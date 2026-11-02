@@ -18,7 +18,7 @@ const L = {
     <div>
       <h1>{t(profile.name)}</h1>
       <p class="title">{t(profile.title)}</p>
-      <p class="trait">{t(profile.trait)}</p>
+      <p class="trait">{t(profile.motto).replace(/[\[\]]/g, '')}</p>
     </div>
     <ul class="contact">
       <li>{t(profile.location)} · {t(profile.workMode)}</li>

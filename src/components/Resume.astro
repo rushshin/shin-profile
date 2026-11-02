@@ -7,6 +7,8 @@ const { lang } = Astro.props;
 const other = lang === 'zh' ? '/en/' : '/';
 const sections = ['about', 'experience', 'skills', 'education', 'contact'] as const;
 const t = (o: Record<Lang, string>) => o[lang];
+const mottoParts = t(profile.motto).split(/(\[[^\]]+\])/).filter(Boolean).map((p) => ({ text: p.replace(/^\[|\]$/g, ''), hl: p.startsWith('[') }));
+const mottoPlain = mottoParts.map((p) => p.text).join('');
 const current = profile.experience.find((e) => e.current);
 const previous = profile.experience.filter((e) => !e.current);
 const workHref = (slug: string) => `${lang === 'zh' ? '' : '/en'}/work/${slug}/`;
@@ -34,9 +36,8 @@ const allSkills = profile.skills.flatMap((g) => g.items);
     <p class="hello reveal">{t(ui.hello)}</p>
     <h1 class="reveal" id="name" data-text={t(profile.name)}>{t(profile.name)}</h1>
     <p class="role reveal">{t(profile.title)}</p>
-    <p class="trait reveal">{lang === 'zh' ? `「${t(profile.trait)}」` : `“${t(profile.trait)}”`} {profile.traitEmoji}</p>
-    <p class="typing reveal" aria-live="polite">
-      <span class="prompt">$</span> {t(ui.iAm)} <span id="typed" data-words={JSON.stringify(profile.typing[lang])}></span><span class="caret">▍</span>
+    <p class="motto reveal" aria-label={mottoPlain}>
+      <span id="motto" aria-hidden="true">{mottoParts.map((p) => <span class:list={{ hl: p.hl }} data-full={p.text}>{p.text}</span>)}</span><span class="caret" aria-hidden="true"></span>
     </p>
     <div class="links reveal">
       {profile.links.map((l) => <a class="btn" href={l.href} {...ext(l.href)}>{l.label}{arrow(l.href)}</a>)}
@@ -204,22 +205,21 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   }, { threshold: 0.6 });
   document.querySelectorAll('[data-count]').forEach((el) => counter.observe(el));
 
-  // 打字機
-  const typed = document.getElementById('typed')!;
-  const words: string[] = JSON.parse(typed.dataset.words || '[]');
-  if (reduce) typed.textContent = words[0] ?? '';
+  // Type the motto once; server-rendered text stays as the no-JS fallback.
+  const mottoParts = [...document.querySelectorAll<HTMLElement>('#motto [data-full]')];
+  const mottoEl = document.querySelector<HTMLElement>('.motto')!;
+  if (reduce) mottoEl.classList.add('done');
   else {
-    let w = 0, c = 0, del = false;
+    mottoParts.forEach((s) => (s.textContent = ''));
+    let part = 0, c = 0;
     const tick = () => {
-      const word = words[w];
-      c += del ? -1 : 1;
-      typed.textContent = word.slice(0, c);
-      let wait = del ? 35 : 75;
-      if (!del && c === word.length) { del = true; wait = 1600; }
-      else if (del && c === 0) { del = false; w = (w + 1) % words.length; wait = 300; }
-      setTimeout(tick, wait);
+      const full = [...(mottoParts[part].dataset.full ?? '')];
+      mottoParts[part].textContent = full.slice(0, ++c).join('');
+      if (c >= full.length) { part++; c = 0; }
+      if (part < mottoParts.length) setTimeout(tick, 70);
+      else setTimeout(() => mottoEl.classList.add('done'), 2400);
     };
-    tick();
+    setTimeout(tick, 900);
   }
 
   // 亂碼解讀標題（Scramble Decode）
@@ -333,11 +333,10 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   h1 { font-size: clamp(44px, 9vw, 88px); line-height: 1.02; margin: 4px 0 12px; letter-spacing: -0.03em;
     background: linear-gradient(120deg, var(--text) 40%, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .role { font-size: clamp(17px, 2.6vw, 22px); margin: 0 0 20px; }
-  .trait { font-family: var(--font); font-size: clamp(16px, 2.2vw, 19px); color: var(--text); border-left: 3px solid var(--accent); padding-left: 12px; margin: 0 0 20px; }
-  .typing { font-family: var(--mono); font-size: 15px; color: var(--muted); margin: 0 0 32px; min-height: 1.7em; }
-  .prompt { color: var(--accent); }
-  #typed { color: var(--text); }
-  .caret { color: var(--accent); animation: blink 1s steps(1) infinite; }
+  .motto { font-family: var(--font); font-size: clamp(20px, 3vw, 26px); font-weight: 600; letter-spacing: -0.01em; color: var(--text); margin: 4px 0 32px; min-height: 1.5em; }
+  .motto .hl { color: var(--accent); background: linear-gradient(transparent 62%, var(--accent-soft) 62%); }
+  .caret { display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -0.12em; background: var(--accent); animation: blink 1s steps(1) infinite; transition: opacity .4s; }
+  .motto.done .caret { opacity: 0; animation: none; }
   .links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .btn { display: inline-block; text-decoration: none; padding: 9px 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
     font-size: 14px; font-weight: 500; transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .2s, box-shadow .2s; }

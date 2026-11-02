@@ -10,17 +10,12 @@ export const profile = {
   } as T,
   location: { zh: '台灣・台北／新竹／桃園', en: 'Taipei / Hsinchu / Taoyuan, Taiwan' } as T,
   workMode: { zh: '可全遠端或混合辦公', en: 'Open to remote or hybrid' } as T,
-  // Keywords cycled by the typing effect.
-  typing: {
-    zh: ['設計雲原生私有雲', '用 AI Agent 加速交付', '用 GitOps 交付平台', '打造 AI 基礎設施', '讓系統穩定運行'],
-    en: ['architecting private cloud', 'shipping faster with AI agents', 'shipping platforms with GitOps', 'building AI infrastructure', 'keeping systems reliable'],
-  } as Record<Lang, string[]>,
   intro: {
     zh: '現在設計雲原生私有雲與 AI 基礎設施；之前做過網銀 SRE、社群影音推薦系統與 MEC 邊緣運算平台，累積 7 年軟體與基礎設施經驗。',
     en: 'Architecting cloud-native private cloud and AI infrastructure — previously online banking SRE, social video recommendation and MEC edge platforms, across 7+ years in software and infrastructure.',
   } as T,
-  trait: { zh: '好的平台與工具，讓整個團隊一起變強', en: 'Good platforms and tools make the whole team stronger' } as T,
-  traitEmoji: '🛠️🤝💪',
+  // Brackets mark the words the motto highlights.
+  motto: { zh: '把[平台]做好，讓[團隊]一起變強。', en: 'Better [platforms], stronger [teams].' } as T,
   pitch: {
     zh: '從裸機到 AI 平台，我把企業的機房變成像公有雲一樣好用。',
     en: 'From bare metal to AI platforms, I make enterprise data centers as easy to use as public cloud.',
@@ -138,7 +133,6 @@ export const profile = {
 export const ui = {
   nav: { about: { zh: '關於', en: 'About' }, experience: { zh: '經歷', en: 'Experience' }, skills: { zh: '技能', en: 'Skills' }, education: { zh: '學歷', en: 'Education' }, contact: { zh: '聯絡', en: 'Contact' } },
   hello: { zh: '你好，我是', en: "Hi, I'm" },
-  iAm: { zh: '我專注在', en: "I'm focused on" },
   now: { zh: '現職 MetaMEC：設計雲原生私有雲與 AI 平台', en: 'Now at MetaMEC: architecting private cloud & AI platforms' },
   employerNow: { zh: '現職', en: 'Now' },
   employerPreviously: { zh: '曾任', en: 'Previously' },

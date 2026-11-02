@@ -57,7 +57,7 @@ npm run build && npm run pdf
 | 效果 | 位置 |
 |---|---|
 | Scramble Decode | Hero 姓名 |
-| Typing Swap | Hero 標語 |
+| Typewriter（座右銘打一次） | Hero 座右銘 |
 | 現職徽章（連到 MetaMEC 成果頁） | Hero |
 | Scroll Text Reveal | 關於我 |
 | Count Up | 數據卡 |
