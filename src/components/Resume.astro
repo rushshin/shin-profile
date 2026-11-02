@@ -64,6 +64,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
             <div>
               <h3>{t(e.role)}</h3>
               <p class="company">{t(e.company)}</p>
+              {e.team && <p class="team">{t(e.team)}</p>}
             </div>
             <span class="period">{e.period}</span>
           </div>
@@ -362,6 +363,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   .job ul { margin: 14px 0 0; padding-left: 18px; font-size: 15px; }
   .job li { margin: 4px 0; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .team { display: inline-block; margin: 8px 0 0; font: 12px var(--mono); padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
   .more { display: inline-block; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--accent); text-decoration: none; }
   .more:hover { text-decoration: underline; }
   .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }

@@ -5,8 +5,8 @@ type T = Record<Lang, string>;
 export const profile = {
   name: { zh: 'Shin Lin', en: 'Shin Lin' } as T, // 想放中文姓名可改 zh
   title: {
-    zh: '技術架構師・SRE',
-    en: 'Technical Architect · SRE',
+    zh: '雲原生平台架構師・SRE',
+    en: 'Cloud-Native Platform Architect · SRE',
   } as T,
   location: { zh: '台灣・桃園／台北／新竹', en: 'Taoyuan / Taipei / Hsinchu, Taiwan' } as T,
   // Keywords cycled by the typing effect.
@@ -32,12 +32,13 @@ export const profile = {
     {
       slug: 'metamec',
       company: { zh: 'MetaMEC', en: 'MetaMEC' } as T,
-      role: { zh: '資深技術架構師', en: 'Senior Technical Architect' } as T,
+      role: { zh: '資深軟體工程師｜技術架構', en: 'Senior Software Engineer | Technical Architect' } as T,
       period: '2025.08 — Now',
       current: true,
+      team: { zh: '帶領 3–5 人專案小組', en: 'Leads a 3–5 engineer project squad' } as T,
       points: {
-        zh: ['設計 Kubernetes 私有雲與 AI 平台架構', '建立 GitOps 交付流程與 SSO、機密管理', '主導平台可觀測性與 DevSecOps'],
-        en: ['Architect the Kubernetes private cloud and AI platform', 'Built GitOps delivery, SSO and secrets management', 'Lead platform observability and DevSecOps'],
+        zh: ['設計 Kubernetes 私有雲與 AI 平台架構', '主導專案，規劃並分派任務給 3–5 位工程師', '擔任企業客戶技術窗口，支援 POC 與提案'],
+        en: ['Architect the Kubernetes private cloud and AI platform', 'Lead projects; plan and assign work for 3–5 engineers', 'Technical point of contact for enterprise customers, POCs and proposals'],
       } as Record<Lang, string[]>,
       tags: ['Kubernetes', 'ArgoCD', 'Ceph', 'Harbor', 'Keycloak', 'OpenBao', 'OpenTelemetry'],
     },
@@ -46,9 +47,10 @@ export const profile = {
       company: { zh: '國泰世華銀行', en: 'Cathay United Bank' } as T,
       role: { zh: 'SRE｜資深軟體工程師', en: 'Site Reliability Engineer | Senior Software Engineer' } as T,
       period: '2024.09 — 2025.07',
+      team: { zh: '帶領 5–8 人團隊', en: 'Led a team of 5–8 engineers' } as T,
       points: {
-        zh: ['維運 CUBE 網銀與內部系統的關鍵 gateway', '協助網銀服務上雲，以 OpenTelemetry 建立共用監控模組', '維運 OpenShift 私有雲與 AWS / GCP 部署'],
-        en: ['Ran the critical gateway for CUBE online banking and internal systems', 'Moved online banking to the cloud and built a shared OpenTelemetry monitoring module', 'Operated OpenShift private cloud and AWS / GCP deployments'],
+        zh: ['帶領 5–8 人團隊，維運 CUBE 網銀與內部系統的關鍵 gateway', '協助網銀服務上雲，以 OpenTelemetry 建立共用監控模組', '維運 OpenShift 私有雲與 AWS / GCP 部署'],
+        en: ['Led a 5–8 person team running the critical gateway for CUBE online banking and internal systems', 'Moved online banking to the cloud and built a shared OpenTelemetry monitoring module', 'Operated OpenShift private cloud and AWS / GCP deployments'],
       } as Record<Lang, string[]>,
       tags: ['OpenTelemetry', 'OpenShift', 'Kubernetes', 'AWS', 'GCP', 'Java', 'Spring Boot'],
     },

@@ -44,12 +44,22 @@ export const works: Work[] = [
         result: { zh: '身分、機密、憑證與監控都有一致的做法', en: 'One consistent approach to identity, secrets, certificates and monitoring' },
       },
       {
+        id: 'lead',
+        title: { zh: '專案領導', en: 'Project leadership' },
+        lead: { zh: '小團隊，高密度', en: 'Small team, high leverage' },
+        points: {
+          zh: ['主導平台專案，拆解需求並分派任務給 3–5 位工程師', 'Code review 與技術指導，維持架構一致', '建立 spec → ticket → review 的交付流程'],
+          en: ['Lead platform projects; break down work and assign it to 3–5 engineers', 'Code review and mentoring to keep the architecture consistent', 'Set up a spec → ticket → review delivery flow'],
+        },
+        result: { zh: '精簡編制下仍能穩定推進多條產品線', en: 'Several product lines move forward with a lean team' },
+      },
+      {
         id: 'ai',
         title: { zh: 'AI 平台與客戶導入', en: 'AI platform & adoption' },
         lead: { zh: '讓平台跑得動 AI 工作負載', en: 'Make the platform ready for AI workloads' },
         points: {
-          zh: ['規劃 AI 導向 Kubernetes 平台的 GPU 排程與網路', '支援企業客戶 POC 與技術提案'],
-          en: ['Plan GPU scheduling and networking for an AI-oriented Kubernetes platform', 'Support enterprise POCs and technical proposals'],
+          zh: ['規劃 AI 導向 Kubernetes 平台的 GPU 排程與網路', '擔任企業客戶技術窗口，支援 POC 與技術提案'],
+          en: ['Plan GPU scheduling and networking for an AI-oriented Kubernetes platform', 'Technical point of contact for enterprise POCs and proposals'],
         },
         result: { zh: '架構設計直接對接客戶需求', en: 'Architecture decisions map directly to customer needs' },
       },
@@ -67,8 +77,8 @@ export const works: Work[] = [
         title: { zh: '關鍵 gateway 維運', en: 'Critical gateway operations' },
         lead: { zh: '網銀流量的第一道門', en: 'The front door for online banking traffic' },
         points: {
-          zh: ['主導內部系統與 CUBE 網銀／行動銀行關鍵 gateway 的維運', '負責服務穩定性與事件處理'],
-          en: ['Led operations of the critical gateway for internal systems and CUBE online/mobile banking', 'Owned service stability and incident handling'],
+          zh: ['帶領 5–8 人團隊，主導內部系統與 CUBE 網銀／行動銀行關鍵 gateway 的維運', '負責服務穩定性與事件處理'],
+          en: ['Led a 5–8 person team operating the critical gateway for internal systems and CUBE online/mobile banking', 'Owned service stability and incident handling'],
         },
         result: { zh: '銀行核心入口持續穩定運作', en: 'The bank’s core entry point kept running reliably' },
       },
