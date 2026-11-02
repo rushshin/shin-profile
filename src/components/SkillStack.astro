@@ -1,0 +1,102 @@
+---
+import { profile, type Lang } from '../data/profile';
+import { skillJobs } from '../data/visuals';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const jobs = [
+  { slug: 'metamec', name: 'MetaMEC' },
+  { slug: 'cathay', name: lang === 'zh' ? '國泰' : 'Cathay' },
+  { slug: 'playsee', name: 'Playsee' },
+  { slug: 'alpha-networks', name: lang === 'zh' ? '明泰' : 'Alpha' },
+  { slug: 'syscom', name: lang === 'zh' ? '凌群' : 'SYSCOM' },
+];
+---
+<div class="skill-stack reveal" data-skill-stack>
+  <div class="layers" aria-label={lang === 'zh' ? '技能類別' : 'Skill groups'}>
+    {profile.skills.map((group, index) => (
+      <button type="button" class="layer" data-layer={index} aria-pressed={index === 0} aria-controls={`skill-matrix-${lang}-${index}`}>
+        <span>{group.group[lang]}</span><span class="count">{group.items.length}</span>
+      </button>
+    ))}
+  </div>
+  <div class="matrices">
+    {profile.skills.map((group, index) => (
+      <div class="matrix" id={`skill-matrix-${lang}-${index}`} data-matrix={index} hidden={index !== 0}>
+        <div class="matrix-title">{group.group[lang]}</div>
+        <table>
+          <colgroup><col class="skill-col" />{jobs.map(() => <col />)}</colgroup>
+          <thead><tr><th scope="col" class="skill-head">{lang === 'zh' ? '技能' : 'Skill'}</th>{jobs.map((job) => (
+            <th scope="col"><a href={`${lang === 'zh' ? '' : '/en'}/work/${job.slug}/`}>{job.name}</a></th>
+          ))}</tr></thead>
+          <tbody>{group.items.map((item) => (
+            <tr class:list={{ unused: !skillJobs[item]?.length }}>
+              <th scope="row">{item}</th>
+              {jobs.map((job) => {
+                const used = skillJobs[item]?.includes(job.slug) ?? false;
+                return <td aria-label={`${item}: ${job.name} — ${used ? (lang === 'zh' ? '使用' : 'used') : (lang === 'zh' ? '未使用' : 'not used')}`}><span class:list={['mark', { used }]} aria-hidden="true"></span></td>;
+              })}
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    ))}
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-skill-stack]').forEach((stack) => {
+    const buttons = [...stack.querySelectorAll<HTMLButtonElement>('[data-layer]')];
+    const matrices = [...stack.querySelectorAll<HTMLElement>('[data-matrix]')];
+    buttons.forEach((button) => button.addEventListener('click', () => {
+      buttons.forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
+      matrices.forEach((matrix) => { matrix.hidden = matrix.dataset.matrix !== button.dataset.layer; });
+    }));
+    matrices.forEach((matrix) => {
+      matrix.addEventListener('pointerover', (event) => {
+        const cell = (event.target as Element).closest('td, th');
+        if (!cell || !matrix.contains(cell)) return;
+        const column = (cell as HTMLTableCellElement).cellIndex + 1;
+        matrix.querySelectorAll('.column-hover').forEach((el) => el.classList.remove('column-hover'));
+        matrix.querySelectorAll(`tr > :nth-child(${column})`).forEach((el) => el.classList.add('column-hover'));
+      });
+      matrix.addEventListener('pointerleave', () => {
+        matrix.querySelectorAll('.column-hover').forEach((el) => el.classList.remove('column-hover'));
+      });
+    });
+  });
+</script>
+
+<style>
+  .skill-stack { display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); gap: 18px; min-width: 0; }
+  .layers { display: grid; align-content: start; gap: 8px; min-width: 0; }
+  .layer { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: 13px var(--mono); text-align: left; cursor: pointer; }
+  .layer:hover, .layer[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .layer[aria-pressed="true"] { color: var(--accent); }
+  .count { flex: none; color: var(--muted); }
+  .matrices { min-width: 0; }
+  .matrix { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .matrix[hidden] { display: none; }
+  .matrix-title { padding: 12px 14px; border-bottom: 1px solid var(--line); color: var(--accent); font: 13px var(--mono); }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; font: 11px/1.35 var(--mono); }
+  .skill-col { width: 39%; }
+  th, td { min-width: 0; padding: 9px 4px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+  tr:last-child > * { border-bottom: 0; }
+  thead th { color: var(--muted); font-weight: 500; text-align: center; vertical-align: bottom; }
+  thead th:first-child, tbody th { padding-left: 12px; text-align: left; }
+  thead a { text-decoration: none; }
+  thead a:hover { color: var(--accent); text-decoration: underline; }
+  tbody th { font-weight: 500; }
+  tbody td { text-align: center; }
+  tbody tr:hover > *, .column-hover { background: var(--accent-soft); }
+  .unused th { color: var(--muted); }
+  .mark { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--line); opacity: .65; }
+  .mark.used { border-color: var(--accent); background: var(--accent); opacity: 1; }
+  @media (max-width: 720px) {
+    .skill-stack { grid-template-columns: minmax(0, 1fr); }
+    .layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    table { font-size: 10px; }
+    .skill-col { width: 34%; }
+    thead th { padding: 9px 1px; font-size: 9px; overflow-wrap: normal; }
+  }
+</style>

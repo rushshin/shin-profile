@@ -1,12 +1,15 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
+import CareerLog from './CareerLog.astro';
+import SkillStack from './SkillStack.astro';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const other = lang === 'zh' ? '/en/' : '/';
 const sections = ['about', 'experience', 'skills', 'education', 'contact'] as const;
 const t = (o: Record<Lang, string>) => o[lang];
-// 30 天 uptime 條（純裝飾，SRE 彩蛋）
-const bars = Array.from({ length: 30 });
+const sha = process.env.WORKERS_CI_COMMIT_SHA;
+const deployed = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+const deployText = `main@${sha ? sha.slice(0, 7) : 'local'} · deployed ${deployed}`;
 // 捲動逐字點亮：中文逐字、英文逐詞
 const introTokens = lang === 'zh' ? [...t(profile.intro)] : t(profile.intro).split(/(\s+)/);
 const allSkills = profile.skills.flatMap((g) => g.items);
@@ -24,11 +27,8 @@ const allSkills = profile.skills.flatMap((g) => g.items);
 
 <main id="top">
   <section class="hero">
-    <a class="status reveal" href="#experience">
-      <span class="dot"></span>{t(ui.status)}
-      <span class="uptime" aria-hidden="true">{bars.map(() => <i></i>)}</span>
-      <span class="pct">99.99%</span>
-    </a>
+    {sha ? <a class="deploy reveal" href={`https://github.com/rushshin/shin-profile/commit/${sha}`} target="_blank" rel="noopener"><span class="dot" aria-hidden="true"></span>{deployText}</a>
+      : <span class="deploy reveal"><span class="dot" aria-hidden="true"></span>{deployText}</span>}
     <p class="hello reveal">{t(ui.hello)}</p>
     <h1 class="reveal" id="name" data-text={t(profile.name)}>{t(profile.name)}</h1>
     <p class="role reveal">{t(profile.title)}</p>
@@ -53,6 +53,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
         </div>
       ))}
     </div>
+    <CareerLog lang={lang} />
   </section>
 
   <section id="experience" class="block">
@@ -78,14 +79,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
 
   <section id="skills" class="block">
     <h2 class="reveal"><span>03</span>{t(ui.nav.skills)}</h2>
-    <div class="skills">
-      {profile.skills.map((g) => (
-        <div class="card reveal">
-          <h3>{t(g.group)}</h3>
-          <div class="tags">{g.items.map((i) => <span class="tag">{i}</span>)}</div>
-        </div>
-      ))}
-    </div>
+    <SkillStack lang={lang} />
     <div class="marquee" aria-hidden="true">
       <div class="track">{[...allSkills, ...allSkills].map((i) => <span>{i}</span>)}</div>
       <div class="track rev">{[...allSkills].reverse().concat([...allSkills].reverse()).map((i) => <span>{i}</span>)}</div>
@@ -300,13 +294,9 @@ const allSkills = profile.skills.flatMap((g) => g.items);
 
   main, footer { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 0 16px; }
   .hero { min-height: calc(100vh - 60px); display: flex; flex-direction: column; justify-content: center; padding: 64px 0; }
-  .status { display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; font: 12px var(--mono);
+  .deploy { display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; font: 12px var(--mono);
     border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; text-decoration: none; margin-bottom: 32px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 2s infinite; }
-  .uptime { display: inline-flex; gap: 2px; }
-  .uptime i { width: 3px; height: 12px; border-radius: 1px; background: var(--ok); opacity: .75; }
-  .uptime i:nth-child(17) { opacity: .35; }
-  .pct { color: var(--muted); }
+  .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 2s infinite; }
   .hello { margin: 0; color: var(--muted); font-size: 18px; }
   h1 { font-size: clamp(44px, 9vw, 88px); line-height: 1.02; margin: 4px 0 12px; letter-spacing: -0.03em;
     background: linear-gradient(120deg, var(--text) 40%, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -368,7 +358,6 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   .more:hover { text-decoration: underline; }
   .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
 
-  .skills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .edu { display: grid; gap: 14px; }
   /* 技能無限跑馬燈 */
   .marquee { margin-top: 28px; display: grid; gap: 10px; overflow: hidden;
@@ -396,9 +385,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   @media (max-width: 720px) {
     nav { display: none; }
     .stats { grid-template-columns: 1fr; }
-    .skills { grid-template-columns: 1fr; }
     .job-head { flex-direction: column; gap: 4px; }
-    .uptime { display: none; }
     .hint { display: none; }
     .block { padding: 56px 0; }
   }

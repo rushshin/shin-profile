@@ -121,7 +121,6 @@ export const ui = {
   nav: { about: { zh: '關於', en: 'About' }, experience: { zh: '經歷', en: 'Experience' }, skills: { zh: '技能', en: 'Skills' }, education: { zh: '學歷', en: 'Education' }, contact: { zh: '聯絡', en: 'Contact' } },
   hello: { zh: '你好，我是', en: "Hi, I'm" },
   iAm: { zh: '我專注在', en: "I'm focused on" },
-  status: { zh: 'All systems operational', en: 'All systems operational' },
   viewWork: { zh: '看成果 →', en: 'View work →' },
   home: { zh: '首頁', en: 'Home' },
   prev: { zh: '← 上一份', en: '← Previous' },

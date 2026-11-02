@@ -1,6 +1,8 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
 import { works } from '../data/work';
+import { visuals, labels } from '../data/visuals';
+import ArchDiagram from './ArchDiagram.astro';
 interface Props { lang: Lang; slug: string }
 const { lang, slug } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
@@ -12,6 +14,16 @@ const prev = profile.experience[i - 1];
 const next = profile.experience[i + 1];
 const other = `${lang === 'zh' ? '/en' : ''}/work/${slug}/`;
 const pad = (n: number) => String(n + 1).padStart(2, '0');
+const v = visuals[slug];
+const steps = (['context', 'problem', 'decision', 'outcome'] as const).map((k) => ({ k, label: t(labels[k]), text: t(v.story[k]) }));
+const describe: [string, string][] = [
+  ['Name', t(exp.role)],
+  ['Namespace', t(exp.company)],
+  ['Age', exp.period],
+  ['Status', exp.current ? 'Running' : 'Completed'],
+  ...(exp.team ? [['Team', t(exp.team)] as [string, string]] : []),
+  ['Labels', exp.tags.join(', ')],
+];
 ---
 <header class="nav">
   <a href={`${prefix}/`} class="brand">SL<span class="cursor">_</span></a>
@@ -32,8 +44,24 @@ const pad = (n: number) => String(n + 1).padStart(2, '0');
     <p class="role">{t(exp.role)}</p>
     {exp.team && <p class="team">{t(exp.team)}</p>}
     <p class="summary">{t(work.summary)}</p>
-    <div class="tags">{exp.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
   </section>
+
+  <div class="term reveal" aria-label="kubectl describe">
+    <p class="cmd"><span>$</span> kubectl describe role {slug}</p>
+    <dl>
+      {describe.map(([k, val]) => (<><dt>{k}:</dt><dd class:list={{ ok: val === 'Running' }}>{val}</dd></>))}
+    </dl>
+    <p class="ev-head">Events:</p>
+    <ol class="events">
+      {work.sections.map((s) => <li><span class="type">Normal</span><span class="reason">{s.id}</span><span>{t(s.title)}</span></li>)}
+    </ol>
+  </div>
+
+  <ol class="story">
+    {steps.map((st, n) => (
+      <li class:list={['reveal', st.k]}><span class="num">{pad(n)} · {st.label}</span>{st.text}</li>
+    ))}
+  </ol>
 
   <div class="cards">
     {work.sections.map((s, n) => (
@@ -45,8 +73,22 @@ const pad = (n: number) => String(n + 1).padStart(2, '0');
     ))}
   </div>
 
+  <ArchDiagram diagram={v.diagram} label={t(labels.arch)} />
+  <p class="cap">{t(labels.arch)}</p>
+
+  <div class="compare reveal">
+    <input type="radio" name="cmp" id="cmp-typical" />
+    <input type="radio" name="cmp" id="cmp-ours" checked />
+    <div class="seg" role="group">
+      <label for="cmp-typical">{t(labels.typical)}</label>
+      <label for="cmp-ours">{t(labels.ours)}</label>
+    </div>
+    <ol class="flow typical">{v.compare.typical[lang].map((x) => <li>{x}</li>)}</ol>
+    <ol class="flow ours">{v.compare.ours[lang].map((x) => <li>{x}</li>)}</ol>
+  </div>
+
   {work.sections.map((s, n) => (
-    <section id={s.id} class="block">
+    <section id={s.id} class="block" data-section={s.id}>
       <h2 class="reveal"><span>{pad(n)}</span>{t(s.title)}</h2>
       <p class="lead reveal">{t(s.lead)}</p>
       <ul class="reveal">{s.points[lang].map((p) => <li>{p}</li>)}</ul>
@@ -88,6 +130,18 @@ const pad = (n: number) => String(n + 1).padStart(2, '0');
     if (!reduce) el.style.transitionDelay = `${Math.min((i % 6) * 70, 350)}ms`;
     io.observe(el);
   });
+  // Cross-highlight diagram nodes, summary cards and sections that share a section id.
+  const linked = (id: string) => document.querySelectorAll(`[data-section="${id}"], .cards a[href="#${id}"]`);
+  const setHl = (id: string | undefined, on: boolean) => { if (id) linked(id).forEach((el) => el.classList.toggle('hl', on)); };
+  document.querySelectorAll<HTMLElement>('[data-section]').forEach((el) => {
+    el.addEventListener('pointerenter', () => setHl(el.dataset.section, true));
+    el.addEventListener('pointerleave', () => setHl(el.dataset.section, false));
+  });
+  document.querySelectorAll<SVGGElement>('.arch .node').forEach((n) => {
+    const go = () => document.getElementById(n.dataset.section!)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    n.addEventListener('click', go);
+    n.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Enter') go(); });
+  });
   document.getElementById('theme-btn')!.addEventListener('click', () => {
     const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
     root.dataset.theme = dark ? 'light' : 'dark';
@@ -117,8 +171,46 @@ const pad = (n: number) => String(n + 1).padStart(2, '0');
   .role { margin: 0 0 18px; font-size: 18px; color: var(--muted); }
   .team { display: inline-block; margin: 0 0 18px; font: 12px var(--mono); padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
   .summary { margin: 0; font-size: clamp(17px, 2.2vw, 20px); max-width: 720px; font-weight: 500; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
-  .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+
+  .term { margin: 28px 0 0; padding: 18px 20px; border-radius: 14px; background: #0d1117; color: #c9d1d9; font: 13px/1.7 var(--mono); overflow-wrap: anywhere; }
+  .term p { margin: 0; }
+  .cmd span { color: #58a6ff; margin-right: 6px; }
+  .term dl { display: grid; grid-template-columns: 11ch 1fr; gap: 0 12px; margin: 10px 0; }
+  .term dt { color: #8b949e; }
+  .term dd { margin: 0; }
+  .term dd.ok { color: #3fb950; }
+  .ev-head { color: #8b949e; }
+  .events { list-style: none; margin: 4px 0 0; padding: 0 0 0 2ch; }
+  .events li { display: grid; grid-template-columns: 8ch 16ch 1fr; gap: 12px; }
+  .events .type { color: #3fb950; }
+  .events .reason { color: #d2a8ff; }
+
+  .story { list-style: none; margin: 28px 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: s; }
+  .story li { position: relative; padding: 14px 18px 14px 0; border-top: 2px solid var(--line); font-size: 15px; }
+  .story li::before { content: ''; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+  .story li.outcome { border-top-color: var(--accent); }
+  .story li.outcome::before { background: var(--accent); }
+  .story .num { display: block; font: 12px var(--mono); color: var(--accent); margin-bottom: 4px; }
+
+  .cap { margin: 8px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+  .compare { margin: 32px 0 0; }
+  .compare input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface); }
+  .seg label { padding: 6px 16px; border-radius: 999px; font-size: 14px; cursor: pointer; color: var(--muted); transition: background .2s, color .2s; }
+  .compare:has(#cmp-typical:checked) label[for="cmp-typical"],
+  .compare:has(#cmp-ours:checked) label[for="cmp-ours"] { background: var(--accent); color: #fff; }
+  .compare:has(#cmp-typical:focus-visible) .seg, .compare:has(#cmp-ours:focus-visible) .seg { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .flow { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 34px; }
+  .flow li { position: relative; padding: 10px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); font-size: 15px; animation: pop .35s ease both; }
+  .flow li:not(:last-child)::after { content: '→'; position: absolute; right: -24px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .flow.typical li { color: var(--muted); border-style: dashed; }
+  .flow.ours li { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); }
+  .compare:has(#cmp-ours:checked) .typical, .compare:has(#cmp-typical:checked) .ours { display: none; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } }
+
+  .block.hl h2 { color: var(--accent); }
+  .cards a.hl { border-color: var(--accent); }
 
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
   .card { position: relative; display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line);
@@ -149,5 +241,10 @@ const pad = (n: number) => String(n + 1).padStart(2, '0');
   .btn:hover { border-color: var(--accent); }
   footer { padding: 40px 16px 56px; color: var(--muted); font-size: 13px; text-align: center; border-top: 1px solid var(--line); }
   @keyframes blink { 50% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+  @media (max-width: 720px) {
+    .story { grid-template-columns: 1fr 1fr; row-gap: 12px; }
+    .events li { grid-template-columns: 7ch 1fr; }
+    .events li span:last-child { grid-column: 2; }
+  }
+  @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } .flow li { animation: none; } }
 </style>

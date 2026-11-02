@@ -1,0 +1,64 @@
+---
+import type { Diagram } from '../data/visuals';
+interface Props { diagram: Diagram; label: string }
+const { diagram, label } = Astro.props;
+const COL = 200, ROW = 92, W = 164, H = 46, PAD = 18;
+const rows = Math.max(...diagram.nodes.map((n) => n.row)) + 1;
+const height = rows * ROW + 4;
+const pos = Object.fromEntries(diagram.nodes.map((n) => [n.id, { x: n.col * COL + PAD, y: n.row * ROW + PAD }]));
+// Clip a center-to-center segment at both box borders so arrowheads stay visible.
+const clip = (dx: number, dy: number) => Math.min(dx ? (W / 2 + 4) / Math.abs(dx) : Infinity, dy ? (H / 2 + 4) / Math.abs(dy) : Infinity);
+const edges = diagram.edges.map(([a, b]) => {
+  const ax = pos[a].x + W / 2, ay = pos[a].y + H / 2, bx = pos[b].x + W / 2, by = pos[b].y + H / 2;
+  const dx = bx - ax, dy = by - ay, t = clip(dx, dy);
+  const d = `M ${(ax + dx * t).toFixed(1)} ${(ay + dy * t).toFixed(1)} L ${(bx - dx * t).toFixed(1)} ${(by - dy * t).toFixed(1)}`;
+  const sec = diagram.nodes.find((n) => n.id === b)?.section ?? '';
+  return { d, sec };
+});
+---
+<figure class="arch">
+  <div class="scroll">
+    <svg viewBox={`0 0 800 ${height}`} role="img" aria-label={label}>
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0L10 5L0 10z" class="head" />
+        </marker>
+      </defs>
+      {edges.map((e, i) => (
+        <g class="edge" data-section={e.sec}>
+          <path d={e.d} marker-end="url(#arrow)" />
+          <circle r="3.5" class="flow" style={`offset-path: path('${e.d}'); animation-delay: ${(i * 0.37).toFixed(2)}s`} />
+        </g>
+      ))}
+      {diagram.nodes.map((n) => (
+        <g class="node" data-section={n.section} tabindex="0">
+          <rect x={pos[n.id].x} y={pos[n.id].y} width={W} height={H} rx="10" />
+          <text x={pos[n.id].x + W / 2} y={pos[n.id].y + H / 2}>{n.label}</text>
+        </g>
+      ))}
+    </svg>
+  </div>
+  <p class="swipe" aria-hidden="true">← swipe →</p>
+</figure>
+
+<style>
+  .arch { margin: 32px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .scroll { overflow-x: auto; }
+  .swipe { display: none; margin: 8px 0 0; font: 12px var(--mono); color: var(--muted); text-align: center; }
+  @media (max-width: 680px) { .swipe { display: block; } }
+  svg { display: block; width: 100%; min-width: 640px; height: auto; font: 13px var(--mono); }
+  .edge path { fill: none; stroke: var(--line); stroke-width: 1.6; stroke-dasharray: 5 5; animation: dash 1.2s linear infinite; }
+  .head { fill: var(--muted); }
+  .flow { fill: var(--accent); offset-rotate: 0deg; animation: travel 2.4s linear infinite; }
+  .node rect { fill: var(--bg); stroke: var(--line); stroke-width: 1.4; transition: stroke .2s, fill .2s; }
+  .node text { fill: var(--text); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .node { cursor: pointer; outline: none; }
+  .node.hl rect, .node:hover rect, .node:focus-visible rect { stroke: var(--accent); fill: var(--accent-soft); }
+  .edge.hl path { stroke: var(--accent); }
+  @keyframes dash { to { stroke-dashoffset: -20; } }
+  @keyframes travel { from { offset-distance: 0%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { offset-distance: 100%; opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .edge path { animation: none; }
+    .flow { display: none; }
+  }
+</style>
