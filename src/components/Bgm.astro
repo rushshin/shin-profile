@@ -24,9 +24,12 @@ const labels = { zh: '背景音樂', en: 'Background music' };
       [[57, 'major'], [52, 'major'], [54, 'minor'], [50, 'major']],
       [[48, 'major'], [53, 'major'], [55, 'major'], [48, 'major']],
     ];
+    // Measured -44 dBFS RMS at 0.1; 1.0 lands near -24 dBFS, a soft background level.
+    const TARGET = 1.0;
     const beat = 60 / 104;
     const sixteenth = beat / 4;
-    const gestures = ['pointerdown', 'keydown', 'touchstart'] as const;
+    // Only these events grant audio activation across Chrome, Safari and Firefox.
+    const gestures = ['pointerup', 'pointerdown', 'mousedown', 'touchend', 'keydown', 'click'] as const;
     let context: AudioContext | undefined;
     let master: GainNode | undefined;
     let padBus: GainNode | undefined;
@@ -37,7 +40,6 @@ const labels = { zh: '背景音樂', en: 'Background music' };
     let timer: number | undefined;
     let desiredOn = true;
     let playing = false;
-    let starting = false;
     let buttonGesturePending = false;
     let chapter = 0;
     let pendingChapter: number | undefined;
@@ -90,6 +92,7 @@ const labels = { zh: '背景音樂', en: 'Background music' };
       percussion.connect(main);
       main.connect(compressor);
       compressor.connect(audio.destination);
+      audio.onstatechange = () => begin();
       context = audio;
       master = main;
       padBus = pad;
@@ -235,39 +238,45 @@ const labels = { zh: '背景音樂', en: 'Background music' };
     };
 
     const removeGestures = () => gestures.forEach((gesture) => window.removeEventListener(gesture, onGesture, true));
-    const addGestures = () => gestures.forEach((gesture) => window.addEventListener(gesture, onGesture, { capture: true, passive: true, once: true }));
+    const addGestures = () => gestures.forEach((gesture) => window.addEventListener(gesture, onGesture, { capture: true, passive: true }));
 
-    const start = async () => {
-      if (!desiredOn || playing || starting || document.hidden) return;
-      starting = true;
+    const begin = () => {
+      if (playing || !desiredOn || !context || context.state !== 'running') return;
+      playing = true;
       removeGestures();
-      const ticket = ++generation;
+      button.classList.remove('waiting');
+      const gain = master!.gain;
+      gain.cancelScheduledValues(context.currentTime);
+      gain.setValueAtTime(gain.value, context.currentTime);
+      gain.linearRampToValueAtTime(TARGET, context.currentTime + 1.5);
+      bar = 0;
+      step = 0;
+      nextStepTime = context.currentTime + 0.05;
+      window.clearTimeout(timer);
+      schedule();
+    };
+
+    // Must run synchronously inside the gesture handler, or browsers keep the context suspended.
+    const start = () => {
+      if (!desiredOn || playing || document.hidden) return;
       try {
-        if (!context) setup();
-        await context!.resume();
-        if (ticket !== generation || !desiredOn) return;
-        playing = true;
-        button.classList.remove('waiting');
-        const audio = context!;
-        const gain = master!.gain;
-        gain.cancelScheduledValues(audio.currentTime);
-        gain.setValueAtTime(gain.value, audio.currentTime);
-        gain.linearRampToValueAtTime(0.1, audio.currentTime + 1.5);
-        bar = 0;
-        step = 0;
-        nextStepTime = audio.currentTime + 0.02;
-        window.clearTimeout(timer);
-        schedule();
-      } catch {
-        if (desiredOn) addGestures();
-      } finally {
-        starting = false;
-      }
+        const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+        if (session) session.type = 'playback';
+      } catch {}
+      if (!context) setup();
+      const audio = context!;
+      const unlock = audio.createBufferSource();
+      unlock.buffer = audio.createBuffer(1, 1, audio.sampleRate);
+      unlock.connect(audio.destination);
+      unlock.start();
+      void audio.resume().then(begin, () => {});
+      begin();
     };
 
     function onGesture(event: Event) {
+      if (event.type === 'click' && button.contains(event.target as Node)) return;
       if (button.contains(event.target as Node)) buttonGesturePending = true;
-      void start();
+      start();
     }
 
     const stop = () => {
@@ -297,13 +306,13 @@ const labels = { zh: '背景音樂', en: 'Background music' };
       if (playing) {
         stop();
       } else if (desiredOn) {
-        void start();
+        start();
       } else {
         desiredOn = true;
         button.setAttribute('aria-pressed', 'true');
         button.classList.add('waiting');
         try { localStorage.setItem('bgm', 'on'); } catch {}
-        void start();
+        start();
       }
     });
     if (desiredOn) addGestures();
