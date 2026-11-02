@@ -5,8 +5,8 @@ type T = Record<Lang, string>;
 export const profile = {
   name: { zh: 'Shin Lin', en: 'Shin Lin' } as T, // 想放中文姓名可改 zh
   title: {
-    zh: '雲原生平台架構師・SRE',
-    en: 'Cloud-Native Platform Architect · SRE',
+    zh: '雲原生平台架構師・AI 基礎設施',
+    en: 'Cloud-Native Platform Architect · AI Infrastructure',
   } as T,
   location: { zh: '台灣・台北／新竹／桃園', en: 'Taipei / Hsinchu / Taoyuan, Taiwan' } as T,
   workMode: { zh: '可全遠端或混合辦公', en: 'Open to remote or hybrid' } as T,
@@ -58,7 +58,7 @@ export const profile = {
     {
       slug: 'cathay',
       company: { zh: '國泰世華銀行', en: 'Cathay United Bank' } as T,
-      role: { zh: 'SRE｜資深軟體工程師', en: 'Site Reliability Engineer | Senior Software Engineer' } as T,
+      role: { zh: '資深軟體工程師｜SRE', en: 'Senior Software Engineer | SRE' } as T,
       period: '2024.09 — 2025.07',
       team: { zh: '帶領 5–8 人團隊', en: 'Led a team of 5–8 engineers' } as T,
       points: {

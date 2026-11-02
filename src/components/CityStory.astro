@@ -18,53 +18,80 @@ const stops = chapters.map((c, i) => ({
 }));
 
 // World units; the camera pans across this world with a scroll-driven viewBox.
-const W = 1600;
-const GROUND = 540;
-const XS = [190, 490, 790, 1090, 1400];
-let seed = 11;
+const G = 540;
+const XS = [200, 500, 800, 1100, 1380];
+let seed = 23;
 const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-const palette = ['#f1dfbf', '#d99a76', '#8fb8b2', '#a9b4c8', '#e8c27a', '#c98f8f', '#b7a6cf', '#9cc3a0'];
+const pick = <T,>(a: T[]) => a[Math.floor(rand() * a.length)];
 type Win = { x: number; y: number; on: number };
-type Floor = { x: number; y: number; w: number; h: number; on: number; wins: Win[] };
-type Bld = { x: number; w: number; h: number; fill: string; on: number; roof: boolean; wins: Win[]; floors: Floor[] };
-const windowsFor = (x: number, y: number, w: number, h: number, base: number): Win[] => {
+const windowsFor = (x: number, y: number, w: number, h: number, base: number, step = 14): Win[] => {
   const out: Win[] = [];
-  for (let wy = y + 9; wy < y + h - 10; wy += 15) for (let wx = x + 6; wx < x + w - 8; wx += 11) out.push({ x: wx, y: wy, on: base + Math.floor(rand() * 3) });
+  for (let wy = y + 8; wy < y + h - 9; wy += step) for (let wx = x + 6; wx < x + w - 8; wx += 10) out.push({ x: wx, y: wy, on: base + Math.floor(rand() * 3) });
   return out;
 };
-const districts = XS.map((cx, i) => {
-  const blds: Bld[] = [];
-  const count = i === 4 ? 4 : 6;
-  let x = cx - 140;
-  for (let b = 0; b < count; b++) {
-    const house = i < 2 && rand() > 0.5;
-    const w = house ? 32 + Math.round(rand() * 10) : 34 + Math.round(rand() * 24);
-    const h = house ? 34 + Math.round(rand() * 18) : 50 + i * 22 + Math.round(rand() * 60);
-    const floors: Floor[] = [];
-    let top = GROUND - h;
-    for (let f = 1; f <= 2; f++) {
-      if (house || rand() < 0.35) continue;
-      const fh = 18 + Math.round(rand() * 10);
-      top -= fh;
-      floors.push({ x: x + 3, y: top, w: w - 6, h: fh, on: i + f, wins: windowsFor(x + 3, top, w - 6, fh + 6, i + f) });
+const warm = ['#f1dfbf', '#e8c9a0', '#d9a07c', '#c98f8f', '#b7a6cf', '#9cc3a0', '#8fb8b2', '#e8c27a'];
+const crowns = ['flat', 'gable', 'step', 'antenna', 'garden', 'dome'] as const;
+type Crown = (typeof crowns)[number];
+type Bld = { x: number; w: number; h: number; fill: string; on: number; crown: Crown; wins: Win[]; up?: { h: number; on: number; fill: string; crown: Crown; wins: Win[] } };
+// Filler buildings sit left of each stop; the right of each stop is kept for its set-piece.
+const fillerZones: [number, number, number][] = [[60, 150, 0], [360, 460, 1], [640, 700, 2], [960, 1040, 3], [1230, 1270, 4]];
+const fillers: Bld[] = [];
+for (const [from, to, i] of fillerZones) {
+  let x = from;
+  while (x < to) {
+    const small = i === 0;
+    const w = small ? 30 + Math.round(rand() * 8) : 28 + Math.round(rand() * 18);
+    const h = small ? 30 + Math.round(rand() * 12) : 60 + i * 22 + Math.round(rand() * 50);
+    const fill = pick(warm);
+    const b: Bld = { x, w, h, fill, on: i, crown: small ? 'gable' : pick([...crowns]), wins: windowsFor(x, G - h, w, h, i) };
+    if (!small && rand() > 0.35) {
+      const uh = 22 + Math.round(rand() * 18);
+      b.up = { h: uh, on: i + 1 + Math.floor(rand() * 2), fill: pick(warm), crown: pick([...crowns]), wins: windowsFor(x + 3, G - h - uh, w - 6, uh + 4, i + 1) };
     }
-    blds.push({ x, w, h, fill: palette[(i * 3 + b) % palette.length], on: i, roof: house || rand() > 0.7, wins: windowsFor(x, GROUND - h, w, h, i), floors });
-    x += w + 5 + Math.round(rand() * 8);
-    if (i === 4 && b === 1) x += 170;
+    fillers.push(b);
+    x += w + 4 + Math.round(rand() * 5);
   }
-  return { cx, i, blds };
+}
+const skyline = Array.from({ length: 46 }, (_, k) => {
+  const x = 10 + k * 34 + Math.round(rand() * 8);
+  const w = 24 + Math.round(rand() * 16);
+  const h = 50 + Math.round(rand() * 80) + Math.floor(x / 300) * 16;
+  const on = Math.max(1, Math.min(4, Math.floor(x / 300)));
+  return { x, w, h, on, wins: windowsFor(x, G - 40 - h, w, h, on + 1, 16) };
 });
-const trees = Array.from({ length: 26 }, (_, k) => {
-  const x = 40 + k * 60 + Math.round(rand() * 24);
-  const near = XS.reduce((best, cx, i) => (Math.abs(cx - x) < Math.abs(XS[best] - x) ? i : best), 0);
-  return { x, r: 9 + Math.round(rand() * 6), on: near + 1 };
-});
-const lamps = Array.from({ length: 22 }, (_, k) => ({ x: 70 + k * 70, on: Math.min(4, Math.floor(k / 4.4)) + 1 }));
-const stars = Array.from({ length: 70 }, () => ({ x: Math.round(rand() * W), y: Math.round(rand() * 360) - 200, r: rand() > 0.85 ? 1.8 : 1 }));
-const sleepers = Array.from({ length: Math.ceil(W / 18) }, (_, k) => k * 18);
-const tower = { x: XS[4] + 150, w: 56, h: 330 };
-const towerWins = windowsFor(tower.x, GROUND - tower.h + 20, tower.w, tower.h - 20, 4).map((w) => ({ ...w, on: 4 + (w.on % 2) }));
-const dc = { x: XS[4] - 50, w: 180, h: 70 };
+const crownPath = (x: number, y: number, w: number, c: Crown) => {
+  if (c === 'gable') return `M${x - 3} ${y} L${x + w / 2} ${y - 13} L${x + w + 3} ${y}Z`;
+  if (c === 'step') return `M${x + 4} ${y} V${y - 8} H${x + w - 4} V${y}Z M${x + 10} ${y - 8} V${y - 15} H${x + w - 10} V${y - 8}Z`;
+  if (c === 'dome') return `M${x + 3} ${y} A${w / 2 - 3} ${w / 2 - 3} 0 0 1 ${x + w - 3} ${y}Z`;
+  if (c === 'garden') return `M${x + 2} ${y} q${w / 4} -10 ${w / 2} 0 q${w / 4} -10 ${w / 2 - 4} 0Z`;
+  return '';
+};
+const crownFill: Record<Crown, string> = { flat: 'none', gable: '#b5654f', step: '#8c7a6b', antenna: 'none', dome: '#7f9db8', garden: '#6fa36c' };
+const trees = Array.from({ length: 24 }, (_, k) => ({ x: 30 + k * 64 + Math.round(rand() * 24), r: 8 + Math.round(rand() * 5), on: Math.min(4, Math.floor(k / 5)) }));
+const stars = Array.from({ length: 110 }, () => ({ x: Math.round(rand() * 1700) - 50, y: Math.round(rand() * 520) - 380, r: rand() > 0.85 ? 1.8 : 1 }));
+const sleepers = Array.from({ length: 140 }, (_, k) => -400 + k * 18);
+const arches = Array.from({ length: 34 }, (_, k) => -360 + k * 70);
+const reflections = Array.from({ length: 70 }, () => ({ x: Math.round(rand() * 1600), y: G + 80 + Math.round(rand() * 60), w: 10 + Math.round(rand() * 22) }));
+
+// Fibre trunks from stop 2 run back to stop 1 and forward along the line.
+// Trunks drop from the first building into a conduit on the viaduct, then rise into each later stop.
+const fibre = (dy: number) => `M${XS[0] + 112 + dy} ${G + 40 + dy} H${XS[4] - 60 + dy}`;
+// Each stop's riser only appears when that stop is reached, and sits behind the buildings and road.
+const risers = [[XS[0] + 112, 1, G - 150], [XS[1] + 70, 1, G - 88], [XS[2] + 120, 2, G - 100], [XS[3] - 30, 3, G - 100], [XS[4] - 60, 4, G - 82]].map(([x, on, top]) => ({ on, d: (dy: number) => `M${x + dy} ${G + 40 + dy} V${top}` }));
+const fibres = [{ d: fibre(0), c: '#4fd1e8', dy: 0 }, { d: fibre(5), c: '#f6b44b', dy: 5 }, { d: fibre(10), c: '#e879a6', dy: 10 }];
+const terrace = { x: XS[2] - 46, w: 136, y: G - 58 };
+const people = Array.from({ length: 12 }, (_, k) => ({ x: terrace.x + 16 + (k % 6) * 20 + Math.round(rand() * 4), y: terrace.y - Math.floor(k / 6) * 15, c: pick(['#e07a5f', '#5b8bd9', '#f2c14e', '#81b29a', '#b07bc9']) }));
+const lanterns = Array.from({ length: 34 }, (_, k) => { const x = XS[0] + 20 + k * 22; return { x, y: G - 150 + Math.sin(((k % 8) / 7) * Math.PI) * 14, c: pick(['#ff8a65', '#ffd54f', '#ff7043']) }; });
+const vault = { x: XS[3] - 10, w: 130, top: G - 172 };
+const campus = { x: XS[4] - 130, w: 170 };
+const spire = { x: XS[4] + 58, top: G - 255 };
+const prism = { x: spire.x + 14, y: spire.top - 10 };
+const heroTops = [[XS[0] + 127, G - 178], [XS[1] + 80, G - 236], [XS[2] + 136, G - 212], [vault.x + vault.w / 2, vault.top]];
+// Arcs stay low so they never pass behind the text card on the left.
+const arcs = heroTops.map(([x, y]) => `M${prism.x} ${prism.y} C${prism.x - 60} ${G - 30} ${x + 80} ${G - 30} ${x} ${y}`);
+const cards = [0, 1, 2, 3].map((k) => `M${XS[2] + 102} ${G - 150 + (k % 2) * 30} Q${XS[2] + 60 - k * 14} ${G - 220} ${terrace.x + 26 + k * 30} ${terrace.y - 36 - (k % 2) * 14}`);
+const gate = { x: vault.x - 34, y: G - 112 };
+const payPath = `M${XS[2] + 176} ${G - 112} H${vault.x + 6}`;
 const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
 ---
 <section id="story" class="city-story" data-city>
@@ -75,122 +102,306 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
 
   <div class="track">
     <div class="stage">
-      <svg viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax slice" role="img" aria-label={t(storyUi.caption)}>
+      <svg viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax slice" role="img" aria-label={t(storyUi.caption)} data-tod="0">
         <defs>
-          <linearGradient id="sky-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd2ee" /><stop offset="1" stop-color="#fbeed3" /></linearGradient>
-          <linearGradient id="sky-dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6c7fbd" /><stop offset=".65" stop-color="#f2a98a" /><stop offset="1" stop-color="#fcd9a4" /></linearGradient>
-          <linearGradient id="sky-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f1530" /><stop offset=".75" stop-color="#28365e" /><stop offset="1" stop-color="#46497a" /></linearGradient>
-          <radialGradient id="beam"><stop offset="0" stop-color="#fff3c4" stop-opacity=".95" /><stop offset="1" stop-color="#fff3c4" stop-opacity="0" /></radialGradient>
-          <radialGradient id="lampglow"><stop offset="0" stop-color="#ffd98a" stop-opacity=".8" /><stop offset="1" stop-color="#ffd98a" stop-opacity="0" /></radialGradient>
+          <linearGradient id="sky-dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3c4f8f" /><stop offset=".5" stop-color="#f4a28c" /><stop offset="1" stop-color="#fde2c4" /></linearGradient>
+          <linearGradient id="sky-morning" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ec8e3" /><stop offset="1" stop-color="#eaf4f4" /></linearGradient>
+          <linearGradient id="sky-noon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4ea8de" /><stop offset="1" stop-color="#caf0f8" /></linearGradient>
+          <linearGradient id="sky-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a4e9c" /><stop offset=".55" stop-color="#f08a5d" /><stop offset="1" stop-color="#fcbf49" /></linearGradient>
+          <linearGradient id="sky-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1b2a" /><stop offset=".8" stop-color="#1b2a4a" /><stop offset="1" stop-color="#2b3560" /></linearGradient>
+          <linearGradient id="aurora" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5ef2c2" stop-opacity="0" /><stop offset=".3" stop-color="#5ef2c2" stop-opacity=".5" /><stop offset=".65" stop-color="#8a7dff" stop-opacity=".42" /><stop offset="1" stop-color="#8a7dff" stop-opacity="0" /></linearGradient>
+          <linearGradient id="river" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb6d1" /><stop offset="1" stop-color="#4f8bb0" /></linearGradient>
+          <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe3f2" /><stop offset="1" stop-color="#6fa8c9" /></linearGradient>
+          <linearGradient id="spire" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b4a72" /><stop offset=".5" stop-color="#6d82b8" /><stop offset="1" stop-color="#3b4a72" /></linearGradient>
+          <radialGradient id="sunglow"><stop offset="0" stop-color="#fff3c4" stop-opacity=".9" /><stop offset="1" stop-color="#ffb37a" stop-opacity="0" /></radialGradient>
+          <radialGradient id="dawnglow" cx=".5" cy="1" r=".8"><stop offset="0" stop-color="#ffb38a" stop-opacity=".9" /><stop offset="1" stop-color="#ffb38a" stop-opacity="0" /></radialGradient>
+          <radialGradient id="beam"><stop offset="0" stop-color="#e6f6ff" stop-opacity=".95" /><stop offset="1" stop-color="#9fd3ff" stop-opacity="0" /></radialGradient>
+          <radialGradient id="lantern"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".9" /><stop offset="1" stop-color="#ffb74d" stop-opacity="0" /></radialGradient>
+          <filter id="soft"><feGaussianBlur stdDeviation="6" /></filter>
         </defs>
 
-        <rect x="-400" y="-4400" width="2400" height="5040" fill="url(#sky-day)" />
-        <rect x="-400" y="-4400" width="2400" height="5040" fill="url(#sky-dusk)" class="fade" data-on="2" />
-        <rect x="-400" y="-4400" width="2400" height="5040" fill="url(#sky-night)" class="fade" data-on="3" />
-        <g class="fade" data-on="3">{stars.map((s) => <circle cx={s.x} cy={s.y} r={s.r} fill="#fff" class="twinkle" />)}</g>
-        <circle cx="1240" cy="120" r="30" fill="#fff6d8" class="fade" data-on="3" />
-        <circle cx="300" cy="110" r="34" fill="#ffe7a8" class="fade-out" data-off="3" />
+        <rect x="-400" y="-4400" width="2400" height="5440" fill="url(#sky-dawn)" />
+        <rect x="-400" y="-4400" width="2400" height="5440" fill="url(#sky-morning)" class="fade" data-on="1" />
+        <rect x="-400" y="-4400" width="2400" height="5440" fill="url(#sky-noon)" class="fade" data-on="2" />
+        <rect x="-400" y="-4400" width="2400" height="5440" fill="url(#sky-gold)" class="fade" data-on="3" />
+        <rect x="-400" y="-4400" width="2400" height="5440" fill="url(#sky-night)" class="fade" data-on="4" />
 
-        <g class="clouds">
-          <g class="cloud" style="--d:80s"><ellipse cx="200" cy="140" rx="70" ry="20" /><ellipse cx="240" cy="126" rx="44" ry="20" /></g>
-          <g class="cloud" style="--d:110s;--o:-40s"><ellipse cx="900" cy="90" rx="80" ry="18" /><ellipse cx="860" cy="78" rx="40" ry="16" /></g>
-          <g class="cloud" style="--d:95s;--o:-70s"><ellipse cx="1300" cy="170" rx="60" ry="16" /></g>
+        <g class="fade fade-out" data-on="-1" data-off="1"><circle cx="260" cy="440" r="110" fill="url(#sunglow)" /><circle cx="260" cy="440" r="32" fill="#ffd27a" /></g>
+        <g class="fade fade-out" data-on="1" data-off="3"><circle cx="780" cy="90" r="120" fill="url(#sunglow)" opacity=".55" /><circle cx="780" cy="90" r="30" fill="#fff4c2" /></g>
+        <g class="fade fade-out" data-on="3" data-off="4"><circle cx="1180" cy="420" r="140" fill="url(#sunglow)" /><circle cx="1180" cy="420" r="38" fill="#ffb86b" /></g>
+        <g class="fade" data-on="4">
+          {stars.map((s) => <circle cx={s.x} cy={s.y} r={s.r} fill="#fff" class="twinkle" />)}
+          <circle cx="980" cy="20" r="26" fill="#fff6d8" />
+          <g class="aurora" filter="url(#soft)">
+            <path d="M-200 -20 C200 -120 500 60 900 -40 S1500 -100 1900 0 L1900 70 C1500 -20 1200 120 900 30 S300 -50 -200 60Z" fill="url(#aurora)" />
+            <path d="M-100 -140 C300 -220 700 -60 1100 -150 S1600 -170 1900 -100 L1900 -50 C1500 -120 1100 -30 800 -90 S200 -170 -100 -70Z" fill="url(#aurora)" opacity=".7" />
+          </g>
         </g>
-        <g class="balloon fade" data-on="2"><ellipse cx="700" cy="200" rx="18" ry="22" fill="#e07a5f" /><path d="M690 218 L696 232 H704 L710 218" fill="none" stroke="#5a4a3c" stroke-width="1" /><rect x="695" y="232" width="10" height="7" fill="#b5654f" /></g>
+        <ellipse cx="1560" cy={G} rx="460" ry="300" fill="url(#dawnglow)" class="fade" data-on="5" />
+        <ellipse cx="1560" cy={G} rx="200" ry="120" fill="url(#dawnglow)" class="fade" data-on="5" />
 
-        <path d="M-400 420 Q-100 330 200 380 T700 360 T1200 350 T1700 372 T2000 360 V640 H-400Z" fill="#a9c3b0" opacity=".55" />
-        <path d="M-400 470 Q0 420 400 452 T1100 440 T1800 456 T2000 450 V640 H-400Z" fill="#8fb894" opacity=".8" />
+        <g class="terrain">
+          <g class="cloud" style="--d:80s"><ellipse cx="200" cy="160" rx="70" ry="20" /><ellipse cx="240" cy="146" rx="44" ry="20" /></g>
+          <g class="cloud" style="--d:110s;--o:-40s"><ellipse cx="900" cy="70" rx="80" ry="18" /><ellipse cx="860" cy="58" rx="40" ry="16" /></g>
+          <g class="cloud" style="--d:95s;--o:-70s"><ellipse cx="1300" cy="190" rx="60" ry="16" /></g>
+          <path d="M-400 400 L-200 300 L0 360 L180 270 L380 350 L560 285 L760 350 L960 275 L1160 340 L1360 265 L1560 330 L1800 285 L2000 360 V640 H-400Z" fill="#b9c4d8" opacity=".55" />
+          <path d="M-400 430 Q-100 340 200 390 T700 370 T1200 360 T1700 382 T2000 370 V640 H-400Z" fill="#a9c3b0" opacity=".7" />
+        </g>
+        {[1150, 1270, 1490].map((x, k) => (
+          <g class="fade" data-on="4" transform={`translate(${x} ${G - 170 - (k % 2) * 18}) scale(${0.8 + (k % 2) * 0.15})`}>
+            <path d="M-2 0 L-4 96 H4 L2 0Z" fill="#c9d3e6" stroke="#ffffff" stroke-width=".8" />
+            <g class="spin"><path d="M0 0 L-4 -46 L0 -50 L4 -46Z M0 0 L42 20 L44 25 L38 26Z M0 0 L-40 24 L-42 29 L-36 28Z" fill="#dfe6f3" stroke="#ffffff" stroke-width="1" /><circle r="4" fill="#ffffff" /></g>
+          </g>
+        ))}
+        <path class="terrain" d="M-400 480 Q0 440 400 462 T1100 452 T1800 466 T2000 460 V640 H-400Z" fill="#8fb894" />
 
-        <g class="fade" data-on="1">{trees.filter((tr) => tr.on <= 2).map((tr) => <g><rect x={tr.x - 1.5} y={GROUND - 14} width="3" height="14" fill="#6b4f3a" /><circle cx={tr.x} cy={GROUND - 14 - tr.r * 0.6} r={tr.r} fill="#6fa36c" /></g>)}</g>
+        <g>{skyline.map((s) => (
+          <g class="fade" data-on={s.on}>
+            <rect x={s.x} y={G - 40 - s.h} width={s.w} height={s.h + 40} rx="2" class="far-bld" />
+            {s.wins.map((w) => <rect x={w.x} y={w.y} width="4" height="6" class="win far" data-on={w.on + 3} />)}
+          </g>
+        ))}</g>
 
-        {districts.map((d) => (
-          <g class="district">
-            {d.blds.map((b) => (
-              <g class="rise" data-on={b.on} style={`transform-origin: ${b.x + b.w / 2}px ${GROUND}px`}>
-                <rect x={b.x} y={GROUND - b.h} width={b.w} height={b.h} rx="3" fill={b.fill} stroke="#5a4a3c" stroke-opacity=".25" />
-                {b.roof && <path d={`M${b.x - 3} ${GROUND - b.h} L${b.x + b.w / 2} ${GROUND - b.h - 13} L${b.x + b.w + 3} ${GROUND - b.h}Z`} fill="#b5654f" />}
-                {b.wins.map((w) => <rect x={w.x} y={w.y} width="5" height="7" rx="1" class="win" data-on={w.on} />)}
-                {b.floors.map((f) => (
-                  <g class="rise" data-on={f.on} style={`transform-origin: ${f.x + f.w / 2}px ${f.y + f.h}px`}>
-                    <rect x={f.x} y={f.y} width={f.w} height={f.h + 1} rx="2" fill="#f7eedd" stroke="#5a4a3c" stroke-opacity=".25" />
-                    {f.wins.map((w) => <rect x={w.x} y={w.y} width="5" height="6" rx="1" class="win" data-on={w.on} />)}
-                  </g>
-                ))}
+        <g class="fade-out pins" data-off="0">
+          <path d={`M${XS[0]} ${G - 190} ${XS.slice(1).map((x, i) => `Q${(XS[i] + x) / 2} ${G - 250} ${x} ${G - 190}`).join(' ')}`} fill="none" stroke="#c8553d" stroke-width="5" stroke-dasharray="3 12" stroke-linecap="round" />
+          {XS.map((x, i) => (
+            <g>
+              <path d={`M${x} ${G - 150} L${x - 12} ${G - 178} A18 18 0 1 1 ${x + 12} ${G - 178}Z`} fill="#c8553d" />
+              <circle cx={x} cy={G - 190} r="11" fill="#fff" />
+              <text x={x} y={G - 184} class="route-num">{i + 1}</text>
+              <rect x={x - 42} y={G - 146} width="84" height="24" rx="12" fill="#fffaf0" stroke="#c8553d" stroke-width="1.5" />
+              <text x={x} y={G - 129} class="pin-label">{short[stops[i].slug][lang]}</text>
+            </g>
+          ))}
+        </g>
+        <g class="fade" data-on="0">{trees.filter((tr) => tr.on <= 1 && (tr.x < XS[0] + 30 || tr.x > XS[0] + 220)).map((tr) => <g><rect x={tr.x - 1.5} y={G - 14} width="3" height="14" fill="#6b4f3a" /><circle cx={tr.x} cy={G - 14 - tr.r * 0.6} r={tr.r} fill="#6fa36c" /></g>)}</g>
+
+        <g class="fade" data-on="2">
+          <path d={`M${XS[0] + 20} ${G - 150} ${lanterns.map((l) => `L${l.x} ${l.y - 4}`).join(' ')}`} fill="none" stroke="#6b4f3a" stroke-width="1" />
+          {lanterns.map((l) => <g><circle cx={l.x} cy={l.y + 4} r="9" fill="url(#lantern)" class="fade" data-on="3" /><rect x={l.x - 3} y={l.y} width="6" height="8" rx="2.5" fill={l.c} /></g>)}
+        </g>
+
+        {risers.map((r) => <g class="rise" data-on={r.on} style={`transform-origin: 0 ${G + 40}px`}>{fibres.map((f) => <path d={r.d(f.dy)} fill="none" stroke={f.c} stroke-width="2.4" />)}</g>)}
+
+        {fillers.map((b) => (
+          <g class="rise" data-on={b.on} style={`transform-origin: ${b.x + b.w / 2}px ${G}px`}>
+            <rect x={b.x} y={G - b.h} width={b.w} height={b.h} rx="2" fill={b.fill} stroke="#5a4a3c" stroke-opacity=".22" />
+            {crownPath(b.x, G - b.h, b.w, b.crown) && <path d={crownPath(b.x, G - b.h, b.w, b.crown)} fill={crownFill[b.crown]} />}
+            {b.crown === 'antenna' && <rect x={b.x + b.w / 2 - 1} y={G - b.h - 18} width="2" height="18" fill="#5a4a3c" />}
+            {b.wins.map((w) => <rect x={w.x} y={w.y} width="5" height="7" rx="1" class="win" data-on={w.on} />)}
+            {b.up && (
+              <g class="rise" data-on={b.up.on} style={`transform-origin: ${b.x + b.w / 2}px ${G - b.h}px`}>
+                <rect x={b.x + 3} y={G - b.h - b.up.h} width={b.w - 6} height={b.up.h + 1} rx="2" fill={b.up.fill} stroke="#5a4a3c" stroke-opacity=".22" />
+                {crownPath(b.x + 3, G - b.h - b.up.h, b.w - 6, b.up.crown) && <path d={crownPath(b.x + 3, G - b.h - b.up.h, b.w - 6, b.up.crown)} fill={crownFill[b.up.crown]} />}
+                {b.up.wins.map((w) => <rect x={w.x} y={w.y} width="5" height="6" rx="1" class="win" data-on={w.on} />)}
               </g>
-            ))}
+            )}
           </g>
         ))}
 
-        <g class="rise" data-on="0" style={`transform-origin: ${XS[0] + 120}px ${GROUND}px`}>
-          <path d={`M${XS[0] + 96} ${GROUND} V${GROUND - 70} H${XS[0] + 146} V${GROUND} M${XS[0] + 96} ${GROUND - 35} H${XS[0] + 146} M${XS[0] + 96} ${GROUND - 70} L${XS[0] + 146} ${GROUND} M${XS[0] + 146} ${GROUND - 70} L${XS[0] + 96} ${GROUND}`} fill="none" stroke="#c9a46a" stroke-width="2" class="fade-out" data-off="2" />
+        {/* Stop 1 — groundwork: stepped excavation, piers and an open steel frame that is clad at stop 2. */}
+        <g class="rise" data-on="0" style={`transform-origin: ${XS[0] + 120}px ${G}px`}>
+          {[0, 1, 2, 3].map((k) => <rect x={XS[0] + 75 + k * 32} y={G - 150} width="6" height="150" fill="#c0563f" />)}
+          {[0, 1, 2, 3, 4].map((k) => <rect x={XS[0] + 72} y={G - 150 + k * 30} width="108" height="5" fill="#c0563f" />)}
+          {[0, 1, 2].map((k) => <path d={`M${XS[0] + 81 + k * 32} ${G - 145 + k * 0} L${XS[0] + 107 + k * 32} ${G - 120}`} stroke="#a8432f" stroke-width="2" />)}
         </g>
-        <g class="rise" data-on="1" style={`transform-origin: ${XS[1] + 120}px ${GROUND}px`}>
-          <path d={`M${XS[1] + 105} ${GROUND} L${XS[1] + 120} ${GROUND - 170} L${XS[1] + 135} ${GROUND} M${XS[1] + 109} ${GROUND - 40} H${XS[1] + 131} M${XS[1] + 113} ${GROUND - 90} H${XS[1] + 127} M${XS[1] + 116} ${GROUND - 130} H${XS[1] + 124}`} fill="none" stroke="#8a8f9e" stroke-width="2.5" />
-          <circle cx={XS[1] + 120} cy={GROUND - 172} r="4" fill="#ff6b5b" class="blink" />
-          <path d={`M${XS[1] + 104} ${GROUND - 160} q16 -14 32 0 M${XS[1] + 98} ${GROUND - 168} q22 -22 44 0`} fill="none" stroke="#ff9b8f" stroke-width="1.5" class="blink" />
+        <g class="fade" data-on="1">
+          <rect x={XS[0] + 70} y={G - 154} width="114" height="124" rx="3" fill="#f1dfbf" stroke="#5a4a3c" stroke-opacity=".25" />
+          {windowsFor(XS[0] + 70, G - 154, 114, 124, 1).map((w) => <rect x={w.x} y={w.y} width="6" height="8" rx="1" class="win" data-on={w.on} />)}
+          <rect x={XS[0] + 66} y={G - 162} width="122" height="8" rx="2" fill="#c0563f" />
+          <path d={`M${XS[0] + 118} ${G - 162} v-16 m-8 0 h16`} stroke="#5a4a3c" stroke-width="2" />
         </g>
-        <g class="rise" data-on="2" style={`transform-origin: ${XS[2] + 40}px ${GROUND}px`}>
-          <rect x={XS[2] + 10} y={GROUND - 210} width="66" height="40" rx="4" fill="#2b2f45" />
-          <rect x={XS[2] + 14} y={GROUND - 206} width="58" height="32" rx="2" class="screen" />
-          <path d={`M${XS[2] + 38} ${GROUND - 198} l14 8 l-14 8z`} fill="#fff" />
-          <rect x={XS[2] + 41} y={GROUND - 170} width="4" height="40" fill="#2b2f45" />
+        <g class="crane fade fade-out" data-on="0" data-off="1" aria-hidden="true">
+          <path d={`M${XS[0] + 236} ${G} V${G - 230} M${XS[0] + 248} ${G} V${G - 230} ${Array.from({ length: 11 }, (_, k) => `M${XS[0] + 236} ${G - k * 21} L${XS[0] + 248} ${G - k * 21 - 21}`).join(' ')}`} stroke="#e0a43c" stroke-width="2.5" fill="none" />
+          <path d={`M${XS[0] + 90} ${G - 236} H${XS[0] + 290} M${XS[0] + 90} ${G - 228} H${XS[0] + 290} M${XS[0] + 242} ${G - 260} L${XS[0] + 90} ${G - 236} M${XS[0] + 242} ${G - 260} L${XS[0] + 290} ${G - 236}`} stroke="#e0a43c" stroke-width="2.5" fill="none" />
+          <rect x={XS[0] + 270} y={G - 228} width="22" height="16" fill="#8c7a6b" />
+          <g class="hoist">
+            <line x1={XS[0] + 128} y1={G - 228} x2={XS[0] + 128} y2={G - 206} stroke="#5a4a3c" stroke-width="1.5" />
+            <path d={`M${XS[0] + 128} ${G - 206} L${XS[0] + 114} ${G - 190} M${XS[0] + 128} ${G - 206} L${XS[0] + 142} ${G - 190}`} stroke="#5a4a3c" stroke-width="1.2" />
+            <path d={`M${XS[0] + 124} ${G - 210} h8 l-4 4z`} fill="#3d3d3d" />
+            <rect x={XS[0] + 112} y={G - 190} width="32" height="16" rx="2" fill="#4fa3c9" class="module" />
+          </g>
+          <circle cx={XS[0] + 242} cy={G - 262} r="3" fill="#ff6b5b" class="blink" />
         </g>
-        <g class="rise" data-on="3" style={`transform-origin: ${XS[3] + 20}px ${GROUND}px`}>
-          <path d={`M${XS[3] - 40} ${GROUND - 92} L${XS[3] + 20} ${GROUND - 122} L${XS[3] + 80} ${GROUND - 92}Z`} fill="#e9e1cf" stroke="#5a4a3c" stroke-opacity=".3" />
-          <rect x={XS[3] - 36} y={GROUND - 92} width="112" height="10" fill="#e9e1cf" />
-          {[0, 1, 2, 3, 4].map((k) => <rect x={XS[3] - 30 + k * 22} y={GROUND - 82} width="10" height="72" fill="#f4eee0" stroke="#5a4a3c" stroke-opacity=".2" />)}
-          <rect x={XS[3] - 40} y={GROUND - 10} width="120" height="10" fill="#d8cfbb" />
-          <path d={`M${XS[3] + 12} ${GROUND - 116} h16 v6 c0 6 -8 10 -8 10 c0 0 -8 -4 -8 -10z`} fill="#c9a03c" />
+
+        {/* Stop 2 — infrastructure: a glass edge substation under a trussed signal arch. */}
+        <g class="rise" data-on="1" style={`transform-origin: ${XS[1] + 80}px ${G}px`}>
+          <path d={`M${XS[1] + 20} ${G} L${XS[1] + 60} ${G - 210} M${XS[1] + 140} ${G} L${XS[1] + 100} ${G - 210} M${XS[1] + 60} ${G - 210} Q${XS[1] + 80} ${G - 236} ${XS[1] + 100} ${G - 210}`} stroke="#c0563f" stroke-width="5" fill="none" stroke-linecap="round" />
+          {Array.from({ length: 9 }, (_, k) => { const y0 = G - k * 23, y1 = y0 - 23, l0 = XS[1] + 20 + k * 4.44, l1 = l0 + 4.44, r0 = XS[1] + 140 - k * 4.44, r1 = r0 - 4.44; return <path d={`M${l0} ${y0} L${l1 + 18} ${y1} M${l1} ${y1} L${l0 + 18} ${y0} M${r0} ${y0} L${r1 - 18} ${y1} M${r1} ${y1} L${r0 - 18} ${y0} M${l1} ${y1} H${l1 + 10} M${r1} ${y1} H${r1 - 10}`} stroke="#f1dfbf" stroke-width="1.6" />; })}
+          {[-1, 1].map((d) => <rect x={XS[1] + 80 + d * 22 - 4} y={G - 222} width="8" height="22" rx="2" fill="#f1dfbf" stroke="#c0563f" stroke-width="1" />)}
+          <path d={`M${XS[1] + 80} ${G - 240} L${XS[1] + 80} ${G - 222}`} stroke="#c0563f" stroke-width="3" />
+          <circle cx={XS[1] + 80} cy={G - 232} r="6" fill="#ff6b5b" class="blink" />
+          <path d={`M${XS[1] + 60} ${G - 248} q20 -18 40 0 M${XS[1] + 50} ${G - 258} q30 -28 60 0 M${XS[1] + 40} ${G - 268} q40 -38 80 0`} fill="none" stroke="#4fd1e8" stroke-width="2" class="wave" />
+          <rect x={XS[1] + 30} y={G - 86} width="100" height="86" rx="4" fill="url(#glass)" stroke="#5a7891" stroke-width="1.5" />
+          {[0, 1, 2, 3, 4].map((c) => <g>{[0, 1, 2, 3].map((r) => <rect x={XS[1] + 40 + c * 18} y={G - 76 + r * 18} width="10" height="12" rx="1" fill="#2f4a68" />)}</g>)}
+          {[0, 1, 2, 3, 4].map((c) => [0, 1, 2, 3].map((r) => <circle cx={XS[1] + 45 + c * 18} cy={G - 72 + r * 18} r="1.6" class="led" style={`animation-delay: ${((c * 4 + r) % 7) * 0.3}s`} />))}
+          <rect x={XS[1] + 26} y={G - 92} width="108" height="8" rx="2" fill="#5a7891" />
         </g>
-        <g class="rise" data-on="4" style={`transform-origin: ${dc.x + dc.w / 2}px ${GROUND}px`}>
-          <rect x={dc.x} y={GROUND - dc.h} width={dc.w} height={dc.h} rx="4" fill="#4a5578" />
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((k) => <g>{[0, 1, 2, 3].map((r) => <rect x={dc.x + 12 + k * 21} y={GROUND - dc.h + 12 + r * 13} width="14" height="6" rx="1" class="win ai" data-on={4 + ((k + r) % 2)} />)}</g>)}
-          <rect x={dc.x + 6} y={GROUND - dc.h - 8} width={dc.w - 12} height="8" rx="2" fill="#5d6990" />
+
+        {/* Stop 3 — the city comes alive: an amphitheatre plaza facing a video wall. */}
+        <g class="rise" data-on="2" style={`transform-origin: ${XS[2] - 120}px ${G}px`}>
+          <g class="spin-slow" style={`transform-origin: ${XS[2] - 120}px ${G - 110}px`}>
+            <circle cx={XS[2] - 120} cy={G - 110} r="62" fill="none" stroke="#f3f3f7" stroke-width="3" />
+            {Array.from({ length: 10 }, (_, k) => <line x1={XS[2] - 120} y1={G - 110} x2={XS[2] - 120 + Math.cos(k * 0.628) * 62} y2={G - 110 + Math.sin(k * 0.628) * 62} stroke="#f3f3f7" stroke-width="1.2" />)}
+            {Array.from({ length: 10 }, (_, k) => <circle cx={XS[2] - 120 + Math.cos(k * 0.628) * 62} cy={G - 110 + Math.sin(k * 0.628) * 62} r="7" fill={['#e07a5f', '#f2c14e', '#5b8bd9', '#81b29a', '#b07bc9'][k % 5]} />)}
+          </g>
+          <path d={`M${XS[2] - 160} ${G} L${XS[2] - 120} ${G - 110} L${XS[2] - 80} ${G}`} stroke="#6c7a99" stroke-width="4" fill="none" />
         </g>
-        <g class="rise" data-on="4" style={`transform-origin: ${tower.x + tower.w / 2}px ${GROUND}px`}>
-          <rect x={tower.x} y={GROUND - tower.h} width={tower.w} height={tower.h} rx="5" fill="#3d4a6b" />
-          <rect x={tower.x + tower.w / 2 - 2} y={GROUND - tower.h - 46} width="4" height="46" fill="#3d4a6b" />
-          {towerWins.map((w) => <rect x={w.x} y={w.y} width="5" height="7" rx="1" class="win ai" data-on={w.on} />)}
-          <text x={tower.x + tower.w / 2} y={GROUND - tower.h + 15} class="ai-label">AI</text>
+        <g class="rise" data-on="2" style={`transform-origin: ${XS[2] + 60}px ${G}px`}>
+          <rect x={terrace.x} y={terrace.y} width={terrace.w} height={G - terrace.y} fill="#c9b79a" />
+          {Array.from({ length: 6 }, (_, k) => <path d={`M${terrace.x + 10 + k * 22} ${G} V${terrace.y + 18} A11 11 0 0 1 ${terrace.x + 32 + k * 22} ${terrace.y + 18} V${G}`} fill="#a8957a" />)}
+          {[0, 1].map((k) => <rect x={terrace.x + 6 + k * 8} y={terrace.y - (k + 1) * 15} width={terrace.w - 12 - k * 16} height="15" fill={['#e8b48f', '#f1c9a5'][k]} />)}
+          {people.map((p, k) => <g><path d={`M${p.x - 5} ${p.y} V${p.y - 7} a5 5 0 0 1 10 0 V${p.y}Z`} fill={p.c} />{k % 4 === 1 && <path d={`M${p.x + 4} ${p.y - 9} l5 -9`} stroke={p.c} stroke-width="2.4" stroke-linecap="round" />}<circle cx={p.x} cy={p.y - 18} r="4.4" fill="#f1c9a5" stroke="#8a6a50" stroke-width=".6" /></g>)}
+          <rect x={XS[2] + 96} y={G - 220} width="80" height="220" rx="3" fill="#e8c9a0" stroke="#5a4a3c" stroke-opacity=".25" />
+          <rect x={XS[2] + 104} y={G - 212} width="64" height="104" rx="6" fill="#3a2a2a" stroke="#d4a93c" stroke-width="3" />
+          {Array.from({ length: 12 }, (_, k) => <circle cx={XS[2] + 104 + (k < 6 ? 0 : 64)} cy={G - 204 + (k % 6) * 18} r="2.4" class="bulb" style={`animation-delay: ${k * 0.15}s`} />)}
+          {[0, 1, 2].map((k) => <rect x={XS[2] + 112} y={G - 204 + k * 32} width="48" height="26" rx="3" class="tile" style={`animation-delay: ${k * 0.7}s`} />)}
+          {[0, 1, 2].map((k) => <path d={`M${XS[2] + 132} ${G - 197 + k * 32} l9 6 l-9 6z`} fill="#fff" />)}
+          {windowsFor(XS[2] + 96, G - 100, 80, 100, 2).map((w) => <rect x={w.x} y={w.y} width="5" height="7" rx="1" class="win" data-on={w.on} />)}
+          <path d={`M${XS[2] + 92} ${G - 220} H${XS[2] + 180} L${XS[2] + 170} ${G - 232} H${XS[2] + 102}Z`} fill="#c0563f" />
+        </g>
+        <g class="fade" data-on="2">
+          {cards.map((d, k) => (
+            <g class="card" style={`offset-path: path('${d}'); animation-delay: ${k * 1.1}s`}>
+              <rect x="-12" y="-8" width="24" height="16" rx="3" fill="#fff" stroke="#e07a5f" stroke-width="1.2" /><path d="M-3 -4 l7 4 l-7 4z" fill="#e07a5f" />
+            </g>
+          ))}
+          {[[terrace.x + 30, '#ff6b81'], [terrace.x + 80, '#5b8bd9'], [terrace.x + 56, '#ff6b81']].map(([x, c], k) => (
+            <g class="float-up" style={`animation-delay: ${k * 1.4 + 0.5}s`}>
+              {k !== 1
+                ? <path d={`M${x} ${terrace.y - 50} c-6 -8 -16 -2 -10 6 l10 9 l10 -9 c6 -8 -4 -14 -10 -6z`} fill={c as string} />
+                : <g><rect x={(x as number) - 10} y={terrace.y - 64} width="20" height="13" rx="4" fill={c as string} /><path d={`M${(x as number) - 4} ${terrace.y - 51} l-4 6 l8 -6z`} fill={c as string} /></g>}
+            </g>
+          ))}
+        </g>
+
+        {/* Stop 4 — unseen safety: an Art Deco vault hall, a golden skybridge and a shield canopy. */}
+        <g class="fade" data-on="3">
+          <path d={`M${XS[2] + 176} ${G - 112} H${vault.x}`} stroke="#d4a93c" stroke-width="7" />
+          <path d={`M${XS[2] + 176} ${G - 104} H${vault.x}`} stroke="#b48a2c" stroke-width="2" />
+          {Array.from({ length: 6 }, (_, k) => <path d={`M${XS[2] + 186 + k * 18} ${G - 104} v-14`} stroke="#b48a2c" stroke-width="1.5" />)}
+          <path d={`M${gate.x - 16} ${G - 98} V${gate.y - 18} A16 16 0 0 1 ${gate.x + 16} ${gate.y - 18} V${G - 98}`} fill="none" stroke="#ffe08a" stroke-width="5" class="gate" />
+          <path d={`M${gate.x} ${gate.y - 30} l8 4 v6 c0 6 -8 10 -8 10 c0 0 -8 -4 -8 -10 v-6z`} fill="#d4a93c" />
+          {[0, 1, 2].map((n) => <g class="coin" style={`offset-path: path('${payPath}'); animation-delay: ${n * 1.1}s`}><circle r="9" fill="#ffd54f" opacity=".35" /><circle r="5" fill="#ffd54f" /></g>)}
+        </g>
+        <g class="rise" data-on="3" style={`transform-origin: ${vault.x + vault.w / 2}px ${G}px`}>
+          <path d={`M${vault.x} ${G} V${G - 130} H${vault.x + 12} V${G - 150} H${vault.x + 30} V${vault.top} H${vault.x + vault.w - 30} V${G - 150} H${vault.x + vault.w - 12} V${G - 130} H${vault.x + vault.w} V${G}Z`} fill="#e9d9b6" stroke="#8c6d3a" stroke-opacity=".45" />
+          {[0, 1, 2, 3, 4, 5].map((k) => <rect x={vault.x + 8 + k * 21} y={G - 120} width="5" height="112" fill="#d6c193" />)}
+          <circle cx={vault.x + vault.w / 2} cy={G - 120} r="26" fill="#2d3a5c" stroke="#d4a93c" stroke-width="3" />
+          <g class="astro" style={`transform-origin: ${vault.x + vault.w / 2}px ${G - 120}px`}>
+            <circle cx={vault.x + vault.w / 2} cy={G - 120} r="19" fill="none" stroke="#ffd166" stroke-width="2" />
+            {Array.from({ length: 12 }, (_, k) => <line x1={vault.x + vault.w / 2 + Math.cos(k * 0.5236) * 7} y1={G - 120 + Math.sin(k * 0.5236) * 7} x2={vault.x + vault.w / 2 + Math.cos(k * 0.5236) * 19} y2={G - 120 + Math.sin(k * 0.5236) * 19} stroke="#ffd166" stroke-width="1.6" />)}
+          </g>
+          <circle cx={vault.x + vault.w / 2} cy={G - 122} r="4" fill="#ffd166" />
+          <path d={`M${vault.x + vault.w / 2 - 2.5} ${G - 120} h5 l2 9 h-9z`} fill="#ffd166" />
+          <rect x={vault.x + vault.w / 2 - 14} y={G - 40} width="28" height="40" rx="14" fill="#8c6d3a" />
+          <rect x={vault.x - 6} y={G - 8} width={vault.w + 12} height="8" fill="#cbb98f" />
+        </g>
+        <g class="fade" data-on="3">
+          {[140, 162, 184].map((r, k) => <path d={`M${vault.x + vault.w / 2 - r} ${G} A${r} ${r * 1.08} 0 0 1 ${vault.x + vault.w / 2 + r} ${G}`} fill="none" stroke="#ffe08a" stroke-width={3.6 - k} stroke-opacity={0.9 - k * 0.22} class="ring" style={`animation-delay: ${k * 0.5}s`} />)}
+          <g class="fade fade-out" data-on="3" data-off="4">
+          <path d="M0 -9 L5 -1 L1 0 L6 9 L-4 1 L0 0 L-5 -8Z" fill="#9b1c2c" stroke="#ff6b6b" stroke-width="1.2" class="threat" style={`offset-path: path('M${vault.x + vault.w + 120} ${G - 330} Q${vault.x + vault.w / 2 + 60} ${G - 260} ${vault.x + vault.w / 2 + 108} ${G - 168}')`} />
+          <circle cx={vault.x + vault.w / 2 + 108} cy={G - 168} r="14" fill="none" stroke="#fffbe6" stroke-width="3" class="burst" style={`transform-origin: ${vault.x + vault.w / 2 + 108}px ${G - 168}px`} />
+          <g style={`transform-origin: ${vault.x + vault.w / 2 + 108}px ${G - 168}px`} class="burst">
+            {Array.from({ length: 10 }, (_, n) => <circle cx={vault.x + vault.w / 2 + 108 + Math.cos(n * 0.628) * 16} cy={G - 168 + Math.sin(n * 0.628) * 16} r="2.4" fill="#ffd54f" />)}
+          </g>
+          </g>
+        </g>
+
+        {/* Stop 5 — intelligence: a terraced compute campus and a neural light spire. */}
+        <g class="rise" data-on="4" style={`transform-origin: ${campus.x + campus.w / 2}px ${G}px`}>
+          <rect x={campus.x} y={G - 80} width={campus.w} height="80" rx="4" fill="#4a5578" />
+          <rect x={campus.x + 22} y={G - 132} width={campus.w - 44} height="52" rx="4" fill="#56628a" />
+          {Array.from({ length: 12 }, (_, k) => <rect x={campus.x + 10 + k * 13} y={G - 72} width="9" height="62" rx="1" fill="#26304d" />)}
+          {Array.from({ length: 12 }, (_, k) => [0, 1, 2, 3, 4].map((r) => <circle cx={campus.x + 14.5 + k * 13} cy={G - 64 + r * 12} r="1.6" class="led ai" style={`animation-delay: ${((k * 5 + r) % 9) * 0.25}s`} />))}
+          {Array.from({ length: 6 }, (_, k) => <rect x={campus.x + 30 + k * 18} y={G - 124} width="12" height="36" rx="1" fill="#26304d" />)}
+          {Array.from({ length: 6 }, (_, k) => [0, 1, 2].map((r) => <circle cx={campus.x + 36 + k * 18} cy={G - 116 + r * 11} r="1.6" class="led ai" style={`animation-delay: ${((k + r) % 5) * 0.3}s`} />))}
+          {Array.from({ length: 5 }, (_, k) => <path d={`M${campus.x + 26 + k * 24} ${G - 132} l10 -14 h18 l-10 14z`} fill="#2f5d8f" stroke="#9fc3df" stroke-width=".8" />)}
+          <path d={`M${campus.x - 6} ${G - 20} H${campus.x - 18} V${G - 70} H${campus.x}`} stroke="#9fc3df" stroke-width="4" fill="none" />
+          <path d={`M${campus.x - 6} ${G - 20} H${campus.x - 18} V${G - 70} H${campus.x}`} stroke="#4fd1e8" stroke-width="2" fill="none" class="flow" />
+        </g>
+        <g class="rise" data-on="4" style={`transform-origin: ${spire.x + 14}px ${G}px`}>
+          <path d={`M${spire.x} ${G} L${spire.x + 8} ${spire.top} L${spire.x + 20} ${spire.top} L${spire.x + 28} ${G}Z`} fill="url(#spire)" />
+          {Array.from({ length: 14 }, (_, k) => <rect x={spire.x + 11} y={spire.top + 14 + k * 16} width="6" height="7" rx="1" class="win ai" data-on={4 + (k % 2)} />)}
+          <path d={`M${prism.x} ${prism.y - 14} L${prism.x + 9} ${prism.y} L${prism.x} ${prism.y + 10} L${prism.x - 9} ${prism.y}Z`} fill="#bfe8ff" />
         </g>
         <g class="fade" data-on="4">
-          <circle cx={tower.x + tower.w / 2} cy={GROUND - tower.h - 48} r="70" fill="url(#beam)" class="pulse" />
-          <circle cx={tower.x + tower.w / 2} cy={GROUND - tower.h - 48} r="5" fill="#fff3c4" />
+          {arcs.map((d) => <path d={d} fill="none" stroke="#9fd3ff" stroke-width="2.2" stroke-opacity=".55" />)}
+          {arcs.map((d, k) => <circle r="3.5" fill="#e6f6ff" class="bead" style={`offset-path: path('${d}'); animation-delay: ${k * 0.6}s`} />)}
+          {heroTops.map(([x, y], k) => <circle cx={x} cy={y} r="6" fill="#e6f6ff" class="node" style={`animation-delay: ${k * 0.6 + 1.2}s`} />)}
+          <circle cx={prism.x} cy={prism.y} r="70" fill="url(#beam)" class="pulse" />
+          {[0, 1].map((k) => (
+            <g class="drone" style={`offset-path: path('M${campus.x + 40} ${G - 160 - k * 30} C${XS[3] + 80} ${G - 300} ${XS[2] + 100} ${G - 260} ${XS[1] + 120} ${G - 200}'); animation-delay: ${k * 3}s`}>
+              <circle r="12" fill="#9fd3ff" opacity=".18" /><rect x="-8" y="-2.5" width="16" height="5" rx="2.5" fill="#ffffff" /><rect x="-12" y="-5" width="7" height="2" rx="1" fill="#ffffff" /><rect x="5" y="-5" width="7" height="2" rx="1" fill="#ffffff" /><circle r="2" cy="4" fill="#7dff9a" class="blink" />
+            </g>
+          ))}
         </g>
 
-        <g class="fade" data-on="2">{trees.filter((tr) => tr.on > 2).map((tr) => <g><rect x={tr.x - 1.5} y={GROUND - 14} width="3" height="14" fill="#6b4f3a" /><circle cx={tr.x} cy={GROUND - 14 - tr.r * 0.6} r={tr.r} fill="#5e9460" /></g>)}</g>
-
-        <g class="crane fade" data-on="0" aria-hidden="true">
-          <rect x="-3" y="-230" width="6" height="230" fill="#e0a43c" />
-          <rect x="-60" y="-230" width="130" height="6" fill="#e0a43c" />
-          <line x1="50" y1="-224" x2="50" y2="-170" stroke="#5a4a3c" stroke-width="1.5" class="hook" />
-          <rect x="41" y="-170" width="18" height="12" fill="#d99a76" class="hook" />
+        {/* Epilogue — the next construction site, lit for the night shift. */}
+        <g class="rise" data-on="5" style={`transform-origin: 1540px ${G}px`}>
+          <path d={`M1478 ${G} L1478 ${G - 40} H1602 V${G}Z`} fill="#5a6a8a" opacity=".6" />
+          {[0, 1, 2, 3, 4].map((k) => <path d={`M${1480 + k * 30} ${G} V${G - 170}`} stroke="#f2b33d" stroke-width="2.5" />)}
+          {[0, 1, 2, 3, 4, 5, 6].map((k) => <path d={`M1480 ${G - k * 28} H1600`} stroke="#f2b33d" stroke-width="2" />)}
+          {[0, 1, 2, 3].map((k) => <path d={`M${1480 + k * 30} ${G - 168} L${1510 + k * 30} ${G - 140} M${1480 + k * 30} ${G - 84} L${1510 + k * 30} ${G - 56}`} stroke="#d99a2a" stroke-width="1.5" />)}
+          <path d={`M1612 ${G} V${G - 280} M1612 ${G - 270} H1480 M1612 ${G - 270} L1640 ${G - 270} M1612 ${G - 290} L1500 ${G - 270}`} stroke="#f2b33d" stroke-width="3.5" />
+          <line x1="1520" y1={G - 270} x2="1520" y2={G - 200} stroke="#5a4a3c" stroke-width="1.5" />
+          <rect x="1508" y={G - 200} width="24" height="12" fill="#4fa3c9" />
+          {[1490, 1590].map((x) => <g><path d={`M${x} ${G - 178} l-30 -18 v36z`} fill="#fff3c4" opacity=".25" /><circle cx={x} cy={G - 178} r="16" fill="url(#lantern)" /><circle cx={x} cy={G - 178} r="3.5" fill="#fffbe6" /></g>)}
+        </g>
+        <g class="fade" data-on="5">
+          {[[300, 110, '#ffd180'], [1040, 90, '#ff8a80'], [1260, 150, '#80d8ff']].map(([x, y, c], k) => (
+            <g class="firework" style={`transform-origin: ${x}px ${y}px; animation-delay: ${k * 0.8}s`}>
+              {Array.from({ length: 16 }, (_, n) => <circle cx={(x as number) + Math.cos((n / 16) * Math.PI * 2) * 34} cy={(y as number) + Math.sin((n / 16) * Math.PI * 2) * 34} r="2.2" fill={c as string} />)}
+              {Array.from({ length: 8 }, (_, n) => <circle cx={(x as number) + Math.cos((n / 8) * Math.PI * 2 + 0.4) * 18} cy={(y as number) + Math.sin((n / 8) * Math.PI * 2 + 0.4) * 18} r="1.6" fill="#fff" />)}
+            </g>
+          ))}
+          <path d="M200 -120 l120 60" stroke="#fff" stroke-width="2" stroke-linecap="round" class="shoot" />
         </g>
 
-        <rect x="-400" y={GROUND} width="2400" height={640 - GROUND + 10} fill="#7fae7c" />
-        <rect x="-400" y={GROUND + 4} width="2400" height="18" fill="#9a9a9a" class="fade" data-on="1" />
-        <g class="fade" data-on="1">{Array.from({ length: 50 }, (_, k) => <rect x={-380 + k * 50} y={GROUND + 12} width="22" height="2" fill="#f3f3f3" />)}</g>
+        <g class="fade" data-on="2">{trees.filter((tr) => tr.on >= 2).map((tr) => <g><rect x={tr.x - 1.5} y={G - 14} width="3" height="14" fill="#6b4f3a" /><circle cx={tr.x} cy={G - 14 - tr.r * 0.6} r={tr.r} fill="#5e9460" /></g>)}</g>
+
+        <g class="terrain">
+          <rect x="-400" y={G} width="2400" height="32" fill="#7fae7c" />
+          <rect x="-400" y={G + 70} width="2400" height="2400" fill="url(#river)" />
+          {Array.from({ length: 40 }, (_, k) => <rect x={-380 + k * 60} y={G + 90 + (k % 3) * 18} width="26" height="2" rx="1" fill="#fff" opacity=".35" class="shimmer" style={`animation-delay: ${(k % 5) * 0.4}s`} />)}
+        </g>
+        <g class="fade" data-on="4">{reflections.map((r) => <rect x={r.x} y={r.y} width={r.w} height="2" rx="1" fill="#ffd98a" opacity=".5" class="shimmer" />)}</g>
+        <g class="terrain">
+          <rect x="-400" y={G + 36} width="2400" height="36" fill="#b7a58c" />
+          {arches.map((x) => <path d={`M${x} ${G + 72} V${G + 60} A22 18 0 0 1 ${x + 44} ${G + 60} V${G + 72}Z`} fill="#55819e" />)}
+          {arches.map((x) => <path d={`M${x - 13} ${G + 40} V${G + 72}`} stroke="#9c8b72" stroke-width="1" />)}
+        </g>
+        <rect x="-400" y={G + 4} width="2400" height="18" fill="#9a9a9a" class="fade" data-on="1" />
+        <g class="fade" data-on="1">{Array.from({ length: 50 }, (_, k) => <rect x={-380 + k * 50} y={G + 12} width="22" height="2" fill="#f3f3f3" />)}</g>
+        <g class="fade fade-out" data-on="0" data-off="1">
+          <path d={`M${XS[0] + 46} ${G} L${XS[0] + 56} ${G + 9} H${XS[0] + 66} L${XS[0] + 74} ${G + 18} H${XS[0] + 178} L${XS[0] + 186} ${G + 9} H${XS[0] + 196} L${XS[0] + 206} ${G}Z`} fill="#8a6244" />
+          <path d={`M${XS[0] + 56} ${G + 9} H${XS[0] + 196} M${XS[0] + 74} ${G + 18} H${XS[0] + 178}`} stroke="#6b4a33" stroke-width="1.5" />
+          {[0, 1, 2, 3].map((k) => <rect x={XS[0] + 73 + k * 32} y={G} width="10" height="22" fill="#c9c3b8" />)}
+        </g>
+        <g class="fade" data-on="1">
+          {fibres.map((f) => <path d={f.d} fill="none" stroke={f.c} stroke-width="3" stroke-linecap="round" />)}
+          {Array.from({ length: 24 }, (_, k) => <rect x={XS[0] + 120 + k * 52} y={G + 37} width="3" height="18" fill="#6b5a46" />)}
+          {fibres.map((f, k) => [0, 1, 2].map((n) => <circle r="3.5" fill="#fff" class="packet" style={`offset-path: path('${f.d}'); animation-delay: ${k * 0.6 + n * 1.6}s; --c: ${f.c}`} />))}
+        </g>
         <g class="cars fade" data-on="2">
-          <g class="car" style="--d:22s"><rect x="0" y={GROUND + 5} width="22" height="9" rx="3" fill="#e07a5f" /><rect x="5" y={GROUND + 1} width="12" height="6" rx="2" fill="#f2c4b4" /></g>
-          <g class="car rev" style="--d:28s"><rect x="0" y={GROUND + 9} width="22" height="9" rx="3" fill="#5b8bd9" /><rect x="5" y={GROUND + 5} width="12" height="6" rx="2" fill="#c9daf5" /></g>
-          <g class="car" style="--d:35s;--o:-12s"><rect x="0" y={GROUND + 5} width="26" height="9" rx="3" fill="#f2c14e" /></g>
-        </g>
-        <g>{lamps.map((l) => <g class="fade" data-on={l.on}><rect x={l.x} y={GROUND - 34} width="2" height="34" fill="#5a4a3c" /><circle cx={l.x + 1} cy={GROUND - 36} r="3" class="lamp" /><circle cx={l.x + 1} cy={GROUND - 36} r="14" fill="url(#lampglow)" class="fade" data-on="3" /></g>)}</g>
-
-        <rect x="-400" y={GROUND + 30} width="2400" height="4" fill="#6b4f3a" />
-        {sleepers.map((x) => <rect x={x} y={GROUND + 28} width="9" height="10" rx="1" fill="#8a6a50" opacity=".6" />)}
-        <rect x="-400" y={GROUND + 38} width="2400" height="3" fill="#6b4f3a" />
-
-        <g class="route-line fade-out" data-off="0">
-          <path d={`M${XS[0]} ${GROUND - 60} H${XS[4]}`} fill="none" stroke="#c8553d" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round" />
-          {XS.map((x, i) => <g><circle cx={x} cy={GROUND - 60} r="14" fill="#fff" stroke="#c8553d" stroke-width="4" /><text x={x} y={GROUND - 54} class="route-num">{i + 1}</text></g>)}
+          <g class="car" style="--d:22s"><rect x="0" y={G + 5} width="22" height="9" rx="3" fill="#e07a5f" /><rect x="5" y={G + 1} width="12" height="6" rx="2" fill="#f2c4b4" /></g>
+          <g class="car rev" style="--d:28s"><rect x="0" y={G + 9} width="22" height="9" rx="3" fill="#5b8bd9" /><rect x="5" y={G + 5} width="12" height="6" rx="2" fill="#c9daf5" /></g>
+          <g class="car" style="--d:35s;--o:-12s"><rect x="0" y={G + 5} width="26" height="9" rx="3" fill="#f2c14e" /></g>
         </g>
 
+        <rect x="-400" y={G + 30} width="2400" height="4" fill="#6b4f3a" />
+        {sleepers.map((x) => <rect x={x} y={G + 28} width="9" height="9" rx="1" fill="#8a6a50" opacity=".7" />)}
+
+        <g>
+          <rect x="20" y={G - 40} width="70" height="40" rx="3" fill="#c98f6b" />
+          <path d={`M14 ${G - 40} L55 ${G - 64} L96 ${G - 40}Z`} fill="#8c4f3a" />
+          <rect x="44" y={G - 26} width="20" height="26" rx="2" fill="#5a3a2c" />
+          <circle cx="76" cy={G - 26} r="4" fill="#ffd98a" />
+        </g>
         {stops.map((s, i) => (
-          <g>
-            <rect x={XS[i] - 36} y={GROUND + 24} width="72" height="5" rx="2" fill="#e9dcc3" />
-            <rect x={XS[i] - 40} y={GROUND + 50} width="80" height="22" rx="5" class="sign" />
-            <text x={XS[i]} y={GROUND + 65} class="sign-text">{short[s.slug][lang]}</text>
+          <g class="fade" data-on="0">
+            <rect x={XS[i] - 46} y={G + 42} width="92" height="24" rx="4" class="sign" />
+            <text x={XS[i]} y={G + 58.5} class="sign-text">{short[s.slug][lang]}</text>
           </g>
         ))}
 
@@ -198,6 +409,7 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
           <g class="smoke"><circle cx="30" cy="-48" r="7" /><circle cx="36" cy="-60" r="10" /><circle cx="44" cy="-74" r="13" /></g>
           <rect x="-130" y="-32" width="50" height="26" rx="4" fill="#f3e3c3" stroke="#5a4a3c" stroke-opacity=".4" />
           <rect x="-122" y="-26" width="12" height="9" rx="1" class="cabin-win" /><rect x="-102" y="-26" width="12" height="9" rx="1" class="cabin-win" />
+          <g class="fade" data-on="1"><rect x="-124" y="-50" width="34" height="18" rx="2" fill="#2f4a68" stroke="#9fc3df" stroke-width="1" />{[0, 1, 2].map((r) => <g><rect x="-120" y={-47 + r * 5} width="26" height="3" rx="1" fill="#1d2c40" /><circle cx="-97" cy={-45.5 + r * 5} r="1.2" class="led" /></g>)}</g>
           <rect x="-74" y="-32" width="50" height="26" rx="4" fill="#8fb8b2" stroke="#5a4a3c" stroke-opacity=".4" />
           <rect x="-66" y="-26" width="12" height="9" rx="1" class="cabin-win" /><rect x="-46" y="-26" width="12" height="9" rx="1" class="cabin-win" />
           <rect x="-16" y="-36" width="58" height="30" rx="5" fill="#c8553d" />
@@ -205,6 +417,7 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
           <rect x="-9" y="-48" width="13" height="9" rx="1" class="cabin-win" />
           <rect x="24" y="-50" width="9" height="15" fill="#3d3d3d" />
           <circle cx="44" cy="-18" r="4" fill="#ffe08a" />
+          <path d="M46 -18 L96 -28 V-8Z" fill="#ffe08a" opacity=".16" class="fade" data-on="4" />
           {[-118, -92, -62, -36, -4, 26].map((cx) => <circle cx={cx} cy="-4" r="6" fill="#3d3d3d" />)}
         </g>
       </svg>
@@ -214,6 +427,7 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
           <p class="label">{t(storyUi.route)}</p>
           <h3>{t(storyUi.title)}</h3>
           <p class="line">{t(storyUi.routeHint)}</p>
+          <ol class="route-list">{stops.map((s, i) => <li><b>{i + 1}</b>{short[s.slug][lang]}<span>{s.exp.period.slice(0, 4)}</span></li>)}</ol>
         </div>
         {stops.map((s, i) => (
           <div class="bubble" data-bubble={i}>
@@ -224,7 +438,7 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
             {s.skills.length > 0 && (
               <div class="new">
                 <span>{t(storyUi.newSkills)}</span>
-                <div class="chips">{s.skills.slice(0, 8).map((k) => <span class="chip">{k}</span>)}{s.skills.length > 8 && <span class="chip more">+{s.skills.length - 8}</span>}</div>
+                <div class="chips">{s.skills.slice(0, 5).map((k) => <span class="chip">{k}</span>)}{s.skills.length > 5 && <span class="chip more">+{s.skills.length - 5}</span>}</div>
               </div>
             )}
           </div>
@@ -247,34 +461,33 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
     const svg = root.querySelector('svg')!;
     const track = root.querySelector<HTMLElement>('.track')!;
     const train = root.querySelector<SVGGElement>('.train')!;
-    const crane = root.querySelector<SVGGElement>('.crane')!;
     const lit = [...svg.querySelectorAll<SVGElement>('[data-on]')];
     const dark = [...svg.querySelectorAll<SVGElement>('[data-off]')];
     const bubbles = [...root.querySelectorAll<HTMLElement>('[data-bubble]')];
     const jumps = [...root.querySelectorAll<HTMLButtonElement>('[data-jump]')];
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const XS = [190, 490, 790, 1090, 1400];
-    const GROUND = 540;
-    const trainX = [-160, ...XS, 1560];
-    const craneX = [XS[0] + 60, XS[1] + 40, XS[2] + 90, XS[3] + 110, XS[4] + 110, XS[4] + 110];
+    const XS = [200, 500, 800, 1100, 1380];
+    const HERO = [250, 560, 860, 1140, 1390];
+    const G = 540;
+    const trainX = [60, ...XS, 1470];
     let stage = -2;
 
-    // Keyframes: bird's-eye route map, five stations up close, then the finished city from afar.
+    // Keyframes: the route from afar, each stop with its set-piece kept clear of the text bubble, then the city from afar.
     const cams = () => {
       const narrow = innerWidth < innerHeight;
-      const close = narrow ? 470 : 820;
-      const wide = { cx: narrow ? 860 : 800, w: narrow ? 1150 : 1750 };
-      return [wide, ...XS.map((x, i) => ({ cx: x + (i === 4 ? 70 : 20), w: close })), wide];
+      const close = narrow ? 300 : 780;
+      const shift = narrow ? 0 : close * 0.16;
+      const wide = narrow ? { cx: 820, w: 760 } : { cx: 780, w: 1700 };
+      return [wide, ...HERO.map((x) => ({ cx: x - shift, w: close })), narrow ? { cx: 1250, w: 720 } : { cx: 840, w: 1720 }];
     };
     const ease = (f: number) => { const g = Math.min(1, Math.max(0, (f - 0.3) / 0.55)); return g * g * (3 - 2 * g); };
 
     const setStage = (s: number) => {
       if (s === stage) return;
       stage = s;
+      svg.dataset.tod = String(Math.max(0, Math.min(4, s)));
       lit.forEach((el) => el.classList.toggle('on', Number(el.dataset.on) <= s));
       dark.forEach((el) => el.classList.toggle('gone', Number(el.dataset.off) <= s));
-      crane.style.transform = `translate(${craneX[Math.max(0, s)]}px, ${GROUND}px)`;
-      crane.classList.toggle('done', s >= 5);
       jumps.forEach((b, i) => { b.classList.toggle('passed', i < s); b.classList.toggle('here', i === s); b.setAttribute('aria-current', String(i === s)); });
       if (s >= 0) dispatchEvent(new CustomEvent('bgm:chapter', { detail: s }));
     };
@@ -293,10 +506,13 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
       const a = c[i], b = c[Math.min(6, i + 1)];
       const cx = a.cx + (b.cx - a.cx) * e;
       const w = a.w + (b.w - a.w) * e;
-      const h = w * innerHeight / innerWidth;
-      svg.setAttribute('viewBox', `${(cx - w / 2).toFixed(1)} ${(GROUND + 110 - h).toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
+      const h = w * svg.clientHeight / Math.max(1, svg.clientWidth);
+      // Bottom edge sits in the river so station plaques clear the route-map overlay.
+      // Phones: pin the skyline just under the text card; desktop: keep the river at the bottom edge.
+      const top = innerWidth < innerHeight ? (G - 275) - 0.3 * h : G + 130 + w * 0.03 - h;
+      svg.setAttribute('viewBox', `${(cx - w / 2).toFixed(1)} ${top.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`);
       const tx = trainX[i] + (trainX[Math.min(6, i + 1)] - trainX[i]) * e;
-      train.style.transform = `translate(${tx.toFixed(1)}px, ${GROUND + 30}px)`;
+      train.style.transform = `translate(${tx.toFixed(1)}px, ${G + 30}px)`;
       setStage(Math.min(5, Math.floor(k - 0.35)));
       const near = Math.round(k);
       bubbles.forEach((el) => el.classList.toggle('show', Number(el.dataset.bubble) === near - 1 && Math.abs(k - near) < 0.32));
@@ -304,8 +520,7 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
 
     jumps.forEach((b) => b.addEventListener('click', () => {
       const { r, span } = progress();
-      const top = scrollY + r.top + (Number(b.dataset.jump) / 6) * span;
-      scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+      scrollTo({ top: scrollY + r.top + (Number(b.dataset.jump) / 6) * span, behavior: reduce ? 'auto' : 'smooth' });
     }));
 
     let raf = 0;
@@ -327,47 +542,83 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
   .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
   svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
+  .terrain { transition: filter 1.4s ease; }
+  svg[data-tod="0"] .terrain { filter: sepia(.25) saturate(1.1) brightness(1.02); }
+  svg[data-tod="3"] .terrain { filter: sepia(.35) saturate(1.15) brightness(.92) hue-rotate(-8deg); }
+  svg[data-tod="4"] .terrain { filter: brightness(.42) saturate(.75) hue-rotate(12deg); }
+
   .fade { opacity: 0; transition: opacity 1.2s ease; }
   .fade.on { opacity: 1; }
   .fade-out { transition: opacity 1.2s ease; }
   .fade-out.gone { opacity: 0; }
-  .rise { transform: scaleY(0); transition: transform 1s cubic-bezier(.2, .9, .3, 1.25); }
+  .rise { transform: scaleY(0); transition: transform 1s cubic-bezier(.2, .9, .3, 1.2); }
   .rise.on { transform: scaleY(1); }
   .win { fill: #5d6b85; opacity: .35; transition: fill .6s, opacity .6s; }
   .win.on { fill: #ffd98a; opacity: 1; }
+  .far-bld { fill: #c9d3e2; opacity: .5; transition: fill 1.4s; }
+  svg[data-tod="3"] .far-bld { fill: #d9b8a8; }
+  svg[data-tod="4"] .far-bld { fill: #34406a; opacity: .85; }
+  .win.far { opacity: 0; }
+  .win.far.on { opacity: .9; }
   .win.ai.on { fill: #9fd3ff; }
-  .screen { fill: #e07a5f; animation: screen 4s steps(1) infinite; }
-  .lamp { fill: #ffe6a0; }
-  .ai-label { fill: #9fd3ff; font: 700 13px var(--mono); text-anchor: middle; }
+  .led { fill: #7dff9a; animation: blink 1.6s steps(1) infinite; }
+  .led.ai { fill: #9fd3ff; }
+  .tile { fill: #e07a5f; animation: tile 3s steps(1) infinite; }
+  .bulb { fill: #ffe08a; animation: blink 1.2s steps(1) infinite; }
+  .pin-label { font: 700 14px var(--font); fill: #4a3a2a; text-anchor: middle; }
+  .gate { filter: drop-shadow(0 0 6px #ffe08a); }
+  .burst { animation: burst 5s ease-out infinite; }
+  .bead { filter: drop-shadow(0 0 4px #9fd3ff); animation: along 2.6s ease-in infinite; }
+  .node { animation: node 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
   .route-num { fill: #c8553d; font: 700 16px var(--font); text-anchor: middle; }
-  .cloud { fill: #fff; opacity: .8; animation: drift var(--d) linear infinite; animation-delay: var(--o, 0s); }
+  .cloud { fill: #fff; opacity: .85; animation: drift var(--d) linear infinite; animation-delay: var(--o, 0s); transition: opacity 1.4s; }
+  svg[data-tod="4"] .cloud { opacity: .18; }
+  .route-list { display: none; list-style: none; margin: 10px 0 0; padding: 0; gap: 4px; text-align: left; }
+  .route-list li { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .route-list b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #c8553d; color: #fff; font: 700 11px var(--font); }
+  .route-list span { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
   .twinkle { animation: twinkle 3s ease-in-out infinite; }
   .twinkle:nth-child(3n) { animation-delay: 1s; }
   .twinkle:nth-child(4n) { animation-delay: 2s; }
   .pulse { transform-box: fill-box; transform-origin: center; animation: pulse 2.4s ease-in-out infinite; }
   .blink { animation: blink 1.4s steps(1) infinite; }
-  .balloon { animation: float 9s ease-in-out infinite; }
+  .wave { animation: wave 2s ease-out infinite; }
+  .spin { animation: spin 5s linear infinite; }
+  .spin-slow { animation: spin 40s linear infinite; }
+  .astro { animation: spin 14s linear infinite; }
+  .hoist { animation: hoist 4s ease-in-out infinite; }
+  .float-up { animation: floatup 4.4s ease-out infinite; }
+  .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); }
+  .fade.on .draw { animation: draw 2.4s ease-out forwards; }
+  .packet { filter: drop-shadow(0 0 4px var(--c)); animation: along 4.2s linear infinite; }
+  .card { animation: along 4.4s ease-in-out infinite; }
+  .coin { fill: #ffd54f; filter: drop-shadow(0 0 4px #ffd54f); animation: along 3.2s linear infinite; }
+  .ring { animation: ring 3.2s ease-in-out infinite; }
+  .threat { animation: threat 5s ease-in infinite; }
+  .ripple { transform-box: fill-box; transform-origin: center; animation: ripple 5s ease-out infinite; }
+  .arc { stroke-dasharray: 6 8; animation: dash 1.4s linear infinite; }
+  .flow { stroke-dasharray: 14 6; animation: dash 1.2s linear infinite; }
+  .drone { animation: along 10s ease-in-out infinite alternate; }
+  .aurora { animation: aurora 12s ease-in-out infinite alternate; }
+  .firework { animation: firework 2.6s ease-out infinite; }
+  .shoot { animation: shoot 5s ease-in infinite; }
+  .shimmer { animation: shimmer 3s ease-in-out infinite; }
   .car { animation: drive var(--d) linear infinite; animation-delay: var(--o, 0s); }
   .car.rev { animation-direction: reverse; }
-  .crane { transition: transform 1.4s ease, opacity 1s ease; }
-  .crane.done { opacity: 0; }
-  .hook { animation: hoist 3s ease-in-out infinite; }
-  .sign { fill: #fffaf0; stroke: #5a4a3c; stroke-opacity: .35; }
-  .sign-text { font: 600 13px var(--font); fill: #3d342b; text-anchor: middle; }
+  .sign { fill: #f6e7c8; stroke: #8c6d3a; stroke-width: 1.5; }
+  .sign-text { font: 700 14px var(--font); fill: #4a3a2a; text-anchor: middle; }
   .cabin-win { fill: #ffe9b0; }
   .smoke circle { fill: #fff; opacity: .7; animation: puff 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
   .smoke circle:nth-child(2) { animation-delay: .5s; }
   .smoke circle:nth-child(3) { animation-delay: 1s; }
 
   .bubbles { position: absolute; inset: 0; pointer-events: none; }
-  .bubble { position: absolute; top: max(84px, 12vh); left: max(24px, calc(50vw - 440px)); width: min(440px, calc(100vw - 48px)); padding: 18px 20px;
-    border-radius: 18px; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line);
+  .bubble { position: absolute; top: max(84px, 11vh); left: max(24px, 5vw); width: min(400px, calc(100vw - 48px)); padding: 18px 20px;
+    border-radius: 18px; background: color-mix(in srgb, var(--surface) 93%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line);
     box-shadow: 0 20px 40px -24px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(14px) scale(.97); transition: opacity .45s ease, transform .45s ease; }
-  .bubble::after { content: ''; position: absolute; left: 36px; bottom: -9px; width: 16px; height: 16px; background: inherit; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transform: rotate(45deg); }
   .bubble.show { opacity: 1; transform: none; }
   .bubble.epilogue, .bubble.intro { left: 50%; transform: translate(-50%, 14px) scale(.97); text-align: center; }
   .bubble.epilogue.show, .bubble.intro.show { transform: translate(-50%, 0); }
-  .bubble.epilogue::after, .bubble.intro::after { left: calc(50% - 8px); }
   .label { margin: 0; font: 12px var(--mono); color: var(--accent); }
   .bubble h3 { margin: 4px 0 2px; font-size: clamp(20px, 2.6vw, 26px); }
   .where { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
@@ -382,7 +633,7 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
     background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); box-shadow: 0 10px 30px -20px rgba(0, 0, 0, .5); }
   .route ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; }
   .route li { display: flex; align-items: center; }
-  .route li + li::before { content: ''; width: clamp(14px, 3vw, 40px); height: 3px; border-radius: 2px; background: var(--line); }
+  .route li + li::before { content: ''; width: clamp(12px, 3vw, 40px); height: 3px; border-radius: 2px; background: var(--line); }
   .route button { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 0; background: none; color: var(--muted); font: 12px var(--font); cursor: pointer; border-radius: 999px; }
   .route button:hover, .route button:focus-visible { color: var(--text); }
   .route button i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #c8553d; background: var(--surface); transition: background .3s, transform .3s; }
@@ -394,24 +645,44 @@ const routeStops = [...stops.map((s) => short[s.slug][lang]), t(storyUi.end)];
   @keyframes drive { from { transform: translateX(-400px); } to { transform: translateX(2000px); } }
   @keyframes twinkle { 50% { opacity: .3; } }
   @keyframes pulse { 50% { transform: scale(1.25); opacity: .6; } }
-  @keyframes hoist { 50% { transform: translateY(20px); } }
   @keyframes blink { 50% { opacity: .2; } }
-  @keyframes float { 50% { transform: translateY(-16px); } }
-  @keyframes screen { 33% { fill: #5b8bd9; } 66% { fill: #f2c14e; } }
+  @keyframes wave { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes hoist { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(26px); } }
+  @keyframes floatup { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(-60px); opacity: 0; } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes along { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+  @keyframes tile { 33% { fill: #5b8bd9; } 66% { fill: #f2c14e; } }
+  @keyframes ring { 50% { stroke-opacity: .25; } }
+  @keyframes threat { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 50% { offset-distance: 100%; opacity: 1; } 56%, 100% { offset-distance: 100%; opacity: 0; } }
+  @keyframes ripple { 0%, 55% { transform: scale(.2); opacity: 0; } 60% { opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+  @keyframes dash { to { stroke-dashoffset: -28; } }
+  @keyframes burst { 0%, 50% { transform: scale(.2); opacity: 0; } 54% { opacity: 1; } 85% { opacity: .9; } 100% { transform: scale(1.8); opacity: 0; } }
+  @keyframes node { 0%, 100% { opacity: .5; transform: scale(.8); } 40% { opacity: 1; transform: scale(1.4); } }
+  @keyframes aurora { from { transform: translateX(-40px) skewX(-3deg); opacity: .7; } to { transform: translateX(40px) skewX(3deg); opacity: 1; } }
+  @keyframes firework { 0% { transform: scale(.1); opacity: 0; } 20% { opacity: 1; } 70% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.1); opacity: 0; } }
+  @keyframes shoot { 0%, 80% { transform: translate(0, 0); opacity: 0; } 85% { opacity: 1; } 100% { transform: translate(400px, 200px); opacity: 0; } }
+  @keyframes shimmer { 50% { opacity: .1; } }
   @keyframes puff { from { transform: translateY(8px) scale(.5); opacity: .8; } to { transform: translateY(-18px) scale(1.4); opacity: 0; } }
 
   @media (max-width: 720px) {
-    .bubble { top: 72px; left: 12px; width: calc(100vw - 24px); padding: 14px 16px; }
-    .bubble::after { display: none; }
+    .pins { display: none; }
+    .bubble { top: 64px; left: 12px; width: calc(100vw - 24px); padding: 12px 14px; }
+    .route-list { display: grid; }
+    .bubble h3 { font-size: 20px; }
+    .bubble .line { font-size: 14px; }
+    .bubble .new { display: none; }
     .bubble.epilogue, .bubble.intro { left: 12px; transform: translateY(14px) scale(.97); }
     .bubble.epilogue.show, .bubble.intro.show { transform: none; }
-    .route { left: 12px; bottom: 16px; transform: none; padding: 6px 8px; }
+    .route { left: 12px; right: 72px; bottom: 16px; transform: none; padding: 6px 8px; }
+    .route ol { justify-content: space-between; }
     .route button span { display: none; }
     .route button.here span { display: inline; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .fade, .fade-out, .rise, .win, .crane, .bubble, .route button i { transition: none; }
-    .cloud, .twinkle, .pulse, .hook, .smoke circle, .blink, .balloon, .car, .screen { animation: none; }
-    .smoke, .cars { display: none; }
+    .terrain, .fade, .fade-out, .rise, .win, .bubble, .route button i { transition: none; }
+    .bulb, .burst, .bead, .node, .cloud, .twinkle, .pulse, .hoist, .smoke circle, .blink, .car, .tile, .wave, .spin, .spin-slow, .astro, .float-up, .packet, .card, .coin, .ring, .threat, .ripple, .arc, .flow, .drone, .aurora, .firework, .shoot, .shimmer, .led { animation: none; }
+    .fade.on .draw { animation: none; stroke-dashoffset: 0; }
+    .smoke, .cars, .packet, .card, .coin, .threat, .ripple, .drone, .float-up, .firework, .shoot { display: none; }
   }
 </style>
