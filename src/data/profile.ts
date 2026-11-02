@@ -8,21 +8,23 @@ export const profile = {
     zh: '雲原生平台架構師・SRE',
     en: 'Cloud-Native Platform Architect · SRE',
   } as T,
-  location: { zh: '台灣・桃園／台北／新竹', en: 'Taoyuan / Taipei / Hsinchu, Taiwan' } as T,
+  location: { zh: '台灣・台北／新竹／桃園', en: 'Taipei / Hsinchu / Taoyuan, Taiwan' } as T,
+  workMode: { zh: '可全遠端或混合辦公', en: 'Open to remote or hybrid' } as T,
   // Keywords cycled by the typing effect.
   typing: {
-    zh: ['設計雲原生私有雲', '用 GitOps 交付平台', '打造 AI 基礎設施', '讓系統穩定運行'],
-    en: ['architecting private cloud', 'shipping platforms with GitOps', 'building AI infrastructure', 'keeping systems reliable'],
+    zh: ['設計雲原生私有雲', '用 AI Agent 加速交付', '用 GitOps 交付平台', '打造 AI 基礎設施', '讓系統穩定運行'],
+    en: ['architecting private cloud', 'shipping faster with AI agents', 'shipping platforms with GitOps', 'building AI infrastructure', 'keeping systems reliable'],
   } as Record<Lang, string[]>,
   intro: {
     zh: '現在設計雲原生私有雲與 AI 基礎設施；之前做過網銀 SRE、社群影音推薦系統與 MEC 邊緣運算平台，累積 7 年軟體與基礎設施經驗。',
     en: 'Architecting cloud-native private cloud and AI infrastructure — previously online banking SRE, social video recommendation and MEC edge platforms, across 7+ years in software and infrastructure.',
   } as T,
   highlights: [
-    { title: { zh: '帶領團隊', en: 'Leads teams' } as T, text: { zh: '在國泰世華帶領 5–8 人維運網銀關鍵服務；在 MetaMEC 主導專案，分派 3–5 位工程師。', en: 'Led 5–8 engineers running critical online-banking services at Cathay United Bank; leads projects with 3–5 engineers at MetaMEC.' } as T },
-    { title: { zh: '銀行等級的穩定', en: 'Banking-grade reliability' } as T, text: { zh: '負責國泰世華 CUBE 網銀與行動銀行背後的關鍵 gateway。', en: "Ran the critical gateway behind Cathay United Bank's CUBE online and mobile banking." } as T },
-    { title: { zh: '把技術做成產品', en: 'Turns tech into products' } as T, text: { zh: '把 MEC 邊緣運算平台做成可銷售的商品；交付私有雲平台給企業客戶。', en: 'Took a MEC edge platform to market; delivers private cloud platforms to enterprise customers.' } as T },
-    { title: { zh: '面對客戶', en: 'Customer-facing' } as T, text: { zh: '擔任企業客戶的技術窗口，支援 POC 與技術提案。', en: 'Technical point of contact for enterprise POCs and proposals.' } as T },
+    { icon: 'team', title: { zh: '帶領團隊', en: 'Leads teams' } as T, text: { zh: '在國泰世華帶領 5–8 人維運網銀關鍵服務；在 MetaMEC 主導專案，分派 3–5 位工程師。', en: 'Led 5–8 engineers running critical online-banking services at Cathay United Bank; leads projects with 3–5 engineers at MetaMEC.' } as T },
+    { icon: 'spark', title: { zh: '與時俱進的 AI 工作流', en: 'AI-native engineering' } as T, text: { zh: '在 MetaMEC 導入 AI Agent（Claude Code、Codex）協作開發與審查，讓小團隊交付更快、品質更穩。', en: 'Brought AI agents (Claude Code, Codex) into development and review at MetaMEC, so a small team ships faster with steadier quality.' } as T },
+    { icon: 'shield', title: { zh: '銀行等級的穩定', en: 'Banking-grade reliability' } as T, text: { zh: '負責國泰世華 CUBE 網銀與行動銀行背後的關鍵 gateway。', en: "Ran the critical gateway behind Cathay United Bank's CUBE online and mobile banking." } as T },
+    { icon: 'box', title: { zh: '把技術做成產品', en: 'Turns tech into products' } as T, text: { zh: '把 MEC 邊緣運算平台做成可銷售的商品；交付私有雲平台給企業客戶。', en: 'Took a MEC edge platform to market; delivers private cloud platforms to enterprise customers.' } as T },
+    { icon: 'handshake', title: { zh: '面對客戶', en: 'Customer-facing' } as T, text: { zh: '擔任企業客戶的技術窗口，支援 POC 與技術提案。', en: 'Technical point of contact for enterprise POCs and proposals.' } as T },
   ],
   stats: [
     { value: '7+', label: { zh: '年開發經驗', en: 'years building software' } as T },
@@ -43,10 +45,10 @@ export const profile = {
       current: true,
       team: { zh: '帶領 3–5 人專案小組', en: 'Leads a 3–5 engineer project squad' } as T,
       points: {
-        zh: ['設計 Kubernetes 私有雲與 AI 平台架構', '主導專案，規劃並分派任務給 3–5 位工程師', '擔任企業客戶技術窗口，支援 POC 與提案'],
-        en: ['Architect the Kubernetes private cloud and AI platform', 'Lead projects; plan and assign work for 3–5 engineers', 'Technical point of contact for enterprise customers, POCs and proposals'],
+        zh: ['設計 Kubernetes 私有雲與 AI 平台架構', '導入 AI Agent 工作流（Claude Code、Codex），從規格、開票到 code review 加速交付', '主導專案，規劃並分派任務給 3–5 位工程師', '擔任企業客戶技術窗口，支援 POC 與提案'],
+        en: ['Architect the Kubernetes private cloud and AI platform', 'Introduced AI-agent workflows (Claude Code, Codex) from spec and ticketing to code review', 'Lead projects; plan and assign work for 3–5 engineers', 'Technical point of contact for enterprise customers, POCs and proposals'],
       } as Record<Lang, string[]>,
-      tags: ['Kubernetes', 'ArgoCD', 'Ceph', 'Harbor', 'Keycloak', 'OpenBao', 'OpenTelemetry'],
+      tags: ['Kubernetes', 'ArgoCD', 'Ceph', 'Keycloak', 'OpenBao', 'OpenTelemetry', 'AI Agents'],
     },
     {
       slug: 'cathay',
@@ -95,14 +97,14 @@ export const profile = {
     },
   ],
   skills: [
-    { group: { zh: '雲端架構', en: 'Cloud Architecture' } as T, items: ['Kubernetes', 'Private Cloud', 'Hybrid Cloud', 'OpenShift', 'AWS', 'GCP', 'Azure'] },
-    { group: { zh: 'GitOps 與 IaC', en: 'GitOps & IaC' } as T, items: ['ArgoCD', 'ApplicationSet', 'Helm', 'Kustomize', 'Terraform', 'Ansible', 'GitLab CI'] },
-    { group: { zh: 'AI 基礎設施', en: 'AI Infrastructure' } as T, items: ['GPU Scheduling', 'NVIDIA GPU Operator', 'AI Platform on Kubernetes', 'High-Performance Networking'] },
+    { group: { zh: '雲端架構', en: 'Cloud Architecture' } as T, items: ['Kubernetes', 'Docker', 'Private Cloud', 'Hybrid Cloud', 'OpenShift', 'AWS', 'GCP', 'Azure'] },
+    { group: { zh: 'GitOps 與 IaC', en: 'GitOps & IaC' } as T, items: ['CI/CD', 'ArgoCD', 'ApplicationSet', 'Helm', 'Kustomize', 'Terraform', 'Ansible', 'GitLab CI'] },
+    { group: { zh: 'AI 工作流與基礎設施', en: 'AI Workflow & Infrastructure' } as T, items: ['AI Agent Workflow', 'Claude Code / Codex', 'AI Platform on Kubernetes', 'GPU Scheduling', 'NVIDIA GPU Operator', 'High-Performance Networking', 'Model Training (PyTorch, YOLO)'] },
     { group: { zh: '虛擬化與儲存', en: 'Virtualization & Storage' } as T, items: ['KVM', 'VM HA Cluster', 'Ceph', 'Harbor'] },
-    { group: { zh: '安全與身分', en: 'Security & Identity' } as T, items: ['Keycloak', 'Dex SSO', 'OpenBao', 'cert-manager / PKI', 'DevSecOps'] },
-    { group: { zh: '可觀測性', en: 'Observability' } as T, items: ['OpenTelemetry', 'Prometheus', 'Grafana', 'Logs / Metrics / Traces'] },
-    { group: { zh: '後端開發', en: 'Backend' } as T, items: ['Go', 'Java', 'Spring Boot', 'Python', 'C#', 'ASP.NET Core', 'Kong Gateway', 'DDD'] },
-    { group: { zh: '資料與訊息', en: 'Data & Messaging' } as T, items: ['PostgreSQL', 'Redis', 'Elasticsearch', 'Bigtable', 'Spanner', 'MongoDB', 'Pub/Sub'] },
+    { group: { zh: '安全與身分', en: 'Security & Identity' } as T, items: ['DevSecOps', 'RBAC', 'Keycloak', 'Dex SSO', 'OpenBao', 'cert-manager / PKI'] },
+    { group: { zh: '可觀測性', en: 'Observability' } as T, items: ['OpenTelemetry', 'Logs / Metrics / Traces', 'Prometheus', 'Grafana'] },
+    { group: { zh: '後端開發', en: 'Backend' } as T, items: ['Microservices', 'Go', 'Java', 'Spring Boot', 'Python', 'C#', 'ASP.NET Core', 'Kong Gateway', 'DDD'] },
+    { group: { zh: '資料與訊息', en: 'Data & Messaging' } as T, items: ['PostgreSQL', 'Redis', 'Elasticsearch', 'Bigtable', 'Spanner', 'MongoDB', 'Pub/Sub', 'Hadoop'] },
   ],
   education: [
     {
@@ -140,8 +142,8 @@ export const ui = {
   prev: { zh: '← 上一份', en: '← Previous' },
   next: { zh: '下一份 →', en: 'Next →' },
   result: { zh: '成果', en: 'Outcome' },
-  contactTitle: { zh: '一起聊聊？', en: "Let's talk" },
-  contactText: { zh: '歡迎透過 Email 或 LinkedIn 聯絡。', en: 'Reach out by email or on LinkedIn.' },
+  contactTitle: { zh: '與我聯繫', en: 'Contact' },
+  contactText: { zh: '歡迎透過以下方式與我聯繫。', en: 'Feel free to reach out through any of the channels below.' },
   switchLang: { zh: 'EN', en: '中文' },
   palette: { zh: '快速跳轉', en: 'quick jump' },
 } satisfies Record<string, Record<string, T> | T>;

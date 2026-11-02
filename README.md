@@ -15,7 +15,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 |---|---|
 | `src/data/profile.ts` | 首頁文字內容（雙語） |
 | `src/data/work.ts` | 每段經歷的成果頁內容（雙語） |
-| `src/data/visuals.ts` | 架構圖節點、Before/After、事件流程、技能 × 工作對照 |
+| `src/data/visuals.ts` | 架構圖節點、Before/After、事件流程、技能使用程度（主力／使用過） |
 | `src/components/Resume.astro` | 首頁版面、互動腳本、樣式 |
 | `src/components/WorkPage.astro` | 成果頁版面（kubectl describe、事件流程、Before/After） |
 | `src/components/ArchDiagram.astro` | 成果頁架構圖（inline SVG、流動動畫） |

@@ -20,7 +20,7 @@ const L = {
       <p class="title">{t(profile.title)}</p>
     </div>
     <ul class="contact">
-      <li>{t(profile.location)}</li>
+      <li>{t(profile.location)} · {t(profile.workMode)}</li>
       {email && <li><a href={`mailto:${email}`}>{email}</a></li>}
       {profile.links.filter((l) => !l.href.startsWith('mailto:')).map((l) => <li><a href={l.href}>{l.href.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, '')}</a></li>)}
       <li><a href={`https://${site}${lang === 'zh' ? '/' : '/en/'}`}>{site}</a></li>

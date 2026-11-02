@@ -9,12 +9,12 @@ export const works: Work[] = [
   {
     slug: 'metamec',
     plain: {
-      zh: '幫企業在自己的機房建一套像公有雲一樣好用又安全的平台，並帶領小團隊交付給客戶。',
-      en: 'Builds enterprises a secure, cloud-like platform in their own data centers, and leads a small team delivering it to customers.',
+      zh: '幫企業在自己的機房建一套像公有雲一樣好用又安全的平台，並用 AI Agent 工作流帶領小團隊交付給客戶。',
+      en: 'Builds enterprises a secure, cloud-like platform in their own data centers, and leads a small, AI-assisted team delivering it to customers.',
     },
     summary: {
-      zh: '從裸機到可交付的雲原生私有雲：平台架構、GitOps、安全與 AI 工作負載。',
-      en: 'A cloud-native private cloud from bare metal to delivery: platform architecture, GitOps, security and AI workloads.',
+      zh: '從裸機到可交付的雲原生私有雲：平台架構、GitOps、安全、AI 工作負載，以及 AI Agent 工作流。',
+      en: 'A cloud-native private cloud from bare metal to delivery: platform architecture, GitOps, security, AI workloads and AI-agent workflows.',
     },
     sections: [
       {
@@ -56,6 +56,16 @@ export const works: Work[] = [
           en: ['Lead platform projects; break down work and assign it to 3–5 engineers', 'Code review and mentoring to keep the architecture consistent', 'Set up a spec → ticket → review delivery flow'],
         },
         result: { zh: '精簡編制下仍能穩定推進多條產品線', en: 'Several product lines move forward with a lean team' },
+      },
+      {
+        id: 'ai-workflow',
+        title: { zh: 'AI 工作流', en: 'AI-assisted engineering' },
+        lead: { zh: '讓 AI Agent 成為團隊的一員', en: 'AI agents as part of the team' },
+        points: {
+          zh: ['建立 spec → Jira ticket → 實作 → 跨模型審查 → MR 的 AI 協作流程', '以 Claude Code 主導，Codex 分工實作並獨立交叉審查', '把維運知識（ArgoCD 排錯、憑證輪替、RCA）寫成可重用的 Agent skills'],
+          en: ['Built an AI-assisted flow: spec → Jira tickets → implementation → cross-model review → MR', 'Claude Code leads; Codex takes implementation and an independent review pass', 'Turned ops know-how (ArgoCD triage, cert rotation, RCA) into reusable agent skills'],
+        },
+        result: { zh: '小團隊維持穩定的交付節奏，每個變更都有第二位審查者把關', en: 'A small team keeps a steady pace, with a second reviewer on every change' },
       },
       {
         id: 'ai',

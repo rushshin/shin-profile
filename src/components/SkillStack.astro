@@ -1,16 +1,28 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
-import { skillJobs } from '../data/visuals';
+import { skillUse } from '../data/visuals';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-const jobs = [
-  { slug: 'metamec', name: 'MetaMEC' },
-  { slug: 'cathay', name: lang === 'zh' ? '國泰' : 'Cathay' },
-  { slug: 'playsee', name: 'Playsee' },
-  { slug: 'alpha-networks', name: lang === 'zh' ? '明泰' : 'Alpha' },
-  { slug: 'syscom', name: lang === 'zh' ? '凌群' : 'SYSCOM' },
-];
+const shortNames: Record<string, Record<Lang, string>> = {
+  metamec: { zh: 'MetaMEC', en: 'MetaMEC' },
+  cathay: { zh: '國泰', en: 'Cathay' },
+  playsee: { zh: 'Playsee', en: 'Playsee' },
+  'alpha-networks': { zh: '明泰', en: 'Alpha' },
+  syscom: { zh: '凌群', en: 'SYSCOM' },
+};
+const labels = {
+  legend: { zh: '技能標記', en: 'Skill markers' },
+  core: { zh: '主力', en: 'Core' },
+  used: { zh: '使用過', en: 'Used' },
+  carried: { zh: '持續累積', en: 'Carried forward' },
+  unused: { zh: '未使用', en: 'not used' },
+};
+const jobs = [...profile.experience].reverse().map((job) => ({
+  slug: job.slug,
+  name: shortNames[job.slug]?.[lang] ?? job.company[lang],
+  year: job.period.slice(0, 4),
+}));
 ---
 <p class="skill-caption reveal">{ui.skillCaption[lang]}</p>
 <div class="skill-stack reveal" data-skill-stack>
@@ -24,21 +36,32 @@ const jobs = [
   <div class="matrices">
     {profile.skills.map((group, index) => (
       <div class="matrix" id={`skill-matrix-${lang}-${index}`} data-matrix={index} hidden={index !== 0}>
-        <div class="matrix-title">{group.group[lang]}</div>
+        <div class="matrix-title">
+          <span>{group.group[lang]}</span>
+          <div class="legend" aria-label={labels.legend[lang]}>
+            <span><span class="mark core" aria-hidden="true"></span>{labels.core[lang]}</span>
+            <span><span class="mark used" aria-hidden="true"></span>{labels.used[lang]}</span>
+            <span><span class="track-key" aria-hidden="true"></span>{labels.carried[lang]}</span>
+          </div>
+        </div>
         <table>
           <colgroup><col class="skill-col" />{jobs.map(() => <col />)}</colgroup>
           <thead><tr><th scope="col" class="skill-head">{lang === 'zh' ? '技能' : 'Skill'}</th>{jobs.map((job) => (
-            <th scope="col"><a href={`${lang === 'zh' ? '' : '/en'}/work/${job.slug}/`}>{job.name}</a></th>
+            <th scope="col"><a href={`${lang === 'zh' ? '' : '/en'}/work/${job.slug}/`}><span>{job.name}</span><span class="job-year">{job.year}</span></a></th>
           ))}</tr></thead>
-          <tbody>{group.items.map((item) => (
-            <tr class:list={{ unused: !skillJobs[item]?.length }}>
+          <tbody>{group.items.map((item) => {
+            const firstUse = jobs.findIndex((job) => skillUse[item]?.[job.slug]);
+            return <tr class:list={{ unused: firstUse === -1 }}>
               <th scope="row">{item}</th>
-              {jobs.map((job) => {
-                const used = skillJobs[item]?.includes(job.slug) ?? false;
-                return <td aria-label={`${item}: ${job.name} — ${used ? (lang === 'zh' ? '使用' : 'used') : (lang === 'zh' ? '未使用' : 'not used')}`}><span class:list={['mark', { used }]} aria-hidden="true"></span></td>;
+              {jobs.map((job, jobIndex) => {
+                const level = skillUse[item]?.[job.slug];
+                const levelLabel = level === 2 ? labels.core[lang] : level === 1 ? labels.used[lang] : labels.unused[lang];
+                return <td class:list={{ carried: jobIndex >= firstUse && firstUse !== -1, 'track-start': jobIndex === firstUse, 'track-end': jobIndex === jobs.length - 1 }} aria-label={`${item}: ${job.name} — ${levelLabel}`}>
+                  {level && <span class:list={['mark', level === 2 ? 'core' : 'used']} aria-hidden="true"></span>}
+                </td>;
               })}
-            </tr>
-          ))}</tbody>
+            </tr>;
+          })}</tbody>
         </table>
       </div>
     ))}
@@ -79,21 +102,29 @@ const jobs = [
   .matrices { min-width: 0; }
   .matrix { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
   .matrix[hidden] { display: none; }
-  .matrix-title { padding: 12px 14px; border-bottom: 1px solid var(--line); color: var(--accent); font: 13px var(--mono); }
+  .matrix-title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 12px 14px; border-bottom: 1px solid var(--line); color: var(--accent); font: 13px var(--mono); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font: 10px var(--mono); }
+  .legend > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .track-key { width: 13px; height: 2px; background: var(--accent); opacity: .4; }
   table { width: 100%; table-layout: fixed; border-collapse: collapse; font: 11px/1.35 var(--mono); }
   .skill-col { width: 39%; }
   th, td { min-width: 0; padding: 9px 4px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
   tr:last-child > * { border-bottom: 0; }
   thead th { color: var(--muted); font-weight: 500; text-align: center; vertical-align: bottom; }
   thead th:first-child, tbody th { padding-left: 12px; text-align: left; }
-  thead a { text-decoration: none; }
+  thead a { display: flex; flex-direction: column; align-items: center; text-decoration: none; white-space: nowrap; }
+  .job-year { margin-top: 3px; color: var(--muted); font: 9px var(--mono); }
   thead a:hover { color: var(--accent); text-decoration: underline; }
   tbody th { font-weight: 500; }
-  tbody td { text-align: center; }
+  tbody td { position: relative; text-align: center; }
+  tbody td.carried::before { position: absolute; top: 50%; right: 0; left: 0; height: 2px; background: var(--accent); opacity: .4; content: ''; transform: translateY(-50%); }
+  tbody td.track-start::before { left: 50%; }
+  tbody td.track-end::before { right: 50%; }
   tbody tr:hover > *, .column-hover { background: var(--accent-soft); }
   .unused th { color: var(--muted); }
-  .mark { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--line); opacity: .65; }
-  .mark.used { border-color: var(--accent); background: var(--accent); opacity: 1; }
+  .mark { position: relative; z-index: 1; display: inline-block; flex: none; box-sizing: border-box; border-radius: 50%; vertical-align: middle; }
+  .mark.core { width: 9px; height: 9px; background: var(--accent); }
+  .mark.used { width: 8px; height: 8px; border: 1.5px solid var(--accent); background: var(--surface); }
   @media (max-width: 720px) {
     .skill-stack { grid-template-columns: minmax(0, 1fr); }
     .layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
