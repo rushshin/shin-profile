@@ -2,7 +2,7 @@
 const labels = { zh: '背景音樂', en: 'Background music' };
 ---
 
-<button class="bgm-toggle" type="button" data-bgm aria-pressed="false" aria-label={labels.zh} title={labels.zh}>
+<button class="bgm-toggle waiting" type="button" data-bgm aria-pressed="true" aria-label={labels.zh} title={labels.zh}>
   <svg class="note" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg>
   <span class="equalizer" aria-hidden="true"><i></i><i></i><i></i></span>
 </button>
@@ -14,162 +14,305 @@ const labels = { zh: '背景音樂', en: 'Background music' };
     const label = document.documentElement.lang.startsWith('zh') ? labels.zh : labels.en;
     button.setAttribute('aria-label', label);
     button.title = label;
-    try { button.classList.toggle('remembered', localStorage.getItem('bgm') === 'on'); } catch {}
 
-    type Chord = [number, 'major' | 'minor'];
+    type Chord = [number, 'major' | 'minor' | 'lydian'];
     const loops: Chord[][] = [
       [[48, 'major'], [55, 'major'], [57, 'minor'], [53, 'major']],
-      [[53, 'major'], [60, 'major'], [57, 'minor'], [58, 'major']],
-      [[55, 'major'], [50, 'major'], [52, 'minor'], [60, 'major']],
-      [[57, 'minor'], [53, 'major'], [60, 'major'], [55, 'major']],
       [[50, 'major'], [57, 'major'], [59, 'minor'], [55, 'major']],
-      [[60, 'major'], [67, 'major'], [69, 'minor'], [65, 'major']],
+      [[53, 'major'], [60, 'major'], [62, 'minor'], [58, 'lydian']],
+      [[55, 'major'], [50, 'major'], [52, 'minor'], [48, 'major']],
+      [[57, 'major'], [52, 'major'], [54, 'minor'], [50, 'major']],
+      [[48, 'major'], [53, 'major'], [55, 'major'], [48, 'major']],
     ];
+    const beat = 60 / 104;
+    const sixteenth = beat / 4;
+    const gestures = ['pointerdown', 'keydown', 'touchstart'] as const;
     let context: AudioContext | undefined;
     let master: GainNode | undefined;
     let padBus: GainNode | undefined;
     let melodyBus: GainNode | undefined;
+    let bassBus: GainNode | undefined;
+    let percussionBus: GainNode | undefined;
+    let noise: AudioBuffer | undefined;
     let timer: number | undefined;
+    let desiredOn = true;
     let playing = false;
+    let starting = false;
+    let buttonGesturePending = false;
     let chapter = 0;
-    let chordIndex = 0;
-    let nextChord = 0;
-    let nextMelody = 0;
-    let currentChord: Chord = loops[0][0];
+    let pendingChapter: number | undefined;
+    let bar = 0;
+    let step = 0;
+    let nextStepTime = 0;
     let generation = 0;
     const midiHz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
+
+    try { desiredOn = localStorage.getItem('bgm') !== 'off'; } catch {}
+    button.setAttribute('aria-pressed', String(desiredOn));
+    button.classList.toggle('waiting', desiredOn);
 
     const setup = () => {
       const audio = new AudioContext();
       const main = audio.createGain();
       main.gain.value = 0;
+      const compressor = audio.createDynamicsCompressor();
+      compressor.threshold.value = -18;
+      compressor.ratio.value = 3;
       const pad = audio.createGain();
+      const padFilter = audio.createBiquadFilter();
+      padFilter.type = 'lowpass';
+      padFilter.frequency.value = 1800;
       const melody = audio.createGain();
-      const filter = audio.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 1200;
+      const bass = audio.createGain();
+      const percussion = audio.createGain();
       const delay = audio.createDelay(0.5);
-      delay.delayTime.value = 0.28;
+      delay.delayTime.value = beat * 0.75;
       const feedback = audio.createGain();
-      feedback.gain.value = 0.18;
+      feedback.gain.value = 0.25;
       const wet = audio.createGain();
-      wet.gain.value = 0.2;
-      pad.connect(filter);
-      filter.connect(main);
+      wet.gain.value = 0.18;
+      const hatFilter = audio.createBiquadFilter();
+      hatFilter.type = 'highpass';
+      hatFilter.frequency.value = 6500;
+      const noiseBuffer = audio.createBuffer(1, Math.ceil(audio.sampleRate * 0.09), audio.sampleRate);
+      const samples = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+      pad.connect(padFilter);
+      padFilter.connect(main);
       melody.connect(main);
       melody.connect(delay);
       delay.connect(feedback);
       feedback.connect(delay);
       delay.connect(wet);
       wet.connect(main);
-      main.connect(audio.destination);
+      bass.connect(main);
+      hatFilter.connect(percussion);
+      percussion.connect(main);
+      main.connect(compressor);
+      compressor.connect(audio.destination);
       context = audio;
       master = main;
       padBus = pad;
       melodyBus = melody;
+      bassBus = bass;
+      percussionBus = percussion;
+      noise = noiseBuffer;
+      hatOutput = hatFilter;
     };
+
+    let hatOutput: BiquadFilterNode | undefined;
 
     const playPad = (chord: Chord, when: number) => {
       if (!context || !padBus) return;
       const [root, quality] = chord;
-      const notes = [root, root + (quality === 'major' ? 4 : 3), root - 5];
+      const notes = [root, root + (quality === 'minor' ? 3 : 4), root + 7];
       const envelope = context.createGain();
-      envelope.gain.setValueAtTime(0, when);
-      envelope.gain.linearRampToValueAtTime(0.3, when + 2);
-      envelope.gain.setValueAtTime(0.3, when + 3.8);
-      envelope.gain.linearRampToValueAtTime(0, when + 5.8);
+      envelope.gain.setValueAtTime(0.0001, when);
+      envelope.gain.linearRampToValueAtTime(0.045, when + 0.25);
+      envelope.gain.setValueAtTime(0.045, when + beat * 2.5);
+      envelope.gain.linearRampToValueAtTime(0.0001, when + beat * 4);
       envelope.connect(padBus);
-      notes.forEach((note, index) => {
+      let ended = 0;
+      notes.forEach((note) => {
         const oscillator = context!.createOscillator();
-        oscillator.type = index === 1 ? 'sine' : 'triangle';
+        oscillator.type = 'sine';
         oscillator.frequency.value = midiHz(note);
-        oscillator.detune.value = [-4, 3, 1][index];
         oscillator.connect(envelope);
         oscillator.start(when);
-        oscillator.stop(when + 5.85);
-        oscillator.onended = () => oscillator.disconnect();
+        oscillator.stop(when + beat * 4 + 0.01);
+        oscillator.onended = () => {
+          oscillator.disconnect();
+          if (++ended === notes.length) envelope.disconnect();
+        };
       });
-      window.setTimeout(() => envelope.disconnect(), Math.max(0, (when + 5.9 - context!.currentTime) * 1000));
     };
 
-    const playPluck = (chord: Chord, when: number) => {
-      if (!context || !melodyBus || Math.random() < 0.2) return;
-      const [root, quality] = chord;
-      const scale = quality === 'major' ? [0, 2, 4, 7, 9] : [0, 3, 5, 7, 10];
-      const note = root + 12 + scale[Math.floor(Math.random() * scale.length)];
+    const playBass = (root: number, when: number, ghost = false) => {
+      if (!context || !bassBus) return;
       const oscillator = context.createOscillator();
       const envelope = context.createGain();
-      const pan = context.createStereoPanner();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = midiHz(note);
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = midiHz(root - 12);
       envelope.gain.setValueAtTime(0.0001, when);
-      envelope.gain.exponentialRampToValueAtTime(0.27, when + 0.015);
-      envelope.gain.exponentialRampToValueAtTime(0.0001, when + 1.2);
-      pan.pan.value = Math.random() * 0.6 - 0.3;
+      envelope.gain.linearRampToValueAtTime(ghost ? 0.12 : chapter === 3 ? 0.3 : 0.24, when + 0.015);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, when + (ghost ? 0.16 : 0.3));
       oscillator.connect(envelope);
+      envelope.connect(bassBus);
+      oscillator.start(when);
+      oscillator.stop(when + (ghost ? 0.17 : 0.31));
+      oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); };
+    };
+
+    const playKick = (when: number) => {
+      if (!context || !percussionBus) return;
+      const oscillator = context.createOscillator();
+      const envelope = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(120, when);
+      oscillator.frequency.exponentialRampToValueAtTime(50, when + 0.15);
+      envelope.gain.setValueAtTime(0.0001, when);
+      envelope.gain.linearRampToValueAtTime(0.18, when + 0.012);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, when + 0.15);
+      oscillator.connect(envelope);
+      envelope.connect(percussionBus);
+      oscillator.start(when);
+      oscillator.stop(when + 0.16);
+      oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); };
+    };
+
+    const playHat = (when: number, strong: boolean) => {
+      if (!context || !noise || !hatOutput) return;
+      const source = context.createBufferSource();
+      const envelope = context.createGain();
+      source.buffer = noise;
+      envelope.gain.setValueAtTime(0.0001, when);
+      envelope.gain.linearRampToValueAtTime(strong ? 0.035 : 0.02, when + 0.008);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, when + 0.065);
+      source.connect(envelope);
+      envelope.connect(hatOutput);
+      source.start(when);
+      source.stop(when + 0.07);
+      source.onended = () => { source.disconnect(); envelope.disconnect(); };
+    };
+
+    const playMelody = (chord: Chord, when: number, position: number) => {
+      if (!context || !melodyBus) return;
+      const [root, quality] = chord;
+      const scale = quality === 'minor' ? [0, 2, 3, 7, 9] : quality === 'lydian' ? [0, 2, 4, 6, 9] : [0, 2, 4, 7, 9];
+      const phrase = [0, 4, 3, 2, 1, 0, 2, 4, 3, 2];
+      const variation = bar % 4 === 2 && position === 3 ? 1 : 0;
+      const note = root + 12 + scale[Math.min(4, phrase[position] + variation)] + (chapter === 5 && bar % 4 === 3 ? 12 : 0);
+      const pan = context.createStereoPanner();
+      pan.pan.value = position % 2 ? 0.18 : -0.18;
+      const envelope = context.createGain();
+      envelope.gain.setValueAtTime(0.0001, when);
+      envelope.gain.linearRampToValueAtTime(0.17, when + 0.008);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, when + 0.52);
       envelope.connect(pan);
       pan.connect(melodyBus);
-      oscillator.start(when);
-      oscillator.stop(when + 1.22);
-      oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); pan.disconnect(); };
+      let ended = 0;
+      [1, 3].forEach((partial) => {
+        const oscillator = context!.createOscillator();
+        const partialGain = context!.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = midiHz(note) * partial;
+        partialGain.gain.value = partial === 1 ? 1 : 0.16;
+        oscillator.connect(partialGain);
+        partialGain.connect(envelope);
+        oscillator.start(when);
+        oscillator.stop(when + 0.53);
+        oscillator.onended = () => {
+          oscillator.disconnect();
+          partialGain.disconnect();
+          if (++ended === 2) { envelope.disconnect(); pan.disconnect(); }
+        };
+      });
     };
 
     const schedule = () => {
       if (!playing || !context || document.hidden) return;
-      const horizon = context.currentTime + 0.2;
-      while (nextChord < horizon) {
-        currentChord = loops[chapter][chordIndex % 4];
-        playPad(currentChord, nextChord);
-        chordIndex++;
-        nextChord += 4;
+      const horizon = context.currentTime + 0.12;
+      while (nextStepTime < horizon) {
+        if (step === 0 && pendingChapter !== undefined) {
+          chapter = pendingChapter;
+          pendingChapter = undefined;
+          bar = 0;
+        }
+        const chord = loops[chapter][bar % 4];
+        if (step === 0) playPad(chord, nextStepTime);
+        if (step === 0 || step === 8 || step === 14) playBass(chord[0], nextStepTime, step === 14);
+        if (step === 0 || step === 8) playKick(nextStepTime);
+        if (step % 2 === 0) playHat(nextStepTime, step % 4 === 0);
+        const motifStep = (bar % 2) * 16 + step;
+        const motifPositions = [2, 5, 8, 11, 14, 18, 21, 24, 27, 30];
+        const position = motifPositions.indexOf(motifStep);
+        if (position >= 0 && !(bar % 4 === 3 && position === 6)) playMelody(chord, nextStepTime, position);
+        nextStepTime += sixteenth;
+        step = (step + 1) % 16;
+        if (step === 0) bar++;
       }
-      while (nextMelody < horizon) {
-        playPluck(currentChord, nextMelody);
-        nextMelody += 0.6 + Math.random() * 0.8;
-      }
-      timer = window.setTimeout(schedule, 100);
+      timer = window.setTimeout(schedule, 25);
     };
+
+    const removeGestures = () => gestures.forEach((gesture) => window.removeEventListener(gesture, onGesture, true));
+    const addGestures = () => gestures.forEach((gesture) => window.addEventListener(gesture, onGesture, { capture: true, passive: true, once: true }));
 
     const start = async () => {
-      if (!context) setup();
-      if (!context || !master) return;
+      if (!desiredOn || playing || starting || document.hidden) return;
+      starting = true;
+      removeGestures();
       const ticket = ++generation;
-      await context.resume();
-      if (ticket !== generation) return;
-      playing = true;
-      button.setAttribute('aria-pressed', 'true');
-      button.classList.remove('remembered');
-      master.gain.cancelScheduledValues(context.currentTime);
-      master.gain.setValueAtTime(master.gain.value, context.currentTime);
-      master.gain.linearRampToValueAtTime(0.1, context.currentTime + 1.5);
-      chordIndex = 0;
-      nextChord = context.currentTime + 0.02;
-      nextMelody = nextChord + 0.4;
-      window.clearTimeout(timer);
-      schedule();
-      try { localStorage.setItem('bgm', 'on'); } catch {}
+      try {
+        if (!context) setup();
+        await context!.resume();
+        if (ticket !== generation || !desiredOn) return;
+        playing = true;
+        button.classList.remove('waiting');
+        const audio = context!;
+        const gain = master!.gain;
+        gain.cancelScheduledValues(audio.currentTime);
+        gain.setValueAtTime(gain.value, audio.currentTime);
+        gain.linearRampToValueAtTime(0.1, audio.currentTime + 1.5);
+        bar = 0;
+        step = 0;
+        nextStepTime = audio.currentTime + 0.02;
+        window.clearTimeout(timer);
+        schedule();
+      } catch {
+        if (desiredOn) addGestures();
+      } finally {
+        starting = false;
+      }
     };
 
+    function onGesture(event: Event) {
+      if (button.contains(event.target as Node)) buttonGesturePending = true;
+      void start();
+    }
+
     const stop = () => {
-      if (!playing || !context || !master) return;
+      desiredOn = false;
       playing = false;
-      const ticket = ++generation;
+      ++generation;
+      removeGestures();
       button.setAttribute('aria-pressed', 'false');
+      button.classList.remove('waiting');
       window.clearTimeout(timer);
-      master.gain.cancelScheduledValues(context.currentTime);
-      master.gain.setValueAtTime(master.gain.value, context.currentTime);
-      master.gain.linearRampToValueAtTime(0, context.currentTime + 1);
-      window.setTimeout(() => { if (ticket === generation) void context?.suspend(); }, 1050);
+      if (context && master) {
+        const ticket = generation;
+        const gain = master.gain;
+        gain.cancelScheduledValues(context.currentTime);
+        gain.setValueAtTime(gain.value, context.currentTime);
+        gain.linearRampToValueAtTime(0, context.currentTime + 1);
+        window.setTimeout(() => { if (ticket === generation) void context?.suspend(); }, 1050);
+      }
       try { localStorage.setItem('bgm', 'off'); } catch {}
     };
 
-    button.addEventListener('click', () => { if (playing) stop(); else void start(); });
+    button.addEventListener('click', () => {
+      if (buttonGesturePending) {
+        buttonGesturePending = false;
+        return;
+      }
+      if (playing) {
+        stop();
+      } else if (desiredOn) {
+        void start();
+      } else {
+        desiredOn = true;
+        button.setAttribute('aria-pressed', 'true');
+        button.classList.add('waiting');
+        try { localStorage.setItem('bgm', 'on'); } catch {}
+        void start();
+      }
+    });
+    if (desiredOn) addGestures();
+
     window.addEventListener('bgm:chapter', (event) => {
       const next = (event as CustomEvent<number>).detail;
-      if (!Number.isInteger(next) || next < 0 || next > 5 || next === chapter) return;
-      chapter = next;
-      chordIndex = 0;
-      if (playing && context) nextChord = context.currentTime + 0.03;
+      if (!Number.isInteger(next) || next < 0 || next > 5) return;
+      if (playing) pendingChapter = next;
+      else { chapter = next; pendingChapter = undefined; }
     });
     document.addEventListener('visibilitychange', () => {
       if (!context || !playing) return;
@@ -179,8 +322,8 @@ const labels = { zh: '背景音樂', en: 'Background music' };
       } else {
         void context.resume().then(() => {
           if (!playing || !context) return;
-          nextChord = context.currentTime + 0.03;
-          nextMelody = nextChord + 0.4;
+          step = 0;
+          nextStepTime = context.currentTime + 0.02;
           schedule();
         });
       }
@@ -198,8 +341,8 @@ const labels = { zh: '背景音樂', en: 'Background music' };
   .equalizer i:nth-child(3) { height: 12px; animation-delay: 320ms; }
   .bgm-toggle[aria-pressed="true"] .note { display: none; }
   .bgm-toggle[aria-pressed="true"] .equalizer { display: flex; }
-  .bgm-toggle.remembered::after { position: absolute; inset: -5px; border: 1px solid var(--accent); border-radius: 50%; content: ''; animation: pulse 2.4s ease-out infinite; pointer-events: none; }
+  .bgm-toggle.waiting::after { position: absolute; inset: -5px; border: 1px solid var(--accent); border-radius: 50%; content: ''; animation: pulse 2.4s ease-out infinite; pointer-events: none; }
   @keyframes bounce { to { transform: scaleY(.4); } }
   @keyframes pulse { to { transform: scale(1.25); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .equalizer i, .bgm-toggle.remembered::after { animation: none; } .bgm-toggle.remembered::after { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .equalizer i, .bgm-toggle.waiting::after { animation: none; } .bgm-toggle.waiting::after { display: none; } }
 </style>

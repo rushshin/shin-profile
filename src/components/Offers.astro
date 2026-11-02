@@ -1,0 +1,56 @@
+---
+import type { Lang } from '../data/profile';
+import { offers, offersUi } from '../data/offers';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const prefix = lang === 'zh' ? '' : '/en';
+const pad = (n: number) => String(n + 1).padStart(2, '0');
+---
+<section id="offers" class="block offers">
+  <p class="bridge reveal">{t(offersUi.bridge)}</p>
+  <h2 class="reveal"><span>02</span>{t(offersUi.title)}</h2>
+  <div class="grid">
+    {offers.map((o, i) => (
+      <a class="offer reveal" href={`${prefix}${o.href}`}>
+        <span class="top">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            {o.icon === 'city' && <><path d="M3 21h18M5 21V9l5-3v15M10 21V4l9 4v13" /><path d="M13 10h3M13 14h3M13 18h3M7 12h1M7 16h1" /></>}
+            {o.icon === 'gpu' && <><rect x="3" y="6" width="18" height="12" rx="2" /><circle cx="9" cy="12" r="2.5" /><circle cx="15.5" cy="12" r="2.5" /><path d="M6 18v3M18 18v3" /></>}
+            {o.icon === 'spark' && <><path d="M12 3v4M12 17v4M3 12h4M17 12h4" /><path d="m12 8 1.5 2.5L16 12l-2.5 1.5L12 16l-1.5-2.5L8 12l2.5-1.5Z" /></>}
+            {o.icon === 'truck' && <><path d="M3 7h11v10H3zM14 11h4l3 3v3h-7" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></>}
+            {o.icon === 'pulse' && <><path d="M3 12h4l2-5 4 10 2-5h6" /></>}
+            {o.icon === 'team' && <><circle cx="9" cy="7" r="3" /><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 4a3 3 0 0 1 0 6m2 10v-2a6 6 0 0 0-2-4.47" /></>}
+          </svg>
+          <span class="num">{pad(i)}</span>
+        </span>
+        <strong>{t(o.promise)}</strong>
+        <span class="proof">{o.proof[lang].map((p) => <em>{p}</em>)}</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    ))}
+  </div>
+  <p class="more reveal">{t(offersUi.more)}</p>
+</section>
+
+<style>
+  .block { padding: 72px 0; scroll-margin-top: 64px; }
+  .bridge { margin: 0 0 6px; color: var(--muted); font-size: 16px; }
+  h2 { font-size: 28px; margin: 0 0 24px; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 12px; }
+  h2 span { font: 13px var(--mono); color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .offer { position: relative; display: flex; flex-direction: column; gap: 12px; min-height: 190px; padding: 20px; border: 1px solid var(--line); border-radius: 16px;
+    background: var(--surface); text-decoration: none; transition: border-color .25s, transform .25s, box-shadow .25s; }
+  .offer:hover, .offer:focus-visible { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 16px 30px -22px var(--accent); }
+  .top { display: flex; justify-content: space-between; align-items: center; color: var(--accent); }
+  .num { font: 12px var(--mono); color: var(--muted); }
+  strong { font-size: 18px; line-height: 1.45; }
+  .proof { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+  .proof em { font: normal 11.5px var(--mono); padding: 2px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+  .arrow { position: absolute; right: 18px; bottom: 16px; color: var(--accent); opacity: 0; transform: translateX(-4px); transition: opacity .25s, transform .25s; }
+  .offer:hover .arrow, .offer:focus-visible .arrow { opacity: 1; transform: none; }
+  .more { margin: 22px 0 0; color: var(--muted); font-size: 15px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } .offer { min-height: 0; } .arrow { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .offer, .arrow { transition: none; } .offer:hover { transform: none; } }
+</style>

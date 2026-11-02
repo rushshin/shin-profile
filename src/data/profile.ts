@@ -131,12 +131,13 @@ export const profile = {
 };
 
 export const ui = {
-  nav: { fit: { zh: '能力', en: 'Fit' }, about: { zh: '關於', en: 'About' }, story: { zh: '旅程', en: 'Journey' }, experience: { zh: '經歷', en: 'Experience' }, skills: { zh: '技能', en: 'Skills' }, education: { zh: '學歷', en: 'Education' }, contact: { zh: '聯絡', en: 'Contact' } },
+  nav: { story: { zh: '旅程', en: 'Journey' }, offers: { zh: '能做什麼', en: 'What I do' }, experience: { zh: '經歷', en: 'Experience' }, skills: { zh: '技能', en: 'Skills' }, education: { zh: '學歷', en: 'Education' }, contact: { zh: '聯絡', en: 'Contact' } },
   hello: { zh: '你好，我是', en: "Hi, I'm" },
   now: { zh: '現職 MetaMEC：設計雲原生私有雲與 AI 平台', en: 'Now at MetaMEC: architecting private cloud & AI platforms' },
   employerNow: { zh: '現職', en: 'Now' },
   employerPreviously: { zh: '曾任', en: 'Previously' },
-  atAGlance: { zh: '一分鐘看懂', en: 'At a glance' },
+  cue: { zh: '搭上這班列車', en: 'Hop on the train' },
+  nextStop: { zh: '下一站，也許是你的團隊。', en: 'The next stop might be your team.' },
   skillCaption: { zh: '點選類別，看每項技能用在哪份工作', en: 'Pick a category to see where each skill was used' },
   resumePdf: { zh: '履歷 PDF', en: 'Resume PDF' },
   viewWork: { zh: '看成果 →', en: 'View work →' },

@@ -15,15 +15,15 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 |---|---|
 | `src/data/profile.ts` | 首頁文字內容（雙語） |
 | `src/data/work.ts` | 每段經歷的成果頁內容（雙語） |
-| `src/data/fit.ts` | 角色要求與證據對照 |
+| `src/data/offers.ts` | 「你可以把這些交給我」的內容 |
 | `src/data/story.ts` | 旅程五站的章節文字 |
 | `src/data/visuals.ts` | 架構圖節點、Before/After、事件流程、技能使用程度（主力／使用過） |
 | `src/components/Resume.astro` | 首頁版面、互動腳本、樣式 |
 | `src/components/WorkPage.astro` | 成果頁版面（kubectl describe、事件流程、Before/After） |
 | `src/components/ArchDiagram.astro` | 成果頁架構圖（inline SVG、流動動畫） |
-| `src/components/FitPanel.astro` | 首頁「我能帶來什麼」：AI Delivery Engineer / Tech Lead 要求 × 證據 |
+| `src/components/Offers.astro` | 首頁「你可以把這些交給我」：6 件事 × 證據連結 |
 | `src/components/CityStory.astro` | 首頁「一路走來」：火車與逐站迭代的城市插畫（捲動驅動） |
-| `src/components/Bgm.astro` | Web Audio 即時合成的原創背景音樂（預設關閉） |
+| `src/components/Bgm.astro` | Web Audio 即時合成的原創背景音樂（預設開啟，第一次互動時開始播放） |
 | `src/components/SkillStack.astro` | 首頁技能分層與技能 × 工作矩陣 |
 | `src/components/ResumePrint.astro` | `/resume/` 列印版履歷（A4） |
 | `scripts/pdf.mjs` | 把 `/resume/` 輸出成 `public/Shin-Lin-Resume-{zh,en}.pdf` |
@@ -39,7 +39,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | 經歷內容 | 完成（MetaMEC 前依 104 履歷） |
 | 成果頁 | 完成（5 頁，質化成果，無量化數據） |
 | 視覺化 | 完成（架構圖、城市旅程插畫、技能矩陣、現職徽章） |
-| 故事與互動 | 完成（角色對照、五站旅程、BGM） |
+| 故事與互動 | 完成（序幕 → 旅程 → 能做什麼 → 經歷 → 下一站） |
 | 白話層 | 完成（一分鐘看懂、現職／曾任、成果頁白話摘要） |
 | PDF 履歷 | 完成（內容變更後要重新產生） |
 | 自訂網域 | 未購買 |
