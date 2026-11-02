@@ -8,7 +8,7 @@ export const profile = {
     zh: '技術架構師・SRE',
     en: 'Technical Architect · SRE',
   } as T,
-  location: { zh: '台灣・桃園／台北', en: 'Taoyuan / Taipei, Taiwan' } as T,
+  location: { zh: '台灣・桃園／台北／新竹', en: 'Taoyuan / Taipei / Hsinchu, Taiwan' } as T,
   // Keywords cycled by the typing effect.
   typing: {
     zh: ['設計雲原生私有雲', '用 GitOps 交付平台', '打造 AI 基礎設施', '讓系統穩定運行'],
