@@ -100,7 +100,6 @@ const allSkills = profile.skills.flatMap((g) => g.items);
             <span class="period">{ed.period}</span>
           </div>
           <p class="company">{t(ed.degree)}</p>
-          <p class="note">{t(ed.note)}</p>
         </div>
       ))}
     </div>
@@ -374,7 +373,6 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   .marquee:hover .track { animation-play-state: paused; }
   .track span { font: 13px var(--mono); padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); white-space: nowrap; }
   @keyframes slide { to { transform: translateX(-50%); } }
-  .note { margin: 8px 0 0; font-size: 14px; }
   .contact p { font-size: 17px; max-width: 600px; }
   footer { padding: 40px 16px 56px; color: var(--muted); font-size: 13px; text-align: center; border-top: 1px solid var(--line); }
 

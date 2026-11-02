@@ -7,7 +7,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | 框架 | Astro 7（純靜態，無 UI 框架、無外部字型或 CDN） |
 | 部署 | Cloudflare Workers Static Assets（`wrangler.jsonc`） |
 | 路由 | `/` 中文、`/en/` 英文、`/404` |
-| 網址 | `https://shin-profile.pig840814.workers.dev`（暫定，未綁自訂網域） |
+| 網址 | `https://shin-profile.shin-lin.workers.dev`（暫定，未綁自訂網域） |
 
 ## 結構
 

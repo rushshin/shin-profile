@@ -2,7 +2,7 @@
 import type { Lang } from '../data/profile';
 interface Props { lang: Lang; title: string; description: string }
 const { lang, title, description } = Astro.props;
-const base = Astro.site ?? new URL('https://shin-profile.pig840814.workers.dev');
+const base = Astro.site ?? new URL('https://shin-profile.shin-lin.workers.dev');
 const zhUrl = new URL('/', base).href;
 const enUrl = new URL('/en/', base).href;
 ---
