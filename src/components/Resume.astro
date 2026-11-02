@@ -69,6 +69,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
           </div>
           {e.points[lang].length > 0 && <ul>{e.points[lang].map((p) => <li>{p}</li>)}</ul>}
           <div class="tags">{e.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
+          <a class="more" href={`${lang === 'zh' ? '' : '/en'}/work/${e.slug}/`}>{t(ui.viewWork)}</a>
         </li>
       ))}
     </ol>
@@ -361,6 +362,8 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   .job ul { margin: 14px 0 0; padding-left: 18px; font-size: 15px; }
   .job li { margin: 4px 0; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .more { display: inline-block; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--accent); text-decoration: none; }
+  .more:hover { text-decoration: underline; }
   .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
 
   .skills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }

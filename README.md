@@ -6,17 +6,19 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 |---|---|
 | 框架 | Astro 7（純靜態，無 UI 框架、無外部字型或 CDN） |
 | 部署 | Cloudflare Workers Static Assets（`wrangler.jsonc`） |
-| 路由 | `/` 中文、`/en/` 英文、`/404` |
+| 路由 | `/` 中文、`/en/` 英文、`/work/<slug>/` 成果頁、`/404` |
 | 網址 | `https://shin-profile.shin-lin.workers.dev`（暫定，未綁自訂網域） |
 
 ## 結構
 
 | 路徑 | 內容 |
 |---|---|
-| `src/data/profile.ts` | 所有文字內容（雙語） |
-| `src/components/Resume.astro` | 版面、互動腳本、樣式 |
+| `src/data/profile.ts` | 首頁文字內容（雙語） |
+| `src/data/work.ts` | 每段經歷的成果頁內容（雙語） |
+| `src/components/Resume.astro` | 首頁版面、互動腳本、樣式 |
+| `src/components/WorkPage.astro` | 成果頁版面 |
 | `src/layouts/Base.astro` | head、SEO / hreflang、CSS tokens、深淺色 |
-| `src/pages/` | `index.astro`、`en/index.astro`、`404.astro` |
+| `src/pages/` | `index.astro`、`work/[slug].astro`、`en/` 對應頁、`404.astro` |
 
 ## 狀態
 
@@ -25,6 +27,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | 網站程式碼 | 完成 |
 | Cloudflare 自動部署 | 完成（push `main` 觸發 Workers Builds） |
 | 經歷內容 | 完成（MetaMEC 前依 104 履歷） |
+| 成果頁 | 完成（5 頁，質化成果，無量化數據） |
 | 自訂網域 | 未購買 |
 | OG 分享圖、Web Analytics | 未實作 |
 

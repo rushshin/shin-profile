@@ -1,0 +1,13 @@
+---
+import Base from '../../../layouts/Base.astro';
+import WorkPage from '../../../components/WorkPage.astro';
+import { profile } from '../../../data/profile';
+import { works } from '../../../data/work';
+export const getStaticPaths = () => works.map((w) => ({ params: { slug: w.slug } }));
+const { slug } = Astro.params;
+const exp = profile.experience.find((e) => e.slug === slug)!;
+const work = works.find((w) => w.slug === slug)!;
+---
+<Base lang="en" title={`${exp.company.en} | ${profile.name.en}`} description={work.summary.en} path={`/work/${slug}/`}>
+  <WorkPage lang="en" slug={slug!} />
+</Base>

@@ -30,6 +30,7 @@ export const profile = {
   ],
   experience: [
     {
+      slug: 'metamec',
       company: { zh: 'MetaMEC', en: 'MetaMEC' } as T,
       role: { zh: '資深技術架構師', en: 'Senior Technical Architect' } as T,
       period: '2025.08 — Now',
@@ -41,6 +42,7 @@ export const profile = {
       tags: ['Kubernetes', 'ArgoCD', 'Ceph', 'Harbor', 'Keycloak', 'OpenBao', 'OpenTelemetry'],
     },
     {
+      slug: 'cathay',
       company: { zh: '國泰世華銀行', en: 'Cathay United Bank' } as T,
       role: { zh: 'SRE｜資深軟體工程師', en: 'Site Reliability Engineer | Senior Software Engineer' } as T,
       period: '2024.09 — 2025.07',
@@ -51,6 +53,7 @@ export const profile = {
       tags: ['OpenTelemetry', 'OpenShift', 'Kubernetes', 'AWS', 'GCP', 'Java', 'Spring Boot'],
     },
     {
+      slug: 'playsee',
       company: { zh: 'Playsee', en: 'Playsee' } as T,
       role: { zh: '資深軟體工程師', en: 'Senior Software Engineer' } as T,
       period: '2023.09 — 2024.09',
@@ -61,6 +64,7 @@ export const profile = {
       tags: ['Go', 'GCP', 'Pub/Sub', 'Bigtable', 'Spanner', 'Redis', 'Elasticsearch'],
     },
     {
+      slug: 'alpha-networks',
       company: { zh: '明泰科技', en: 'Alpha Networks' } as T,
       role: { zh: '資深軟體工程師', en: 'Senior Software Engineer' } as T,
       period: '2021.09 — 2023.09',
@@ -71,6 +75,7 @@ export const profile = {
       tags: ['Go', 'Kubernetes', 'Docker', 'Ansible', 'PostgreSQL', 'Kong Gateway', 'GitLab CI'],
     },
     {
+      slug: 'syscom',
       company: { zh: '凌群電腦', en: 'SYSCOM Computer Engineering' } as T,
       role: { zh: '軟體工程師', en: 'Software Engineer' } as T,
       period: '2019.07 — 2021.09',
@@ -115,6 +120,11 @@ export const ui = {
   hello: { zh: '你好，我是', en: "Hi, I'm" },
   iAm: { zh: '我專注在', en: "I'm focused on" },
   status: { zh: 'All systems operational', en: 'All systems operational' },
+  viewWork: { zh: '看成果 →', en: 'View work →' },
+  home: { zh: '首頁', en: 'Home' },
+  prev: { zh: '← 上一份', en: '← Previous' },
+  next: { zh: '下一份 →', en: 'Next →' },
+  result: { zh: '成果', en: 'Outcome' },
   contactTitle: { zh: '一起聊聊？', en: "Let's talk" },
   contactText: { zh: '歡迎透過 LinkedIn 聯絡。', en: 'Reach out on LinkedIn.' },
   switchLang: { zh: 'EN', en: '中文' },

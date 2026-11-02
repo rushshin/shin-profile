@@ -1,10 +1,10 @@
 ---
 import type { Lang } from '../data/profile';
-interface Props { lang: Lang; title: string; description: string }
-const { lang, title, description } = Astro.props;
+interface Props { lang: Lang; title: string; description: string; path?: string }
+const { lang, title, description, path = '/' } = Astro.props;
 const base = Astro.site ?? new URL('https://shin-profile.shin-lin.workers.dev');
-const zhUrl = new URL('/', base).href;
-const enUrl = new URL('/en/', base).href;
+const zhUrl = new URL(path, base).href;
+const enUrl = new URL(`/en${path}`, base).href;
 ---
 <!doctype html>
 <html lang={lang === 'zh' ? 'zh-Hant-TW' : 'en'}>
@@ -16,6 +16,7 @@ const enUrl = new URL('/en/', base).href;
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="profile" />
+    <link rel="canonical" href={lang === 'zh' ? zhUrl : enUrl} />
     <link rel="alternate" hreflang="zh-Hant" href={zhUrl} />
     <link rel="alternate" hreflang="en" href={enUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

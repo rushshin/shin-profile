@@ -1,0 +1,151 @@
+---
+import { profile, ui, type Lang } from '../data/profile';
+import { works } from '../data/work';
+interface Props { lang: Lang; slug: string }
+const { lang, slug } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const prefix = lang === 'zh' ? '' : '/en';
+const i = profile.experience.findIndex((e) => e.slug === slug);
+const exp = profile.experience[i];
+const work = works.find((w) => w.slug === slug)!;
+const prev = profile.experience[i - 1];
+const next = profile.experience[i + 1];
+const other = `${lang === 'zh' ? '/en' : ''}/work/${slug}/`;
+const pad = (n: number) => String(n + 1).padStart(2, '0');
+---
+<header class="nav">
+  <a href={`${prefix}/`} class="brand">SL<span class="cursor">_</span></a>
+  <div class="actions">
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
+    <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
+  </div>
+</header>
+
+<main>
+  <nav class="crumb" aria-label="Breadcrumb">
+    <a href={`${prefix}/`}>{t(ui.home)}</a> › <a href={`${prefix}/#experience`}>{t(ui.nav.experience)}</a> › <span>{t(exp.company)}</span>
+  </nav>
+
+  <section class="head reveal">
+    <p class="period">{exp.period}</p>
+    <h1>{t(exp.company)}</h1>
+    <p class="role">{t(exp.role)}</p>
+    <p class="summary">{t(work.summary)}</p>
+    <div class="tags">{exp.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
+  </section>
+
+  <div class="cards">
+    {work.sections.map((s, n) => (
+      <a class="card reveal" href={`#${s.id}`}>
+        <span class="num">{pad(n)}</span>
+        <strong>{t(s.title)}</strong>
+        <span>{t(s.lead)}</span>
+      </a>
+    ))}
+  </div>
+
+  {work.sections.map((s, n) => (
+    <section id={s.id} class="block">
+      <h2 class="reveal"><span>{pad(n)}</span>{t(s.title)}</h2>
+      <p class="lead reveal">{t(s.lead)}</p>
+      <ul class="reveal">{s.points[lang].map((p) => <li>{p}</li>)}</ul>
+      <p class="result reveal"><b>{t(ui.result)}</b>{t(s.result)}</p>
+    </section>
+  ))}
+
+  <nav class="pager" aria-label="Work">
+    {prev ? <a class="btn" href={`${prefix}/work/${prev.slug}/`}>{t(ui.prev)}<small>{t(prev.company)}</small></a> : <span></span>}
+    {next ? <a class="btn" href={`${prefix}/work/${next.slug}/`}>{t(ui.next)}<small>{t(next.company)}</small></a> : <span></span>}
+  </nav>
+</main>
+
+<footer>© {new Date().getFullYear()} Shin Lin · Built with Astro, served by Cloudflare</footer>
+
+<script>
+  const root = document.documentElement;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  addEventListener('pointermove', (e) => {
+    root.style.setProperty('--mx', e.clientX + 'px');
+    root.style.setProperty('--my', e.clientY + 'px');
+    const card = (e.target as HTMLElement).closest<HTMLElement>('.card');
+    if (card) {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--cx', e.clientX - r.left + 'px');
+      card.style.setProperty('--cy', e.clientY - r.top + 'px');
+    }
+  });
+  const bar = document.querySelector<HTMLElement>('.progress')!;
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+  };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll<HTMLElement>('.reveal').forEach((el, i) => {
+    if (!reduce) el.style.transitionDelay = `${Math.min((i % 6) * 70, 350)}ms`;
+    io.observe(el);
+  });
+  document.getElementById('theme-btn')!.addEventListener('click', () => {
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+  });
+</script>
+
+<style>
+  .nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 14px max(16px, calc((100vw - 880px) / 2)); background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .brand { font-family: var(--mono); font-weight: 700; text-decoration: none; }
+  .cursor { color: var(--accent); animation: blink 1s steps(1) infinite; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn { display: inline-grid; place-items: center; padding: 6px 8px !important; }
+  .icon-btn, .lang { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px;
+    padding: 4px 12px; font-size: 13px; cursor: pointer; text-decoration: none; font-family: inherit; }
+  .icon-btn:hover, .lang:hover { border-color: var(--accent); }
+
+  main, footer { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  .crumb { padding-top: 32px; font-size: 13px; color: var(--muted); }
+  .crumb a { color: var(--muted); text-decoration: none; }
+  .crumb a:hover { color: var(--accent); }
+  .head { padding: 40px 0 32px; }
+  .period { margin: 0; font: 13px var(--mono); color: var(--accent); }
+  h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.05; margin: 6px 0 8px; letter-spacing: -0.02em; }
+  .role { margin: 0 0 18px; font-size: 18px; color: var(--muted); }
+  .summary { margin: 0; font-size: clamp(17px, 2.2vw, 20px); max-width: 720px; font-weight: 500; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+  .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .card { position: relative; display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; padding: 18px 20px; overflow: hidden; text-decoration: none; transition: border-color .3s; }
+  .card::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(320px circle at var(--cx, 50%) var(--cy, 50%), var(--accent-soft), transparent 70%); }
+  .card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .card:hover::before { opacity: 1; }
+  .card > * { position: relative; }
+  .num { font: 12px var(--mono); color: var(--accent); }
+  .card strong { font-size: 16px; }
+  .card span:last-child { font-size: 14px; color: var(--muted); }
+
+  .block { padding: 56px 0 0; scroll-margin-top: 64px; }
+  h2 { font-size: 26px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 12px; }
+  h2 span { font: 13px var(--mono); color: var(--accent); }
+  .lead { margin: 0 0 16px; color: var(--muted); }
+  ul { margin: 0; padding-left: 20px; font-size: 16px; }
+  li { margin: 6px 0; }
+  .result { margin: 18px 0 0; padding: 14px 18px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+  .result b { font: 12px var(--mono); color: var(--accent); margin-right: 12px; }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; padding: 72px 0 48px; }
+  .btn { display: flex; flex-direction: column; text-decoration: none; padding: 12px 18px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--surface); font-size: 14px; font-weight: 500; transition: border-color .2s; }
+  .btn:last-child { text-align: right; }
+  .btn small { color: var(--muted); font-weight: 400; }
+  .btn:hover { border-color: var(--accent); }
+  footer { padding: 40px 16px 56px; color: var(--muted); font-size: 13px; text-align: center; border-top: 1px solid var(--line); }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+</style>
