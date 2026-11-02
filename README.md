@@ -22,7 +22,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | `src/components/WorkPage.astro` | 成果頁版面（kubectl describe、事件流程、Before/After） |
 | `src/components/ArchDiagram.astro` | 成果頁架構圖（inline SVG、流動動畫） |
 | `src/components/Offers.astro` | 首頁「你可以把這些交給我」：6 件事 × 證據連結 |
-| `src/components/CityStory.astro` | 首頁「一路走來」：火車與逐站迭代的城市插畫（捲動驅動） |
+| `src/components/CityStory.astro` | 首頁「一路走來」：全螢幕旅程，鳥瞰路線 → 鏡頭跟火車逐站推進 → 鳥瞰完成的城市；對話框與路線圖導覽 |
 | `src/components/Bgm.astro` | Web Audio 即時合成的原創背景音樂（預設開啟，第一次互動時開始播放） |
 | `src/components/SkillStack.astro` | 首頁技能分層與技能 × 工作矩陣 |
 | `src/components/ResumePrint.astro` | `/resume/` 列印版履歷（A4） |

@@ -17,5 +17,7 @@ export const storyUi = {
   newSkills: { zh: '這一站新增的技能', en: 'Skills picked up here' },
   epilogueTitle: { zh: '終站？', en: 'Last stop?' },
   epilogue: { zh: '城市沒有完美，永遠在施工中——只有下一次迭代。', en: 'No city is ever finished — it is always under construction. There is only the next iteration.' },
-  view: { zh: '看這一站 →', en: 'See this stop →' },
+  route: { zh: '路線圖', en: 'Route map' },
+  routeHint: { zh: '先看看整條路線，再一站一站走進去。', en: 'First the whole route — then step into each stop.' },
+  end: { zh: '終站', en: 'Now' },
 };
