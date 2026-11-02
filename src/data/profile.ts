@@ -15,18 +15,18 @@ export const profile = {
     en: ['architecting private cloud', 'shipping platforms with GitOps', 'building AI infrastructure', 'keeping systems reliable'],
   } as Record<Lang, string[]>,
   intro: {
-    zh: '7 年軟體與基礎設施經驗，走過 MEC 邊緣運算平台、影片推薦系統與銀行等級 SRE，現在設計雲原生私有雲與 AI 基礎設施。',
-    en: '7+ years across MEC edge platforms, video recommendation and banking-grade SRE — now architecting cloud-native private cloud and AI infrastructure.',
+    zh: '現在設計雲原生私有雲與 AI 基礎設施；之前做過網銀 SRE、社群影音推薦系統與 MEC 邊緣運算平台，累積 7 年軟體與基礎設施經驗。',
+    en: 'Architecting cloud-native private cloud and AI infrastructure — previously online banking SRE, social video recommendation and MEC edge platforms, across 7+ years in software and infrastructure.',
   } as T,
   stats: [
     { value: '7+', label: { zh: '年開發經驗', en: 'years building software' } as T },
     { value: '5', label: { zh: '家公司歷練', en: 'companies' } as T },
     { value: '3', label: { zh: '雲端平台', en: 'cloud platforms' } as T },
   ],
+  email: 'pig840814@gmail.com',
   links: [
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/shin-lin-451994246/' },
     { label: 'GitHub', href: 'https://github.com/rushshin' },
-    // { label: 'Email', href: 'mailto:you@example.com' },
   ],
   experience: [
     {
@@ -127,7 +127,7 @@ export const ui = {
   next: { zh: '下一份 →', en: 'Next →' },
   result: { zh: '成果', en: 'Outcome' },
   contactTitle: { zh: '一起聊聊？', en: "Let's talk" },
-  contactText: { zh: '歡迎透過 LinkedIn 聯絡。', en: 'Reach out on LinkedIn.' },
+  contactText: { zh: '歡迎透過 Email 或 LinkedIn 聯絡。', en: 'Reach out by email or on LinkedIn.' },
   switchLang: { zh: 'EN', en: '中文' },
   palette: { zh: '快速跳轉', en: 'quick jump' },
 } satisfies Record<string, Record<string, T> | T>;

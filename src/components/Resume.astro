@@ -105,7 +105,8 @@ const allSkills = profile.skills.flatMap((g) => g.items);
     <h2 class="reveal"><span>05</span>{t(ui.contactTitle)}</h2>
     <p class="reveal">{t(ui.contactText)}</p>
     <div class="links reveal">
-      {profile.links.map((l) => <a class="btn primary" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+      <a class="btn primary" href={`mailto:${profile.email}`}>{profile.email}</a>
+      {profile.links.map((l) => <a class="btn" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
     </div>
   </section>
 </main>
