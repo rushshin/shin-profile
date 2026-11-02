@@ -1,0 +1,8 @@
+---
+import Base from '../layouts/Base.astro';
+import Resume from '../components/Resume.astro';
+import { profile } from '../data/profile';
+---
+<Base lang="zh" title={`${profile.name.zh}｜${profile.title.zh}`} description={profile.intro.zh}>
+  <Resume lang="zh" />
+</Base>

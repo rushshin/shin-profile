@@ -1,0 +1,405 @@
+---
+import { profile, ui, type Lang } from '../data/profile';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const other = lang === 'zh' ? '/en/' : '/';
+const sections = ['about', 'experience', 'skills', 'education', 'contact'] as const;
+const t = (o: Record<Lang, string>) => o[lang];
+// 30 天 uptime 條（純裝飾，SRE 彩蛋）
+const bars = Array.from({ length: 30 });
+// 捲動逐字點亮：中文逐字、英文逐詞
+const introTokens = lang === 'zh' ? [...t(profile.intro)] : t(profile.intro).split(/(\s+)/);
+const allSkills = profile.skills.flatMap((g) => g.items);
+---
+<header class="nav">
+  <a href="#top" class="brand">SL<span class="cursor">_</span></a>
+  <nav aria-label="Sections">
+    {sections.map((s) => <a href={`#${s}`} data-nav={s}>{t(ui.nav[s])}</a>)}
+  </nav>
+  <div class="actions">
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
+    <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <a class="status reveal" href="#experience">
+      <span class="dot"></span>{t(ui.status)}
+      <span class="uptime" aria-hidden="true">{bars.map(() => <i></i>)}</span>
+      <span class="pct">99.99%</span>
+    </a>
+    <p class="hello reveal">{t(ui.hello)}</p>
+    <h1 class="reveal" id="name" data-text={t(profile.name)}>{t(profile.name)}</h1>
+    <p class="role reveal">{t(profile.title)}</p>
+    <p class="typing reveal" aria-live="polite">
+      <span class="prompt">$</span> {t(ui.iAm)} <span id="typed" data-words={JSON.stringify(profile.typing[lang])}></span><span class="caret">▍</span>
+    </p>
+    <div class="links reveal">
+      {profile.links.map((l) => <a class="btn" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+      <span class="loc">📍 {t(profile.location)}</span>
+    </div>
+    <p class="hint reveal"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd> — {t(ui.palette)}</p>
+  </section>
+
+  <section id="about" class="block">
+    <h2 class="reveal"><span>01</span>{t(ui.nav.about)}</h2>
+    <p class="intro" id="intro" aria-label={t(profile.intro)}>{introTokens.map((w) => <span aria-hidden="true">{w}</span>)}</p>
+    <div class="stats">
+      {profile.stats.map((s) => (
+        <div class="stat card reveal">
+          <strong data-count={s.value}>{s.value}</strong>
+          <span>{t(s.label)}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section id="experience" class="block">
+    <h2 class="reveal"><span>02</span>{t(ui.nav.experience)}</h2>
+    <ol class="timeline">
+      {profile.experience.map((e) => (
+        <li class:list={['job card reveal', { current: e.current }]}>
+          <div class="job-head">
+            <div>
+              <h3>{t(e.role)}</h3>
+              <p class="company">{t(e.company)}</p>
+            </div>
+            <span class="period">{e.period}</span>
+          </div>
+          {e.points[lang].length > 0 && <ul>{e.points[lang].map((p) => <li>{p}</li>)}</ul>}
+          <div class="tags">{e.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section id="skills" class="block">
+    <h2 class="reveal"><span>03</span>{t(ui.nav.skills)}</h2>
+    <div class="skills">
+      {profile.skills.map((g) => (
+        <div class="card reveal">
+          <h3>{t(g.group)}</h3>
+          <div class="tags">{g.items.map((i) => <span class="tag">{i}</span>)}</div>
+        </div>
+      ))}
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="track">{[...allSkills, ...allSkills].map((i) => <span>{i}</span>)}</div>
+      <div class="track rev">{[...allSkills].reverse().concat([...allSkills].reverse()).map((i) => <span>{i}</span>)}</div>
+    </div>
+  </section>
+
+  <section id="education" class="block">
+    <h2 class="reveal"><span>04</span>{t(ui.nav.education)}</h2>
+    <div class="edu">
+      {profile.education.map((ed) => (
+        <div class="card reveal">
+          <div class="job-head">
+            <h3>{t(ed.school)}</h3>
+            <span class="period">{ed.period}</span>
+          </div>
+          <p class="company">{t(ed.degree)}</p>
+          <p class="note">{t(ed.note)}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section id="contact" class="block contact">
+    <h2 class="reveal"><span>05</span>{t(ui.contactTitle)}</h2>
+    <p class="reveal">{t(ui.contactText)}</p>
+    <div class="links reveal">
+      {profile.links.map((l) => <a class="btn primary" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+    </div>
+  </section>
+</main>
+
+<footer>© {new Date().getFullYear()} Shin Lin · Built with Astro, served by Cloudflare</footer>
+
+<dialog id="palette" aria-label="Command palette">
+  <input id="palette-input" type="text" placeholder={lang === 'zh' ? '輸入要前往的區塊…' : 'Type a section…'} autocomplete="off" />
+  <ul id="palette-list">
+    {sections.map((s) => <li><a href={`#${s}`} data-cmd>{t(ui.nav[s])} <small>#{s}</small></a></li>)}
+    {profile.links.map((l) => <li><a href={l.href} target="_blank" rel="noopener" data-cmd>{l.label} <small>↗</small></a></li>)}
+    <li><a href={other} data-cmd>{lang === 'zh' ? 'Switch to English' : '切換為中文'} <small>lang</small></a></li>
+    <li><a href="#" data-cmd data-action="theme">{lang === 'zh' ? '切換深淺色' : 'Toggle theme'} <small>theme</small></a></li>
+  </ul>
+</dialog>
+
+<script>
+  const root = document.documentElement;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 滑鼠聚光燈 + 卡片光暈
+  addEventListener('pointermove', (e) => {
+    root.style.setProperty('--mx', e.clientX + 'px');
+    root.style.setProperty('--my', e.clientY + 'px');
+    const card = (e.target as HTMLElement).closest<HTMLElement>('.card');
+    if (card) {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--cx', e.clientX - r.left + 'px');
+      card.style.setProperty('--cy', e.clientY - r.top + 'px');
+    }
+  });
+
+  // 捲動進度條 + 目前區塊高亮
+  const bar = document.querySelector<HTMLElement>('.progress')!;
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+  };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-nav]');
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (en.isIntersecting) navLinks.forEach((a) => a.classList.toggle('active', a.dataset.nav === en.target.id));
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  document.querySelectorAll('section[id]').forEach((s) => spy.observe(s));
+
+  // 進場動畫（依序延遲）
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll<HTMLElement>('.reveal').forEach((el, i) => {
+    el.style.transitionDelay = `${Math.min((i % 6) * 70, 350)}ms`;
+    io.observe(el);
+  });
+
+  // 數字跳動
+  const counter = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      const el = en.target as HTMLElement; counter.unobserve(el);
+      const raw = el.dataset.count!; const n = parseInt(raw, 10); const suffix = raw.replace(/\d+/, '');
+      if (reduce || isNaN(n)) return;
+      let i = 0; const step = () => { i++; el.textContent = Math.round((n * i) / 30) + suffix; if (i < 30) requestAnimationFrame(step); };
+      step();
+    });
+  }, { threshold: 0.6 });
+  document.querySelectorAll('[data-count]').forEach((el) => counter.observe(el));
+
+  // 打字機
+  const typed = document.getElementById('typed')!;
+  const words: string[] = JSON.parse(typed.dataset.words || '[]');
+  if (reduce) typed.textContent = words[0] ?? '';
+  else {
+    let w = 0, c = 0, del = false;
+    const tick = () => {
+      const word = words[w];
+      c += del ? -1 : 1;
+      typed.textContent = word.slice(0, c);
+      let wait = del ? 35 : 75;
+      if (!del && c === word.length) { del = true; wait = 1600; }
+      else if (del && c === 0) { del = false; w = (w + 1) % words.length; wait = 300; }
+      setTimeout(tick, wait);
+    };
+    tick();
+  }
+
+  // 亂碼解讀標題（Scramble Decode）
+  const nameEl = document.getElementById('name')!;
+  const finalText = nameEl.dataset.text || '';
+  if (!reduce) {
+    const glyphs = '!<>-_\\/[]{}=+*^?#01ABCDEF';
+    let frame = 0; const total = 28;
+    const run = () => {
+      frame++;
+      nameEl.textContent = [...finalText].map((ch, i) =>
+        ch === ' ' ? ' ' : frame / total > i / finalText.length ? ch : glyphs[Math.floor(Math.random() * glyphs.length)]
+      ).join('');
+      if (frame < total) requestAnimationFrame(() => setTimeout(run, 30)); else nameEl.textContent = finalText;
+    };
+    setTimeout(run, 250);
+    nameEl.addEventListener('mouseenter', () => { if (frame >= total) { frame = 0; run(); } });
+  }
+
+  // 自我介紹隨捲動逐字點亮 + 時間軸隨捲動繪製
+  const introSpans = [...document.querySelectorAll<HTMLElement>('#intro span')];
+  const timeline = document.querySelector<HTMLElement>('.timeline')!;
+  const progressOf = (el: HTMLElement, start = 0.85, end = 0.35) => {
+    const r = el.getBoundingClientRect();
+    const a = innerHeight * start - r.top, b = innerHeight * start - innerHeight * end + r.height;
+    return Math.max(0, Math.min(1, a / b));
+  };
+  const onScrollFx = () => {
+    const p = reduce ? 1 : progressOf(document.getElementById('intro')!, 0.9, 0.5);
+    const lit = Math.round(p * introSpans.length);
+    introSpans.forEach((s, i) => s.classList.toggle('lit', i < lit));
+    timeline.style.setProperty('--draw', String(reduce ? 1 : progressOf(timeline, 0.8, 0.5)));
+  };
+  addEventListener('scroll', onScrollFx, { passive: true }); onScrollFx();
+
+  // 磁吸按鈕（Magnetic Button）
+  if (!reduce && matchMedia('(pointer: fine)').matches) {
+    document.querySelectorAll<HTMLElement>('.btn').forEach((b) => {
+      b.addEventListener('pointermove', (e) => {
+        const r = b.getBoundingClientRect();
+        b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`;
+      });
+      b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+    });
+  }
+
+  // 深淺色切換
+  const toggleTheme = () => {
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+  };
+  document.getElementById('theme-btn')!.addEventListener('click', toggleTheme);
+
+  // Ctrl/⌘ + K 指令面板
+  const dlg = document.getElementById('palette') as HTMLDialogElement;
+  const input = document.getElementById('palette-input') as HTMLInputElement;
+  const items = [...dlg.querySelectorAll<HTMLAnchorElement>('[data-cmd]')];
+  let sel = 0;
+  const visible = () => items.filter((a) => a.parentElement!.style.display !== 'none');
+  const paint = () => visible().forEach((a, i) => a.classList.toggle('sel', i === sel));
+  const open = () => { input.value = ''; items.forEach((a) => (a.parentElement!.style.display = '')); sel = 0; paint(); dlg.showModal(); input.focus(); };
+  addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); dlg.open ? dlg.close() : open(); }
+  });
+  document.querySelector('.hint')?.addEventListener('click', open);
+  input.addEventListener('input', () => {
+    const q = input.value.toLowerCase();
+    items.forEach((a) => (a.parentElement!.style.display = a.textContent!.toLowerCase().includes(q) ? '' : 'none'));
+    sel = 0; paint();
+  });
+  input.addEventListener('keydown', (e) => {
+    const v = visible();
+    if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, v.length - 1); paint(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); paint(); }
+    if (e.key === 'Enter' && v[sel]) { e.preventDefault(); v[sel].click(); }
+  });
+  items.forEach((a) => a.addEventListener('click', (e) => {
+    if (a.dataset.action === 'theme') { e.preventDefault(); toggleTheme(); }
+    dlg.close();
+  }));
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+</script>
+
+<style>
+  .nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 14px max(16px, calc((100vw - 880px) / 2)); background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+  .brand { font-family: var(--mono); font-weight: 700; text-decoration: none; letter-spacing: .02em; }
+  .cursor { color: var(--accent); animation: blink 1s steps(1) infinite; }
+  nav { display: flex; gap: 22px; font-size: 14px; }
+  nav a { text-decoration: none; color: var(--muted); transition: color .2s; position: relative; }
+  nav a:hover, nav a.active { color: var(--text); }
+  nav a.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; background: var(--accent); border-radius: 2px; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn { display: inline-grid; place-items: center; padding: 6px 8px !important; }
+  .icon-btn, .lang { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px;
+    padding: 4px 12px; font-size: 13px; cursor: pointer; text-decoration: none; font-family: inherit; }
+  .icon-btn:hover, .lang:hover { border-color: var(--accent); }
+
+  main, footer { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  .hero { min-height: calc(100vh - 60px); display: flex; flex-direction: column; justify-content: center; padding: 64px 0; }
+  .status { display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; font: 12px var(--mono);
+    border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; text-decoration: none; margin-bottom: 32px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 2s infinite; }
+  .uptime { display: inline-flex; gap: 2px; }
+  .uptime i { width: 3px; height: 12px; border-radius: 1px; background: var(--ok); opacity: .75; }
+  .uptime i:nth-child(17) { opacity: .35; }
+  .pct { color: var(--muted); }
+  .hello { margin: 0; color: var(--muted); font-size: 18px; }
+  h1 { font-size: clamp(44px, 9vw, 88px); line-height: 1.02; margin: 4px 0 12px; letter-spacing: -0.03em;
+    background: linear-gradient(120deg, var(--text) 40%, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .role { font-size: clamp(17px, 2.6vw, 22px); margin: 0 0 20px; }
+  .typing { font-family: var(--mono); font-size: 15px; color: var(--muted); margin: 0 0 32px; min-height: 1.7em; }
+  .prompt { color: var(--accent); }
+  #typed { color: var(--text); }
+  .caret { color: var(--accent); animation: blink 1s steps(1) infinite; }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn { display: inline-block; text-decoration: none; padding: 9px 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+    font-size: 14px; font-weight: 500; transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .2s, box-shadow .2s; }
+  .btn:hover { border-color: var(--accent); box-shadow: 0 8px 24px -12px var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .loc { color: var(--muted); font-size: 14px; margin-left: 6px; }
+  .hint { margin-top: 40px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; background: var(--surface); }
+
+  .block { padding: 72px 0; scroll-margin-top: 64px; }
+  h2 { font-size: 28px; margin: 0 0 28px; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 12px; }
+  h2 span { font: 13px var(--mono); color: var(--accent); }
+  .intro { font-size: clamp(19px, 2.6vw, 24px); line-height: 1.6; max-width: 720px; margin: 0 0 36px; font-weight: 500; }
+  .intro span { color: var(--line); transition: color .25s; }
+  .intro span.lit { color: var(--text); }
+
+  .card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; overflow: hidden;
+    transition: border-color .3s, transform .3s; }
+  .card::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(320px circle at var(--cx, 50%) var(--cy, 50%), var(--accent-soft), transparent 70%); }
+  .card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .card:hover::before { opacity: 1; }
+  /* 邊框聚光（Border Spotlight） */
+  .card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(220px circle at var(--cx, 50%) var(--cy, 50%), var(--accent), transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .card:hover::after { opacity: 1; }
+  .card > * { position: relative; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat strong { display: block; font-size: 36px; line-height: 1.1; letter-spacing: -0.02em; color: var(--accent); }
+  .stat span { color: var(--muted); font-size: 14px; }
+
+  .timeline { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; display: grid; gap: 18px; }
+  .timeline::before, .timeline::after { content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; }
+  .timeline::before { background: var(--line); }
+  .timeline::after { background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 40%, transparent)); transform-origin: top; transform: scaleY(var(--draw, 0)); }
+  .job { overflow: visible; }
+  .job > .job-head::before { content: ''; position: absolute; left: -52px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--accent); }
+  .job.current > .job-head::before { background: var(--accent); box-shadow: 0 0 0 5px var(--accent-soft); }
+  .job-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  h3 { margin: 0; font-size: 17px; }
+  .company { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .period { font: 12px var(--mono); color: var(--muted); white-space: nowrap; padding-top: 3px; }
+  .job ul { margin: 14px 0 0; padding-left: 18px; font-size: 15px; }
+  .job li { margin: 4px 0; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+
+  .skills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .edu { display: grid; gap: 14px; }
+  /* 技能無限跑馬燈 */
+  .marquee { margin-top: 28px; display: grid; gap: 10px; overflow: hidden;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+  .track { display: flex; gap: 10px; width: max-content; animation: slide 40s linear infinite; }
+  .track.rev { animation-direction: reverse; animation-duration: 48s; }
+  .marquee:hover .track { animation-play-state: paused; }
+  .track span { font: 13px var(--mono); padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); white-space: nowrap; }
+  @keyframes slide { to { transform: translateX(-50%); } }
+  .note { margin: 8px 0 0; font-size: 14px; }
+  .contact p { font-size: 17px; max-width: 600px; }
+  footer { padding: 40px 16px 56px; color: var(--muted); font-size: 13px; text-align: center; border-top: 1px solid var(--line); }
+
+  dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(520px, calc(100vw - 32px)); background: var(--surface); color: var(--text);
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.4); margin-top: 18vh; }
+  dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(3px); }
+  #palette-input { width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 16px 18px; font: 16px var(--font); background: transparent; color: var(--text); outline: none; }
+  #palette-list { list-style: none; margin: 0; padding: 8px; max-height: 50vh; overflow: auto; }
+  #palette-list a { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 8px; text-decoration: none; font-size: 15px; }
+  #palette-list a small { color: var(--muted); font-family: var(--mono); }
+  #palette-list a.sel, #palette-list a:hover { background: var(--accent-soft); color: var(--accent); }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+  @media (max-width: 720px) {
+    nav { display: none; }
+    .stats { grid-template-columns: 1fr; }
+    .skills { grid-template-columns: 1fr; }
+    .job-head { flex-direction: column; gap: 4px; }
+    .uptime { display: none; }
+    .hint { display: none; }
+    .block { padding: 56px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dot, .cursor, .caret, .track { animation: none; }
+  }
+</style>
