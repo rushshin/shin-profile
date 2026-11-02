@@ -6,7 +6,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 |---|---|
 | 框架 | Astro 7（純靜態，無 UI 框架、無外部字型或 CDN） |
 | 部署 | Cloudflare Workers Static Assets（`wrangler.jsonc`） |
-| 路由 | `/` 中文、`/en/` 英文、`/work/<slug>/` 成果頁、`/404` |
+| 路由 | `/` 中文、`/en/` 英文、`/work/<slug>/` 成果頁、`/resume/` 列印版履歷、`/404` |
 | 網址 | `https://shin-profile.shin-lin.workers.dev`（暫定，未綁自訂網域） |
 
 ## 結構
@@ -21,6 +21,8 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | `src/components/ArchDiagram.astro` | 成果頁架構圖（inline SVG、流動動畫） |
 | `src/components/CareerLog.astro` | 首頁 `git log --graph` 職涯圖 |
 | `src/components/SkillStack.astro` | 首頁技能分層與技能 × 工作矩陣 |
+| `src/components/ResumePrint.astro` | `/resume/` 列印版履歷（A4） |
+| `scripts/pdf.mjs` | 把 `/resume/` 輸出成 `public/Shin-Lin-Resume-{zh,en}.pdf` |
 | `src/layouts/Base.astro` | head、SEO / hreflang、CSS tokens、深淺色 |
 | `src/pages/` | `index.astro`、`work/[slug].astro`、`en/` 對應頁、`404.astro` |
 
@@ -33,8 +35,20 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | 經歷內容 | 完成（MetaMEC 前依 104 履歷） |
 | 成果頁 | 完成（5 頁，質化成果，無量化數據） |
 | 視覺化 | 完成（架構圖、職涯圖、技能矩陣、現職徽章） |
+| 白話層 | 完成（一分鐘看懂、現職／曾任、成果頁白話摘要） |
+| PDF 履歷 | 完成（內容變更後要重新產生） |
 | 自訂網域 | 未購買 |
 | OG 分享圖、Web Analytics | 未實作 |
+
+## PDF 履歷
+
+`profile.ts` 變更後，執行以下指令重新產生 PDF，再 commit `public/*.pdf`。
+
+```bash
+npm run build && npm run pdf
+```
+
+`playwright-core` 使用本機 `~/.cache/ms-playwright` 的 Chromium。
 
 ## 動態效果
 

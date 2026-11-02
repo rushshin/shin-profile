@@ -8,6 +8,6 @@ const { slug } = Astro.params;
 const exp = profile.experience.find((e) => e.slug === slug)!;
 const work = works.find((w) => w.slug === slug)!;
 ---
-<Base lang="zh" title={`${exp.company.zh}｜${profile.name.zh}`} description={work.summary.zh} path={`/work/${slug}/`}>
+<Base lang="zh" title={`${exp.company.zh}｜${profile.name.zh}`} description={work.plain.zh} path={`/work/${slug}/`}>
   <WorkPage lang="zh" slug={slug!} />
 </Base>

@@ -1,0 +1,8 @@
+---
+import Base from '../layouts/Base.astro';
+import ResumePrint from '../components/ResumePrint.astro';
+import { profile } from '../data/profile';
+---
+<Base lang="zh" title={`${profile.name.zh}｜履歷`} description={profile.intro.zh} path="/resume/">
+  <ResumePrint lang="zh" />
+</Base>

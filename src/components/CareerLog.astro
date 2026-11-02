@@ -1,5 +1,5 @@
 ---
-import { profile, type Lang } from '../data/profile';
+import { profile, ui, type Lang } from '../data/profile';
 import { works } from '../data/work';
 
 interface Props { lang: Lang }
@@ -11,6 +11,10 @@ const shortHash = (slug: string) => {
   return hash.toString(16).padStart(7, '0').slice(-7);
 };
 ---
+<div class="career-intro reveal">
+  <h3>{ui.careerPath[lang]}</h3>
+  <p>{ui.careerCaption[lang]}</p>
+</div>
 <div class="career-log reveal">
   <div class="terminal-head"><span class="prompt">$</span> git log --graph --oneline</div>
   <div class="commits">
@@ -32,6 +36,9 @@ const shortHash = (slug: string) => {
 </div>
 
 <style>
+  .career-intro { margin-top: 32px; font-family: var(--font); }
+  .career-intro h3 { margin: 0; font-size: 20px; line-height: 1.4; }
+  .career-intro p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
   .career-log { margin-top: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); overflow: hidden; min-width: 0; }
   .terminal-head { padding: 11px 18px; border-bottom: 1px solid var(--line); font: 12px var(--mono); color: var(--muted); }
   .prompt, .ref { color: var(--accent); }

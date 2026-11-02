@@ -46,7 +46,7 @@ export const visuals: Record<string, Visual> = {
         { id: 'ocp', label: 'OpenShift', col: 3, row: 0, section: 'cloud' },
         { id: 'pub', label: 'AWS / GCP', col: 3, row: 1, section: 'cloud' },
         { id: 'otel', label: 'OTel module', col: 2, row: 2, section: 'observability' },
-        { id: 'dash', label: 'Logs · Metrics · Traces', col: 3, row: 2, section: 'observability' },
+        { id: 'dash', label: 'Logs/Metrics/Traces', col: 3, row: 2, section: 'observability' },
       ],
       edges: [['internal', 'gw'], ['cube', 'gw'], ['gw', 'svc'], ['svc', 'ocp'], ['svc', 'pub'], ['svc', 'otel'], ['otel', 'dash']],
     },
@@ -68,7 +68,7 @@ export const visuals: Record<string, Visual> = {
         { id: 'api', label: 'Go API (gin)', col: 1, row: 1, section: 'api' },
         { id: 'rec', label: 'Recommendation', col: 2, row: 0, section: 'recommendation' },
         { id: 'store', label: 'Bigtable · Spanner', col: 2, row: 2, section: 'data' },
-        { id: 'cache', label: 'Redis · Elasticsearch', col: 3, row: 2, section: 'data' },
+        { id: 'cache', label: 'Redis · Elastic', col: 3, row: 2, section: 'data' },
         { id: 'pubsub', label: 'Pub/Sub + cronjob', col: 3, row: 1, section: 'data' },
       ],
       edges: [['app', 'api'], ['api', 'rec'], ['api', 'store'], ['rec', 'store'], ['pubsub', 'store'], ['store', 'cache']],
@@ -189,6 +189,7 @@ export const skillJobs: Record<string, string[]> = {
 };
 
 export const labels = {
+  tech: { zh: '技術細節', en: 'Technical details' },
   arch: { zh: '架構示意（點選節點跳到對應段落）', en: 'Architecture (select a node to jump to its section)' },
   context: { zh: '情境', en: 'Context' },
   problem: { zh: '問題', en: 'Problem' },

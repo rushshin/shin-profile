@@ -1,5 +1,5 @@
 ---
-import { profile, type Lang } from '../data/profile';
+import { profile, ui, type Lang } from '../data/profile';
 import { skillJobs } from '../data/visuals';
 
 interface Props { lang: Lang }
@@ -12,6 +12,7 @@ const jobs = [
   { slug: 'syscom', name: lang === 'zh' ? '凌群' : 'SYSCOM' },
 ];
 ---
+<p class="skill-caption reveal">{ui.skillCaption[lang]}</p>
 <div class="skill-stack reveal" data-skill-stack>
   <div class="layers" aria-label={lang === 'zh' ? '技能類別' : 'Skill groups'}>
     {profile.skills.map((group, index) => (
@@ -68,6 +69,7 @@ const jobs = [
 </script>
 
 <style>
+  .skill-caption { margin: 0 0 16px; color: var(--muted); font: 14px/1.6 var(--font); }
   .skill-stack { display: grid; grid-template-columns: minmax(0, 38%) minmax(0, 1fr); gap: 18px; min-width: 0; }
   .layers { display: grid; align-content: start; gap: 8px; min-width: 0; }
   .layer { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: 13px var(--mono); text-align: left; cursor: pointer; }

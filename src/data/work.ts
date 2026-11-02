@@ -3,11 +3,15 @@ type T = Record<Lang, string>;
 type L = Record<Lang, string[]>;
 
 export interface WorkSection { id: string; title: T; lead: T; points: L; result: T }
-export interface Work { slug: string; summary: T; sections: WorkSection[] }
+export interface Work { slug: string; plain: T; summary: T; sections: WorkSection[] }
 
 export const works: Work[] = [
   {
     slug: 'metamec',
+    plain: {
+      zh: '幫企業在自己的機房建一套像公有雲一樣好用又安全的平台，並帶領小團隊交付給客戶。',
+      en: 'Builds enterprises a secure, cloud-like platform in their own data centers, and leads a small team delivering it to customers.',
+    },
     summary: {
       zh: '從裸機到可交付的雲原生私有雲：平台架構、GitOps、安全與 AI 工作負載。',
       en: 'A cloud-native private cloud from bare metal to delivery: platform architecture, GitOps, security and AI workloads.',
@@ -67,6 +71,10 @@ export const works: Work[] = [
   },
   {
     slug: 'cathay',
+    plain: {
+      zh: '確保國泰世華網銀與行動銀行穩定運作，並帶領團隊把服務搬上雲端、建立統一的監控。',
+      en: "Kept Cathay United Bank's online and mobile banking running reliably, and led a team moving services to the cloud with unified monitoring.",
+    },
     summary: {
       zh: '銀行等級 SRE：維運 CUBE 網銀關鍵 gateway、協助網銀上雲、建立共用監控。',
       en: 'Banking-grade SRE: running the CUBE gateway, moving online banking to the cloud and building shared monitoring.',
@@ -106,6 +114,10 @@ export const works: Work[] = [
   },
   {
     slug: 'playsee',
+    plain: {
+      zh: '打造社群影音 App 的首頁推薦，讓每位使用者看到自己有興趣的影片。',
+      en: 'Built the home-feed recommendations of a social video app so each user sees videos they care about.',
+    },
     summary: {
       zh: '社群影音 App 後端：首頁影片推薦、Go API 與 GCP 上的資料一致性。',
       en: 'Social video app backend: home-feed recommendation, Go APIs and data consistency on GCP.',
@@ -145,6 +157,10 @@ export const works: Work[] = [
   },
   {
     slug: 'alpha-networks',
+    plain: {
+      zh: '把一套電信規格的邊緣運算平台，從技術做成可以授權銷售的產品。',
+      en: 'Turned a telecom-standard edge computing platform into a product that could be licensed and sold.',
+    },
     summary: {
       zh: 'MEC 邊緣運算平台：依 ETSI / 3GPP 設計，並把平台做成可銷售的商品。',
       en: 'A MEC edge computing platform built to ETSI / 3GPP and turned into a sellable product.',
@@ -184,6 +200,10 @@ export const works: Work[] = [
   },
   {
     slug: 'syscom',
+    plain: {
+      zh: '在系統整合公司參與區塊鏈、AI 影像辨識與大數據等客戶專案，從諮詢做到交付。',
+      en: 'Worked on client projects in blockchain, AI image recognition and big data at a system integrator, from consulting to delivery.',
+    },
     summary: {
       zh: '系統整合：區塊鏈顧問、AI 影像分析與大數據專案、容器化人事雲。',
       en: 'System integration: blockchain consulting, AI image analysis, big data and a containerized HR cloud.',

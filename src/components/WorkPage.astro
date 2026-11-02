@@ -43,19 +43,8 @@ const describe: [string, string][] = [
     <h1>{t(exp.company)}</h1>
     <p class="role">{t(exp.role)}</p>
     {exp.team && <p class="team">{t(exp.team)}</p>}
-    <p class="summary">{t(work.summary)}</p>
+    <p class="summary">{t(work.plain)}</p>
   </section>
-
-  <div class="term reveal" aria-label="kubectl describe">
-    <p class="cmd"><span>$</span> kubectl describe role {slug}</p>
-    <dl>
-      {describe.map(([k, val]) => (<><dt>{k}:</dt><dd class:list={{ ok: val === 'Running' }}>{val}</dd></>))}
-    </dl>
-    <p class="ev-head">Events:</p>
-    <ol class="events">
-      {work.sections.map((s) => <li><span class="type">Normal</span><span class="reason">{s.id}</span><span>{t(s.title)}</span></li>)}
-    </ol>
-  </div>
 
   <ol class="story">
     {steps.map((st, n) => (
@@ -73,18 +62,34 @@ const describe: [string, string][] = [
     ))}
   </div>
 
-  <ArchDiagram diagram={v.diagram} label={t(labels.arch)} />
-  <p class="cap">{t(labels.arch)}</p>
+  <div class="tech">
+    <h2 class="reveal"><span>&lt;/&gt;</span>{t(labels.tech)}</h2>
+    <p class="lead reveal">{t(work.summary)}</p>
 
-  <div class="compare reveal">
-    <input type="radio" name="cmp" id="cmp-typical" />
-    <input type="radio" name="cmp" id="cmp-ours" checked />
-    <div class="seg" role="group">
-      <label for="cmp-typical">{t(labels.typical)}</label>
-      <label for="cmp-ours">{t(labels.ours)}</label>
+    <ArchDiagram diagram={v.diagram} label={t(labels.arch)} />
+    <p class="cap">{t(labels.arch)}</p>
+
+    <div class="compare reveal">
+      <input type="radio" name="cmp" id="cmp-typical" />
+      <input type="radio" name="cmp" id="cmp-ours" checked />
+      <div class="seg" role="group">
+        <label for="cmp-typical">{t(labels.typical)}</label>
+        <label for="cmp-ours">{t(labels.ours)}</label>
+      </div>
+      <ol class="flow typical">{v.compare.typical[lang].map((x) => <li>{x}</li>)}</ol>
+      <ol class="flow ours">{v.compare.ours[lang].map((x) => <li>{x}</li>)}</ol>
     </div>
-    <ol class="flow typical">{v.compare.typical[lang].map((x) => <li>{x}</li>)}</ol>
-    <ol class="flow ours">{v.compare.ours[lang].map((x) => <li>{x}</li>)}</ol>
+
+    <div class="term reveal" aria-label="kubectl describe">
+      <p class="cmd"><span>$</span> kubectl describe role {slug}</p>
+      <dl>
+        {describe.map(([k, val]) => (<><dt>{k}:</dt><dd class:list={{ ok: val === 'Running' }}>{val}</dd></>))}
+      </dl>
+      <p class="ev-head">Events:</p>
+      <ol class="events">
+        {work.sections.map((s) => <li><span class="type">Normal</span><span class="reason">{s.id}</span><span>{t(s.title)}</span></li>)}
+      </ol>
+    </div>
   </div>
 
   {work.sections.map((s, n) => (
@@ -172,7 +177,9 @@ const describe: [string, string][] = [
   .team { display: inline-block; margin: 0 0 18px; font: 12px var(--mono); padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
   .summary { margin: 0; font-size: clamp(17px, 2.2vw, 20px); max-width: 720px; font-weight: 500; }
 
-  .term { margin: 28px 0 0; padding: 18px 20px; border-radius: 14px; background: #0d1117; color: #c9d1d9; font: 13px/1.7 var(--mono); overflow-wrap: anywhere; }
+  .tech { margin: 64px 0 0; padding-top: 40px; border-top: 1px dashed var(--line); }
+  .tech > h2 span { font-family: var(--mono); }
+  .term { margin: 32px 0 0; padding: 18px 20px; border-radius: 14px; background: #0d1117; color: #c9d1d9; font: 13px/1.7 var(--mono); overflow-wrap: anywhere; }
   .term p { margin: 0; }
   .cmd span { color: #58a6ff; margin-right: 6px; }
   .term dl { display: grid; grid-template-columns: 11ch 1fr; gap: 0 12px; margin: 10px 0; }
@@ -185,7 +192,7 @@ const describe: [string, string][] = [
   .events .type { color: #3fb950; }
   .events .reason { color: #d2a8ff; }
 
-  .story { list-style: none; margin: 28px 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: s; }
+  .story { list-style: none; margin: 36px 0 28px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; counter-reset: s; }
   .story li { position: relative; padding: 14px 18px 14px 0; border-top: 2px solid var(--line); font-size: 15px; }
   .story li::before { content: ''; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
   .story li.outcome { border-top-color: var(--accent); }

@@ -1,0 +1,8 @@
+---
+import Base from '../../layouts/Base.astro';
+import ResumePrint from '../../components/ResumePrint.astro';
+import { profile } from '../../data/profile';
+---
+<Base lang="en" title={`${profile.name.en} | Resume`} description={profile.intro.en} path="/resume/">
+  <ResumePrint lang="en" />
+</Base>
