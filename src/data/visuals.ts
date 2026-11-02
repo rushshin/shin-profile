@@ -184,7 +184,7 @@ export const skillJobs: Record<string, string[]> = {
   Elasticsearch: ['playsee'],
   Bigtable: ['playsee'],
   Spanner: ['playsee'],
-  MongoDB: [],
+  MongoDB: ['cathay'],
   'Pub/Sub': ['playsee'],
 };
 
