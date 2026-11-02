@@ -1,11 +1,13 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
-import CareerLog from './CareerLog.astro';
+import FitPanel from './FitPanel.astro';
+import CityStory from './CityStory.astro';
+import Bgm from './Bgm.astro';
 import SkillStack from './SkillStack.astro';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const other = lang === 'zh' ? '/en/' : '/';
-const sections = ['about', 'experience', 'skills', 'education', 'contact'] as const;
+const sections = ['fit', 'about', 'story', 'experience', 'skills', 'education', 'contact'] as const;
 const t = (o: Record<Lang, string>) => o[lang];
 const mottoParts = t(profile.motto).split(/(\[[^\]]+\])/).filter(Boolean).map((p) => ({ text: p.replace(/^\[|\]$/g, ''), hl: p.startsWith('[') }));
 const mottoPlain = mottoParts.map((p) => p.text).join('');
@@ -52,6 +54,10 @@ const allSkills = profile.skills.flatMap((g) => g.items);
     <p class="hint reveal"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd> — {t(ui.palette)}</p>
   </section>
 
+  <section id="fit" class="block fit">
+    <FitPanel lang={lang} />
+  </section>
+
   <section id="about" class="block">
     <h2 class="reveal"><span>01</span>{t(ui.nav.about)}</h2>
     <p class="highlights-label reveal">{t(ui.atAGlance)}</p>
@@ -80,11 +86,12 @@ const allSkills = profile.skills.flatMap((g) => g.items);
         </div>
       ))}
     </div>
-    <CareerLog lang={lang} />
   </section>
 
+  <CityStory lang={lang} />
+
   <section id="experience" class="block">
-    <h2 class="reveal"><span>02</span>{t(ui.nav.experience)}</h2>
+    <h2 class="reveal"><span>03</span>{t(ui.nav.experience)}</h2>
     <ol class="timeline">
       {profile.experience.map((e) => (
         <li class:list={['job card reveal', { current: e.current }]}>
@@ -105,7 +112,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   </section>
 
   <section id="skills" class="block">
-    <h2 class="reveal"><span>03</span>{t(ui.nav.skills)}</h2>
+    <h2 class="reveal"><span>04</span>{t(ui.nav.skills)}</h2>
     <SkillStack lang={lang} />
     <div class="marquee" aria-hidden="true">
       <div class="track">{[...allSkills, ...allSkills].map((i) => <span>{i}</span>)}</div>
@@ -114,7 +121,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   </section>
 
   <section id="education" class="block">
-    <h2 class="reveal"><span>04</span>{t(ui.nav.education)}</h2>
+    <h2 class="reveal"><span>05</span>{t(ui.nav.education)}</h2>
     <div class="edu">
       {profile.education.map((ed) => (
         <div class="card reveal">
@@ -129,7 +136,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   </section>
 
   <section id="contact" class="block contact">
-    <h2 class="reveal"><span>05</span>{t(ui.contactTitle)}</h2>
+    <h2 class="reveal"><span>06</span>{t(ui.contactTitle)}</h2>
     <p class="reveal">{t(ui.contactText)}</p>
     <div class="links reveal">
       {profile.links.map((l) => <a class="btn primary" href={l.href} {...ext(l.href)}>{l.label}{arrow(l.href)}</a>)}
@@ -137,6 +144,8 @@ const allSkills = profile.skills.flatMap((g) => g.items);
     </div>
   </section>
 </main>
+
+<Bgm />
 
 <footer>© {new Date().getFullYear()} Shin Lin · Built with Astro, served by Cloudflare</footer>
 

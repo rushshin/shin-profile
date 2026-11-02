@@ -1,0 +1,295 @@
+---
+import { profile, type Lang } from '../data/profile';
+import { skillUse } from '../data/visuals';
+import { chapters, storyUi } from '../data/story';
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const prefix = lang === 'zh' ? '' : '/en';
+const short: Record<string, Record<Lang, string>> = {
+  syscom: { zh: '凌群', en: 'SYSCOM' }, 'alpha-networks': { zh: '明泰', en: 'Alpha' }, playsee: { zh: 'Playsee', en: 'Playsee' },
+  cathay: { zh: '國泰', en: 'Cathay' }, metamec: { zh: 'MetaMEC', en: 'MetaMEC' },
+};
+const allSkills = profile.skills.flatMap((g) => g.items);
+const firstStop = (skill: string) => chapters.findIndex((c) => skillUse[skill]?.[c.slug]);
+const stops = chapters.map((c, i) => ({
+  ...c,
+  exp: profile.experience.find((e) => e.slug === c.slug)!,
+  skills: allSkills.filter((s) => firstStop(s) === i),
+}));
+
+// Deterministic layout so every build draws the same city.
+let seed = 7;
+const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const XS = [110, 300, 490, 680, 870];
+const GROUND = 318;
+const palette = ['#f1dfbf', '#d99a76', '#8fb8b2', '#a9b4c8', '#e8c27a', '#c98f8f'];
+type Win = { x: number; y: number; on: number };
+type Bld = { x: number; y: number; w: number; h: number; fill: string; wins: Win[]; on: number; roof?: boolean };
+const districts = XS.map((cx, i) => {
+  const blds: Bld[] = [];
+  const count = i === 4 ? 2 : 3;
+  let x = cx - 70;
+  for (let b = 0; b < count; b++) {
+    const w = 34 + Math.round(rand() * 18);
+    const h = 52 + i * 16 + Math.round(rand() * 46);
+    const y = GROUND - h;
+    const wins: Win[] = [];
+    for (let wy = y + 10; wy < GROUND - 14; wy += 15) {
+      for (let wx = x + 7; wx < x + w - 9; wx += 11) wins.push({ x: wx, y: wy, on: i + Math.floor(rand() * 3) });
+    }
+    blds.push({ x, y, w, h, fill: palette[(i + b * 2) % palette.length], wins, on: i, roof: rand() > 0.5 });
+    x += w + 6 + Math.round(rand() * 6);
+  }
+  const top = blds[0];
+  return { cx, i, blds, upgrade: { x: top.x + 4, y: top.y - 22, w: top.w - 8, h: 22, on: i + 2 } };
+});
+const tower = { x: 905, w: 44, h: 228 };
+const towerWins: Win[] = [];
+for (let wy = GROUND - tower.h + 18; wy < GROUND - 12; wy += 14) {
+  for (let wx = tower.x + 7; wx < tower.x + tower.w - 7; wx += 10) towerWins.push({ x: wx, y: wy, on: 4 + Math.floor(rand() * 2) });
+}
+const stars = Array.from({ length: 34 }, () => ({ x: Math.round(rand() * 1000), y: Math.round(rand() * 150), r: rand() > 0.8 ? 1.6 : 1 }));
+const sleepers = Array.from({ length: 64 }, (_, k) => k * 16);
+---
+<section id="story" class="block city-story" data-city>
+  <h2 class="reveal"><span>02</span>{t(storyUi.title)}</h2>
+  <p class="cap reveal">{t(storyUi.caption)}</p>
+
+  <div class="scene">
+    <svg viewBox="0 0 1000 360" role="img" aria-label={t(storyUi.caption)} data-stage="0">
+      <defs>
+        <linearGradient id="sky-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe2f2" /><stop offset="1" stop-color="#fbeed3" /></linearGradient>
+        <linearGradient id="sky-dusk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d8fc4" /><stop offset=".6" stop-color="#f2a98a" /><stop offset="1" stop-color="#fcd9a4" /></linearGradient>
+        <linearGradient id="sky-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141b33" /><stop offset=".7" stop-color="#2c3a63" /><stop offset="1" stop-color="#4b4f7a" /></linearGradient>
+        <radialGradient id="beam"><stop offset="0" stop-color="#fff3c4" stop-opacity=".9" /><stop offset="1" stop-color="#fff3c4" stop-opacity="0" /></radialGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" /></filter>
+      </defs>
+
+      <rect width="1000" height="360" fill="url(#sky-day)" />
+      <rect width="1000" height="360" fill="url(#sky-dusk)" class="fade" data-on="2" />
+      <rect width="1000" height="360" fill="url(#sky-night)" class="fade" data-on="3" />
+      <g class="fade" data-on="3">{stars.map((s) => <circle cx={s.x} cy={s.y} r={s.r} fill="#fff" class="twinkle" />)}</g>
+      <circle cx="840" cy="70" r="22" fill="#fff6d8" class="fade" data-on="3" />
+
+      <g class="clouds">
+        <g class="cloud" style="--d:70s"><ellipse cx="160" cy="70" rx="46" ry="14" /><ellipse cx="190" cy="60" rx="30" ry="14" /></g>
+        <g class="cloud" style="--d:95s"><ellipse cx="560" cy="48" rx="54" ry="13" /><ellipse cx="530" cy="40" rx="28" ry="12" /></g>
+      </g>
+
+      <path d="M0 250 Q120 190 260 236 T520 222 T780 214 T1000 232 V360 H0Z" fill="#a9c3b0" opacity=".55" />
+      <path d="M0 282 Q150 246 330 270 T700 262 T1000 276 V360 H0Z" fill="#8fb894" opacity=".75" />
+
+      {districts.map((d) => (
+        <g class="district" data-station={d.i}>
+          {d.blds.map((b) => (
+            <g class="rise" data-on={b.on} style={`transform-origin: ${b.x + b.w / 2}px ${GROUND}px`}>
+              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="3" fill={b.fill} stroke="#5a4a3c" stroke-opacity=".25" />
+              {b.roof && <path d={`M${b.x - 3} ${b.y} L${b.x + b.w / 2} ${b.y - 12} L${b.x + b.w + 3} ${b.y}Z`} fill="#b5654f" />}
+              {b.wins.map((w) => <rect x={w.x} y={w.y} width="5" height="7" rx="1" class="win" data-on={w.on} />)}
+            </g>
+          ))}
+          <g class="rise upgrade" data-on={d.upgrade.on} style={`transform-origin: ${d.upgrade.x + d.upgrade.w / 2}px ${d.upgrade.y + d.upgrade.h}px`}>
+            <rect x={d.upgrade.x} y={d.upgrade.y} width={d.upgrade.w} height={d.upgrade.h} rx="2" fill="#f7eedd" stroke="#5a4a3c" stroke-opacity=".25" />
+            <rect x={d.upgrade.x + 6} y={d.upgrade.y + 7} width={d.upgrade.w - 12} height="6" rx="1" class="win" data-on={d.upgrade.on} />
+          </g>
+        </g>
+      ))}
+
+      <g class="rise" data-on="4" style={`transform-origin: ${tower.x + tower.w / 2}px ${GROUND}px`}>
+        <rect x={tower.x} y={GROUND - tower.h} width={tower.w} height={tower.h} rx="4" fill="#3d4a6b" />
+        <rect x={tower.x + tower.w / 2 - 1.5} y={GROUND - tower.h - 34} width="3" height="34" fill="#3d4a6b" />
+        {towerWins.map((w) => <rect x={w.x} y={w.y} width="4" height="6" rx="1" class="win ai" data-on={w.on} />)}
+        <text x={tower.x + tower.w / 2} y={GROUND - tower.h + 12} class="ai-label">AI</text>
+      </g>
+      <g class="fade beacon" data-on="4">
+        <circle cx={tower.x + tower.w / 2} cy={GROUND - tower.h - 36} r="46" fill="url(#beam)" class="pulse" />
+        <circle cx={tower.x + tower.w / 2} cy={GROUND - tower.h - 36} r="4" fill="#fff3c4" />
+      </g>
+
+      <g class="crane" aria-hidden="true">
+        <rect x="-2" y="-150" width="4" height="150" fill="#e0a43c" />
+        <rect x="-40" y="-150" width="80" height="4" fill="#e0a43c" />
+        <line x1="26" y1="-146" x2="26" y2="-110" stroke="#5a4a3c" stroke-width="1" class="hook" />
+        <rect x="20" y="-110" width="12" height="8" fill="#d99a76" class="hook" />
+      </g>
+
+      <rect y={GROUND} width="1000" height={360 - GROUND} fill="#7fae7c" />
+      <rect y={GROUND + 10} width="1000" height="3" fill="#6b4f3a" />
+      {sleepers.map((x) => <rect x={x} y={GROUND + 8} width="8" height="8" rx="1" fill="#8a6a50" opacity=".6" />)}
+      <rect y={GROUND + 16} width="1000" height="2" fill="#6b4f3a" />
+
+      {stops.map((s, i) => (
+        <g class="station" data-go={i} tabindex="0" role="button" aria-label={`${t(s.label)} ${short[s.slug][lang]}`}>
+          <rect x={XS[i] - 30} y={GROUND + 2} width="60" height="5" rx="2" fill="#e9dcc3" />
+          <rect x={XS[i] - 32} y={GROUND + 22} width="64" height="16" rx="4" class="sign" />
+          <text x={XS[i]} y={GROUND + 33.5} class="sign-text">{short[s.slug][lang]}</text>
+        </g>
+      ))}
+
+      <g class="train" aria-hidden="true">
+        <g class="smoke"><circle cx="20" cy="-30" r="5" /><circle cx="24" cy="-38" r="7" /><circle cx="30" cy="-48" r="9" /></g>
+        <rect x="-86" y="-22" width="34" height="18" rx="3" fill="#f3e3c3" stroke="#5a4a3c" stroke-opacity=".4" />
+        <rect x="-80" y="-18" width="8" height="6" rx="1" class="cabin-win" /><rect x="-66" y="-18" width="8" height="6" rx="1" class="cabin-win" />
+        <rect x="-48" y="-22" width="34" height="18" rx="3" fill="#8fb8b2" stroke="#5a4a3c" stroke-opacity=".4" />
+        <rect x="-42" y="-18" width="8" height="6" rx="1" class="cabin-win" /><rect x="-28" y="-18" width="8" height="6" rx="1" class="cabin-win" />
+        <rect x="-10" y="-24" width="38" height="20" rx="4" fill="#c8553d" />
+        <rect x="-8" y="-34" width="14" height="12" rx="2" fill="#a8432f" />
+        <rect x="16" y="-32" width="6" height="10" fill="#3d3d3d" />
+        <circle cx="30" cy="-12" r="3" fill="#ffe08a" />
+        {[-78, -60, -40, -22, -2, 18].map((cx) => <circle cx={cx} cy="-3" r="4" fill="#3d3d3d" />)}
+      </g>
+    </svg>
+  </div>
+
+  <ol class="chapters">
+    {stops.map((s, i) => (
+      <li class="chapter" id={`stop-${s.slug}`} data-chapter={i}>
+        <div class="card">
+          <p class="label">{t(s.label)} · {s.exp.period}</p>
+          <h3>{t(s.title)}</h3>
+          <p class="where">{t(s.exp.company)} — {t(s.exp.role)}</p>
+          <p class="line">{t(s.line)}</p>
+          {s.skills.length > 0 && (
+            <div class="new">
+              <span>{t(storyUi.newSkills)}</span>
+              <div class="chips">{s.skills.slice(0, 10).map((k) => <span class="chip">{k}</span>)}{s.skills.length > 10 && <span class="chip more">+{s.skills.length - 10}</span>}</div>
+            </div>
+          )}
+          <a class="go" href={`${prefix}/work/${s.slug}/`}>{t(storyUi.view)}</a>
+        </div>
+      </li>
+    ))}
+    <li class="chapter epilogue" data-chapter={5}>
+      <div class="card">
+        <p class="label">{t(storyUi.epilogueTitle)}</p>
+        <h3>{t(storyUi.epilogue)}</h3>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-city]').forEach((root) => {
+    const svg = root.querySelector('svg')!;
+    const train = root.querySelector<SVGGElement>('.train')!;
+    const crane = root.querySelector<SVGGElement>('.crane')!;
+    const list = root.querySelector<HTMLElement>('.chapters')!;
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-chapter]')];
+    const lit = [...svg.querySelectorAll<SVGElement>('[data-on]')];
+    const xs = [-90, 110, 300, 490, 680, 870];
+    const craneX = [110, 300, 490, 680, 905, 905];
+    let stage = -1;
+
+    const setStage = (s: number) => {
+      if (s === stage) return;
+      stage = s;
+      svg.dataset.stage = String(s);
+      lit.forEach((el) => el.classList.toggle('on', Number(el.dataset.on) <= s));
+      crane.style.transform = `translate(${craneX[s]}px, 318px)`;
+      crane.classList.toggle('done', s >= 5);
+      cards.forEach((c, i) => c.classList.toggle('active', i === s));
+      dispatchEvent(new CustomEvent('bgm:chapter', { detail: s }));
+    };
+
+    const move = () => {
+      const r = list.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (innerHeight * 0.6 - r.top) / r.height));
+      const f = p * (xs.length - 1);
+      const k = Math.min(xs.length - 2, Math.floor(f));
+      const x = xs[k] + (xs[k + 1] - xs[k]) * (f - k);
+      train.style.transform = `translate(${x.toFixed(1)}px, 318px)`;
+    };
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setStage(Number((e.target as HTMLElement).dataset.chapter)); });
+    }, { rootMargin: '-50% 0px -45% 0px' });
+    cards.forEach((c) => io.observe(c));
+
+    root.querySelectorAll<SVGGElement>('[data-go]').forEach((st) => {
+      const go = () => cards[Number(st.dataset.go)].scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+      st.addEventListener('click', go);
+      st.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+    });
+
+    setStage(0);
+    addEventListener('scroll', move, { passive: true });
+    addEventListener('resize', move);
+    move();
+  });
+</script>
+
+<style>
+  .block { padding: 72px 0; scroll-margin-top: 64px; }
+  h2 { font-size: 28px; margin: 0 0 12px; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 12px; }
+  h2 span { font: 13px var(--mono); color: var(--accent); }
+  .cap { margin: 0 0 18px; color: var(--muted); max-width: 720px; }
+  .scene { position: sticky; top: 56px; z-index: 3; padding: 10px 0 14px; background: var(--bg); }
+  svg { display: block; width: 100%; height: auto; border-radius: 18px; border: 1px solid var(--line); box-shadow: 0 18px 40px -28px rgba(0, 0, 0, .45); }
+
+  .fade { opacity: 0; transition: opacity 1.2s ease; }
+  .fade.on { opacity: 1; }
+  .rise { transform: scaleY(0); transition: transform .9s cubic-bezier(.2, .9, .3, 1.2); }
+  .rise.on { transform: scaleY(1); }
+  .win { fill: #5d6b85; opacity: .35; transition: fill .6s, opacity .6s; }
+  .win.on { fill: #ffd98a; opacity: 1; filter: drop-shadow(0 0 2px #ffd98a); }
+  .win.ai.on { fill: #9fd3ff; filter: drop-shadow(0 0 3px #9fd3ff); }
+  .ai-label { fill: #9fd3ff; font: 700 10px var(--mono); text-anchor: middle; }
+  .cloud { fill: #fff; opacity: .75; animation: drift var(--d) linear infinite; }
+  .twinkle { animation: twinkle 3s ease-in-out infinite; }
+  .twinkle:nth-child(3n) { animation-delay: 1s; }
+  .twinkle:nth-child(4n) { animation-delay: 2s; }
+  .pulse { transform-box: fill-box; transform-origin: center; animation: pulse 2.4s ease-in-out infinite; }
+
+  .crane { transition: transform 1.2s ease; }
+  .crane.done { opacity: 0; transition: transform 1.2s ease, opacity 1s ease 1s; }
+  .hook { animation: hoist 3s ease-in-out infinite; }
+
+  .station { cursor: pointer; outline: none; }
+  .sign { fill: #fffaf0; stroke: #5a4a3c; stroke-opacity: .35; transition: fill .2s; }
+  .station:hover .sign, .station:focus-visible .sign { fill: #ffe7b0; }
+  .sign-text { font: 600 10px var(--font); fill: #3d342b; text-anchor: middle; pointer-events: none; }
+
+  .train { transform: translate(-90px, 318px); }
+  .cabin-win { fill: #ffe9b0; }
+  .smoke circle { fill: #fff; opacity: .7; animation: puff 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  .smoke circle:nth-child(2) { animation-delay: .5s; }
+  .smoke circle:nth-child(3) { animation-delay: 1s; }
+
+  .chapters { list-style: none; margin: 0; padding: 0; }
+  .chapter { min-height: 62vh; display: flex; align-items: center; }
+  .chapter .card { width: min(560px, 100%); padding: 22px 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface);
+    opacity: .45; transform: translateY(12px); transition: opacity .5s, transform .5s, border-color .5s; }
+  .chapter:nth-child(even) .card { margin-left: auto; }
+  .chapter.active .card { opacity: 1; transform: none; border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+  .label { margin: 0; font: 12px var(--mono); color: var(--accent); }
+  .chapter h3 { margin: 4px 0 2px; font-size: clamp(22px, 3vw, 28px); }
+  .where { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+  .line { margin: 0; font-size: 16px; }
+  .new { margin-top: 14px; }
+  .new > span { font: 12px var(--mono); color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip.more { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+  .chip { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+  .go { display: inline-block; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--accent); text-decoration: none; }
+  .go:hover { text-decoration: underline; }
+  .epilogue { min-height: 48vh; }
+  .epilogue .card { margin: 0 auto !important; text-align: center; }
+
+  @keyframes drift { from { transform: translateX(-260px); } to { transform: translateX(1100px); } }
+  @keyframes twinkle { 50% { opacity: .3; } }
+  @keyframes pulse { 50% { transform: scale(1.25); opacity: .6; } }
+  @keyframes hoist { 50% { transform: translateY(14px); } }
+  @keyframes puff { from { transform: translateY(6px) scale(.5); opacity: .8; } to { transform: translateY(-14px) scale(1.4); opacity: 0; } }
+
+  @media (max-width: 720px) {
+    .scene { top: 52px; padding: 6px 0 10px; }
+    .chapter { min-height: 70vh; }
+    .chapter:nth-child(even) .card { margin-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fade, .rise, .win, .crane, .chapter .card { transition: none; }
+    .cloud, .twinkle, .pulse, .hook, .smoke circle { animation: none; }
+    .smoke { display: none; }
+  }
+</style>

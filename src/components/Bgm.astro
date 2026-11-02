@@ -1,0 +1,205 @@
+---
+const labels = { zh: '背景音樂', en: 'Background music' };
+---
+
+<button class="bgm-toggle" type="button" data-bgm aria-pressed="false" aria-label={labels.zh} title={labels.zh}>
+  <svg class="note" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/></svg>
+  <span class="equalizer" aria-hidden="true"><i></i><i></i><i></i></span>
+</button>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-bgm]');
+  if (button) {
+    const labels = { zh: '背景音樂', en: 'Background music' };
+    const label = document.documentElement.lang.startsWith('zh') ? labels.zh : labels.en;
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    try { button.classList.toggle('remembered', localStorage.getItem('bgm') === 'on'); } catch {}
+
+    type Chord = [number, 'major' | 'minor'];
+    const loops: Chord[][] = [
+      [[48, 'major'], [55, 'major'], [57, 'minor'], [53, 'major']],
+      [[53, 'major'], [60, 'major'], [57, 'minor'], [58, 'major']],
+      [[55, 'major'], [50, 'major'], [52, 'minor'], [60, 'major']],
+      [[57, 'minor'], [53, 'major'], [60, 'major'], [55, 'major']],
+      [[50, 'major'], [57, 'major'], [59, 'minor'], [55, 'major']],
+      [[60, 'major'], [67, 'major'], [69, 'minor'], [65, 'major']],
+    ];
+    let context: AudioContext | undefined;
+    let master: GainNode | undefined;
+    let padBus: GainNode | undefined;
+    let melodyBus: GainNode | undefined;
+    let timer: number | undefined;
+    let playing = false;
+    let chapter = 0;
+    let chordIndex = 0;
+    let nextChord = 0;
+    let nextMelody = 0;
+    let currentChord: Chord = loops[0][0];
+    let generation = 0;
+    const midiHz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
+
+    const setup = () => {
+      const audio = new AudioContext();
+      const main = audio.createGain();
+      main.gain.value = 0;
+      const pad = audio.createGain();
+      const melody = audio.createGain();
+      const filter = audio.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 1200;
+      const delay = audio.createDelay(0.5);
+      delay.delayTime.value = 0.28;
+      const feedback = audio.createGain();
+      feedback.gain.value = 0.18;
+      const wet = audio.createGain();
+      wet.gain.value = 0.2;
+      pad.connect(filter);
+      filter.connect(main);
+      melody.connect(main);
+      melody.connect(delay);
+      delay.connect(feedback);
+      feedback.connect(delay);
+      delay.connect(wet);
+      wet.connect(main);
+      main.connect(audio.destination);
+      context = audio;
+      master = main;
+      padBus = pad;
+      melodyBus = melody;
+    };
+
+    const playPad = (chord: Chord, when: number) => {
+      if (!context || !padBus) return;
+      const [root, quality] = chord;
+      const notes = [root, root + (quality === 'major' ? 4 : 3), root - 5];
+      const envelope = context.createGain();
+      envelope.gain.setValueAtTime(0, when);
+      envelope.gain.linearRampToValueAtTime(0.3, when + 2);
+      envelope.gain.setValueAtTime(0.3, when + 3.8);
+      envelope.gain.linearRampToValueAtTime(0, when + 5.8);
+      envelope.connect(padBus);
+      notes.forEach((note, index) => {
+        const oscillator = context!.createOscillator();
+        oscillator.type = index === 1 ? 'sine' : 'triangle';
+        oscillator.frequency.value = midiHz(note);
+        oscillator.detune.value = [-4, 3, 1][index];
+        oscillator.connect(envelope);
+        oscillator.start(when);
+        oscillator.stop(when + 5.85);
+        oscillator.onended = () => oscillator.disconnect();
+      });
+      window.setTimeout(() => envelope.disconnect(), Math.max(0, (when + 5.9 - context!.currentTime) * 1000));
+    };
+
+    const playPluck = (chord: Chord, when: number) => {
+      if (!context || !melodyBus || Math.random() < 0.2) return;
+      const [root, quality] = chord;
+      const scale = quality === 'major' ? [0, 2, 4, 7, 9] : [0, 3, 5, 7, 10];
+      const note = root + 12 + scale[Math.floor(Math.random() * scale.length)];
+      const oscillator = context.createOscillator();
+      const envelope = context.createGain();
+      const pan = context.createStereoPanner();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = midiHz(note);
+      envelope.gain.setValueAtTime(0.0001, when);
+      envelope.gain.exponentialRampToValueAtTime(0.27, when + 0.015);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, when + 1.2);
+      pan.pan.value = Math.random() * 0.6 - 0.3;
+      oscillator.connect(envelope);
+      envelope.connect(pan);
+      pan.connect(melodyBus);
+      oscillator.start(when);
+      oscillator.stop(when + 1.22);
+      oscillator.onended = () => { oscillator.disconnect(); envelope.disconnect(); pan.disconnect(); };
+    };
+
+    const schedule = () => {
+      if (!playing || !context || document.hidden) return;
+      const horizon = context.currentTime + 0.2;
+      while (nextChord < horizon) {
+        currentChord = loops[chapter][chordIndex % 4];
+        playPad(currentChord, nextChord);
+        chordIndex++;
+        nextChord += 4;
+      }
+      while (nextMelody < horizon) {
+        playPluck(currentChord, nextMelody);
+        nextMelody += 0.6 + Math.random() * 0.8;
+      }
+      timer = window.setTimeout(schedule, 100);
+    };
+
+    const start = async () => {
+      if (!context) setup();
+      if (!context || !master) return;
+      const ticket = ++generation;
+      await context.resume();
+      if (ticket !== generation) return;
+      playing = true;
+      button.setAttribute('aria-pressed', 'true');
+      button.classList.remove('remembered');
+      master.gain.cancelScheduledValues(context.currentTime);
+      master.gain.setValueAtTime(master.gain.value, context.currentTime);
+      master.gain.linearRampToValueAtTime(0.1, context.currentTime + 1.5);
+      chordIndex = 0;
+      nextChord = context.currentTime + 0.02;
+      nextMelody = nextChord + 0.4;
+      window.clearTimeout(timer);
+      schedule();
+      try { localStorage.setItem('bgm', 'on'); } catch {}
+    };
+
+    const stop = () => {
+      if (!playing || !context || !master) return;
+      playing = false;
+      const ticket = ++generation;
+      button.setAttribute('aria-pressed', 'false');
+      window.clearTimeout(timer);
+      master.gain.cancelScheduledValues(context.currentTime);
+      master.gain.setValueAtTime(master.gain.value, context.currentTime);
+      master.gain.linearRampToValueAtTime(0, context.currentTime + 1);
+      window.setTimeout(() => { if (ticket === generation) void context?.suspend(); }, 1050);
+      try { localStorage.setItem('bgm', 'off'); } catch {}
+    };
+
+    button.addEventListener('click', () => { if (playing) stop(); else void start(); });
+    window.addEventListener('bgm:chapter', (event) => {
+      const next = (event as CustomEvent<number>).detail;
+      if (!Number.isInteger(next) || next < 0 || next > 5 || next === chapter) return;
+      chapter = next;
+      chordIndex = 0;
+      if (playing && context) nextChord = context.currentTime + 0.03;
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!context || !playing) return;
+      if (document.hidden) {
+        window.clearTimeout(timer);
+        void context.suspend();
+      } else {
+        void context.resume().then(() => {
+          if (!playing || !context) return;
+          nextChord = context.currentTime + 0.03;
+          nextMelody = nextChord + 0.4;
+          schedule();
+        });
+      }
+    });
+  }
+</script>
+
+<style>
+  .bgm-toggle { position: fixed; right: 20px; bottom: 20px; z-index: 70; display: grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--accent); box-shadow: 0 4px 16px #0002; cursor: pointer; }
+  .bgm-toggle:hover, .bgm-toggle:focus-visible { border-color: var(--accent); }
+  .bgm-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .equalizer { display: none; align-items: center; gap: 3px; height: 18px; }
+  .equalizer i { display: block; width: 3px; height: 9px; border-radius: 2px; background: currentColor; animation: bounce 850ms ease-in-out infinite alternate; }
+  .equalizer i:nth-child(2) { height: 16px; animation-delay: 160ms; }
+  .equalizer i:nth-child(3) { height: 12px; animation-delay: 320ms; }
+  .bgm-toggle[aria-pressed="true"] .note { display: none; }
+  .bgm-toggle[aria-pressed="true"] .equalizer { display: flex; }
+  .bgm-toggle.remembered::after { position: absolute; inset: -5px; border: 1px solid var(--accent); border-radius: 50%; content: ''; animation: pulse 2.4s ease-out infinite; pointer-events: none; }
+  @keyframes bounce { to { transform: scaleY(.4); } }
+  @keyframes pulse { to { transform: scale(1.25); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .equalizer i, .bgm-toggle.remembered::after { animation: none; } .bgm-toggle.remembered::after { display: none; } }
+</style>
