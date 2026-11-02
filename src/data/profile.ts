@@ -5,22 +5,22 @@ type T = Record<Lang, string>;
 export const profile = {
   name: { zh: 'Shin Lin', en: 'Shin Lin' } as T, // 想放中文姓名可改 zh
   title: {
-    zh: 'Site Reliability Engineer・資深軟體工程師',
-    en: 'Site Reliability Engineer · Senior Software Engineer',
+    zh: '技術架構師・SRE',
+    en: 'Technical Architect · SRE',
   } as T,
   location: { zh: '台灣・桃園／台北', en: 'Taoyuan / Taipei, Taiwan' } as T,
-  // 打字機效果輪播的關鍵字
+  // Keywords cycled by the typing effect.
   typing: {
-    zh: ['讓系統穩定運行', '把可觀測性做到位', '用 Go 寫後端服務', '維運混合雲平台'],
-    en: ['keeping systems reliable', 'making everything observable', 'building backends in Go', 'running hybrid cloud'],
+    zh: ['設計雲原生私有雲', '用 GitOps 交付平台', '打造 AI 基礎設施', '讓系統穩定運行'],
+    en: ['architecting private cloud', 'shipping platforms with GitOps', 'building AI infrastructure', 'keeping systems reliable'],
   } as Record<Lang, string[]>,
   intro: {
-    zh: '7 年軟體開發經驗，專注後端與銀行等級系統的穩定性。',
-    en: '7+ years in software, focused on backend and banking-grade reliability.',
+    zh: '7 年軟體與基礎設施經驗，走過 MEC 邊緣運算平台、影片推薦系統與銀行等級 SRE，現在設計雲原生私有雲與 AI 基礎設施。',
+    en: '7+ years across MEC edge platforms, video recommendation and banking-grade SRE — now architecting cloud-native private cloud and AI infrastructure.',
   } as T,
   stats: [
     { value: '7+', label: { zh: '年開發經驗', en: 'years building software' } as T },
-    { value: '4', label: { zh: '家公司歷練', en: 'companies' } as T },
+    { value: '5', label: { zh: '家公司歷練', en: 'companies' } as T },
     { value: '3', label: { zh: '雲端平台', en: 'cloud platforms' } as T },
   ],
   links: [
@@ -30,46 +30,66 @@ export const profile = {
   ],
   experience: [
     {
-      company: { zh: '國泰世華銀行', en: 'Cathay United Bank' } as T,
-      role: { zh: 'SRE｜資深軟體工程師', en: 'Site Reliability Engineer | Senior Software Engineer' } as T,
-      period: '2024.09 — Now',
+      company: { zh: 'MetaMEC', en: 'MetaMEC' } as T,
+      role: { zh: '資深技術架構師', en: 'Senior Technical Architect' } as T,
+      period: '2025.08 — Now',
       current: true,
       points: {
-        zh: ['維運 CUBE App 關鍵 gateway', '導入 OpenTelemetry 全鏈路可觀測性', '維運 OpenShift 與 AWS / GCP'],
-        en: ['Run the critical gateway behind the CUBE app', 'Rolled out OpenTelemetry end to end', 'Operate OpenShift, AWS and GCP'],
+        zh: ['設計 Kubernetes 私有雲與 AI 平台架構', '建立 GitOps 交付流程與 SSO、機密管理', '主導平台可觀測性與 DevSecOps'],
+        en: ['Architect the Kubernetes private cloud and AI platform', 'Built GitOps delivery, SSO and secrets management', 'Lead platform observability and DevSecOps'],
       } as Record<Lang, string[]>,
-      tags: ['OpenTelemetry', 'OpenShift', 'AWS', 'GCP', 'Spring Boot', 'Microservices'],
+      tags: ['Kubernetes', 'ArgoCD', 'Ceph', 'Harbor', 'Keycloak', 'OpenBao', 'OpenTelemetry'],
+    },
+    {
+      company: { zh: '國泰世華銀行', en: 'Cathay United Bank' } as T,
+      role: { zh: 'SRE｜資深軟體工程師', en: 'Site Reliability Engineer | Senior Software Engineer' } as T,
+      period: '2024.09 — 2025.07',
+      points: {
+        zh: ['維運 CUBE 網銀與內部系統的關鍵 gateway', '協助網銀服務上雲，以 OpenTelemetry 建立共用監控模組', '維運 OpenShift 私有雲與 AWS / GCP 部署'],
+        en: ['Ran the critical gateway for CUBE online banking and internal systems', 'Moved online banking to the cloud and built a shared OpenTelemetry monitoring module', 'Operated OpenShift private cloud and AWS / GCP deployments'],
+      } as Record<Lang, string[]>,
+      tags: ['OpenTelemetry', 'OpenShift', 'Kubernetes', 'AWS', 'GCP', 'Java', 'Spring Boot'],
     },
     {
       company: { zh: 'Playsee', en: 'Playsee' } as T,
       role: { zh: '資深軟體工程師', en: 'Senior Software Engineer' } as T,
       period: '2023.09 — 2024.09',
       points: {
-        zh: ['開發首頁影片推薦服務', '以 Go 開發 API 與 GCP 資料同步'],
-        en: ['Built the home-feed video recommendation service', 'Built Go APIs and GCP data sync'],
+        zh: ['設計首頁 Instream 影片個人化推薦服務', '以 Go（gin）與 DDD 開發 API server', '以 GCP cronjob 與 Pub/Sub 確保影片資料最終一致'],
+        en: ['Designed the personalized in-stream video recommendation service for the home feed', 'Built API servers in Go (gin) with Domain-Driven Design', 'Kept video data eventually consistent with GCP cronjobs and Pub/Sub'],
       } as Record<Lang, string[]>,
       tags: ['Go', 'GCP', 'Pub/Sub', 'Bigtable', 'Spanner', 'Redis', 'Elasticsearch'],
     },
     {
       company: { zh: '明泰科技', en: 'Alpha Networks' } as T,
       role: { zh: '資深軟體工程師', en: 'Senior Software Engineer' } as T,
-      period: '2021.01 — 2023.08',
-      points: { zh: [], en: [] } as Record<Lang, string[]>, // TODO: 補工作內容
-      tags: ['Go', 'Docker', 'Linux', 'Microservices', 'Redis'],
+      period: '2021.09 — 2023.09',
+      points: {
+        zh: ['依 ETSI / 3GPP 設計 MEC 邊緣運算平台後端，以 Go 實作 API server', '開發軟體授權管理（SLM）、RBAC 權限與 Kubernetes 節點管理', '以 Kubernetes、Ansible、GitLab 建立平台部署與 CI/CD'],
+        en: ['Designed the ETSI / 3GPP MEC edge platform backend and built its API servers in Go', 'Built software license management (SLM), RBAC and Kubernetes node management', 'Automated platform deployment and CI/CD with Kubernetes, Ansible and GitLab'],
+      } as Record<Lang, string[]>,
+      tags: ['Go', 'Kubernetes', 'Docker', 'Ansible', 'PostgreSQL', 'Kong Gateway', 'GitLab CI'],
     },
     {
       company: { zh: '凌群電腦', en: 'SYSCOM Computer Engineering' } as T,
-      role: { zh: '軟體工程師', en: 'Junior Software Engineer' } as T,
-      period: '2019.07 — 2021.01',
-      points: { zh: [], en: [] } as Record<Lang, string[]>, // TODO: 補工作內容
-      tags: ['Python', 'ASP.NET Core'],
+      role: { zh: '軟體工程師', en: 'Software Engineer' } as T,
+      period: '2019.07 — 2021.09',
+      points: {
+        zh: ['提供區塊鏈專案技術諮詢與軟硬體規劃', '參與 AI 影像分析平台（Kubernetes、YOLOv3）與 Hadoop 資安分析系統', '以 ASP.NET Core 開發容器化人事雲服務'],
+        en: ['Consulted on blockchain projects and system planning', 'Worked on an AI image-analysis platform (Kubernetes, YOLOv3) and a Hadoop security analytics system', 'Built a containerized HR cloud service on ASP.NET Core'],
+      } as Record<Lang, string[]>,
+      tags: ['Java', 'C#', 'ASP.NET Core', 'Python', 'Docker', 'Kubernetes', 'Hadoop'],
     },
   ],
   skills: [
-    { group: { zh: '可觀測性與維運', en: 'Observability & Reliability' } as T, items: ['OpenTelemetry', 'Logs / Metrics / Traces', 'Gateway Operations'] },
-    { group: { zh: '雲端與平台', en: 'Cloud & Platform' } as T, items: ['Red Hat OpenShift', 'AWS', 'GCP', 'Docker', 'Linux'] },
-    { group: { zh: '後端開發', en: 'Backend' } as T, items: ['Go', 'Spring Boot', 'Python', 'ASP.NET Core', 'Microservices'] },
-    { group: { zh: '資料與訊息', en: 'Data & Messaging' } as T, items: ['Redis', 'Elasticsearch', 'Bigtable', 'Spanner', 'Pub/Sub'] },
+    { group: { zh: '雲端架構', en: 'Cloud Architecture' } as T, items: ['Kubernetes', 'Private Cloud', 'Hybrid Cloud', 'OpenShift', 'AWS', 'GCP', 'Azure'] },
+    { group: { zh: 'GitOps 與 IaC', en: 'GitOps & IaC' } as T, items: ['ArgoCD', 'ApplicationSet', 'Helm', 'Kustomize', 'Terraform', 'Ansible', 'GitLab CI'] },
+    { group: { zh: 'AI 基礎設施', en: 'AI Infrastructure' } as T, items: ['GPU Scheduling', 'NVIDIA GPU Operator', 'AI Platform on Kubernetes', 'High-Performance Networking'] },
+    { group: { zh: '虛擬化與儲存', en: 'Virtualization & Storage' } as T, items: ['KVM', 'VM HA Cluster', 'Ceph', 'Harbor'] },
+    { group: { zh: '安全與身分', en: 'Security & Identity' } as T, items: ['Keycloak', 'Dex SSO', 'OpenBao', 'cert-manager / PKI', 'DevSecOps'] },
+    { group: { zh: '可觀測性', en: 'Observability' } as T, items: ['OpenTelemetry', 'Prometheus', 'Grafana', 'Logs / Metrics / Traces'] },
+    { group: { zh: '後端開發', en: 'Backend' } as T, items: ['Go', 'Java', 'Spring Boot', 'Python', 'C#', 'ASP.NET Core', 'Kong Gateway', 'DDD'] },
+    { group: { zh: '資料與訊息', en: 'Data & Messaging' } as T, items: ['PostgreSQL', 'Redis', 'Elasticsearch', 'Bigtable', 'Spanner', 'MongoDB', 'Pub/Sub'] },
   ],
   education: [
     {

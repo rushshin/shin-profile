@@ -24,7 +24,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 |---|---|
 | 網站程式碼 | 完成 |
 | Cloudflare 自動部署 | 完成（push `main` 觸發 Workers Builds） |
-| 明泰、凌群工作內容 | 未完成（`profile.ts` TODO） |
+| 經歷內容 | 完成（MetaMEC 前依 104 履歷） |
 | 自訂網域 | 未購買 |
 | OG 分享圖、Web Analytics | 未實作 |
 
