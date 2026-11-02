@@ -7,9 +7,10 @@ const { lang } = Astro.props;
 const other = lang === 'zh' ? '/en/' : '/';
 const sections = ['about', 'experience', 'skills', 'education', 'contact'] as const;
 const t = (o: Record<Lang, string>) => o[lang];
-const sha = process.env.WORKERS_CI_COMMIT_SHA;
-const deployed = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-const deployText = `main@${sha ? sha.slice(0, 7) : 'local'} · deployed ${deployed}`;
+const current = profile.experience.find((e) => e.current);
+// mailto must not open a blank tab.
+const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
+const arrow = (href: string) => (href.startsWith('mailto:') ? '' : ' ↗');
 // 捲動逐字點亮：中文逐字、英文逐詞
 const introTokens = lang === 'zh' ? [...t(profile.intro)] : t(profile.intro).split(/(\s+)/);
 const allSkills = profile.skills.flatMap((g) => g.items);
@@ -27,8 +28,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
 
 <main id="top">
   <section class="hero">
-    {sha ? <a class="deploy reveal" href={`https://github.com/rushshin/shin-profile/commit/${sha}`} target="_blank" rel="noopener"><span class="dot" aria-hidden="true"></span>{deployText}</a>
-      : <span class="deploy reveal"><span class="dot" aria-hidden="true"></span>{deployText}</span>}
+    {current && <a class="deploy reveal" href={`${lang === 'zh' ? '' : '/en'}/work/${current.slug}/`}><span class="dot" aria-hidden="true"></span>{t(ui.now)}<span class="go" aria-hidden="true">→</span></a>}
     <p class="hello reveal">{t(ui.hello)}</p>
     <h1 class="reveal" id="name" data-text={t(profile.name)}>{t(profile.name)}</h1>
     <p class="role reveal">{t(profile.title)}</p>
@@ -36,7 +36,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
       <span class="prompt">$</span> {t(ui.iAm)} <span id="typed" data-words={JSON.stringify(profile.typing[lang])}></span><span class="caret">▍</span>
     </p>
     <div class="links reveal">
-      {profile.links.map((l) => <a class="btn" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+      {profile.links.map((l) => <a class="btn" href={l.href} {...ext(l.href)}>{l.label}{arrow(l.href)}</a>)}
       <span class="loc">📍 {t(profile.location)}</span>
     </div>
     <p class="hint reveal"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd> — {t(ui.palette)}</p>
@@ -105,8 +105,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
     <h2 class="reveal"><span>05</span>{t(ui.contactTitle)}</h2>
     <p class="reveal">{t(ui.contactText)}</p>
     <div class="links reveal">
-      <a class="btn primary" href={`mailto:${profile.email}`}>{profile.email}</a>
-      {profile.links.map((l) => <a class="btn" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>)}
+      {profile.links.map((l) => <a class="btn primary" href={l.href} {...ext(l.href)}>{l.label}{arrow(l.href)}</a>)}
     </div>
   </section>
 </main>
@@ -117,7 +116,7 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   <input id="palette-input" type="text" placeholder={lang === 'zh' ? '輸入要前往的區塊…' : 'Type a section…'} autocomplete="off" />
   <ul id="palette-list">
     {sections.map((s) => <li><a href={`#${s}`} data-cmd>{t(ui.nav[s])} <small>#{s}</small></a></li>)}
-    {profile.links.map((l) => <li><a href={l.href} target="_blank" rel="noopener" data-cmd>{l.label} <small>↗</small></a></li>)}
+    {profile.links.map((l) => <li><a href={l.href} {...ext(l.href)} data-cmd>{l.label} <small>{arrow(l.href) || 'mail'}</small></a></li>)}
     <li><a href={other} data-cmd>{lang === 'zh' ? 'Switch to English' : '切換為中文'} <small>lang</small></a></li>
     <li><a href="#" data-cmd data-action="theme">{lang === 'zh' ? '切換深淺色' : 'Toggle theme'} <small>theme</small></a></li>
   </ul>
@@ -297,6 +296,10 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   .hero { min-height: calc(100vh - 60px); display: flex; flex-direction: column; justify-content: center; padding: 64px 0; }
   .deploy { display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; font: 12px var(--mono);
     border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; text-decoration: none; margin-bottom: 32px; }
+  .deploy { font: 13px var(--font); transition: border-color .2s; }
+  .deploy:hover { border-color: var(--accent); }
+  .go { color: var(--accent); transition: transform .2s; }
+  .deploy:hover .go { transform: translateX(3px); }
   .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 2s infinite; }
   .hello { margin: 0; color: var(--muted); font-size: 18px; }
   h1 { font-size: clamp(44px, 9vw, 88px); line-height: 1.02; margin: 4px 0 12px; letter-spacing: -0.03em;

@@ -23,10 +23,10 @@ export const profile = {
     { value: '5', label: { zh: '家公司歷練', en: 'companies' } as T },
     { value: '3', label: { zh: '雲端平台', en: 'cloud platforms' } as T },
   ],
-  email: 'pig840814@gmail.com',
   links: [
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/shin-lin-451994246/' },
     { label: 'GitHub', href: 'https://github.com/rushshin' },
+    { label: 'Email', href: 'mailto:pig840814@gmail.com' },
   ],
   experience: [
     {
@@ -121,6 +121,7 @@ export const ui = {
   nav: { about: { zh: '關於', en: 'About' }, experience: { zh: '經歷', en: 'Experience' }, skills: { zh: '技能', en: 'Skills' }, education: { zh: '學歷', en: 'Education' }, contact: { zh: '聯絡', en: 'Contact' } },
   hello: { zh: '你好，我是', en: "Hi, I'm" },
   iAm: { zh: '我專注在', en: "I'm focused on" },
+  now: { zh: '現職 MetaMEC：設計雲原生私有雲與 AI 平台', en: 'Now at MetaMEC: architecting private cloud & AI platforms' },
   viewWork: { zh: '看成果 →', en: 'View work →' },
   home: { zh: '首頁', en: 'Home' },
   prev: { zh: '← 上一份', en: '← Previous' },

@@ -32,7 +32,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 | Cloudflare 自動部署 | 完成（push `main` 觸發 Workers Builds） |
 | 經歷內容 | 完成（MetaMEC 前依 104 履歷） |
 | 成果頁 | 完成（5 頁，質化成果，無量化數據） |
-| 視覺化 | 完成（架構圖、職涯圖、技能矩陣、部署徽章） |
+| 視覺化 | 完成（架構圖、職涯圖、技能矩陣、現職徽章） |
 | 自訂網域 | 未購買 |
 | OG 分享圖、Web Analytics | 未實作 |
 
@@ -44,7 +44,7 @@ Shin Lin 的個人履歷網站，提供中英雙語版本。
 |---|---|
 | Scramble Decode | Hero 姓名 |
 | Typing Swap | Hero 標語 |
-| 部署徽章（`main@<sha>`） | Hero |
+| 現職徽章（連到 MetaMEC 成果頁） | Hero |
 | Scroll Text Reveal | 關於我 |
 | Count Up | 數據卡 |
 | Scroll Draw Path | 經歷時間軸 |
