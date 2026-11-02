@@ -2,7 +2,8 @@ import type { Lang } from './profile';
 type T = Record<Lang, string>;
 type L = Record<Lang, string[]>;
 
-export interface WorkSection { id: string; title: T; lead: T; points: L; result: T }
+export interface StackLayer { name: T; text: T }
+export interface WorkSection { id: string; title: T; lead: T; points: L; result: T; stack?: { title: T; layers: StackLayer[] } }
 export interface Work { slug: string; plain: T; summary: T; sections: WorkSection[] }
 
 export const works: Work[] = [
@@ -69,13 +70,26 @@ export const works: Work[] = [
       },
       {
         id: 'ai-workflow',
-        title: { zh: 'AI 工作流與團隊工具', en: 'AI workflow & team tools' },
-        lead: { zh: '好的工具，讓整個團隊一起變強', en: 'Good tools make the whole team stronger' },
+        title: { zh: 'AI 工作流導入', en: 'Bringing AI workflows to the team' },
+        lead: { zh: '用 8 個準則，把 AI 安全地帶進團隊', en: 'Eight principles to bring AI into the team safely' },
         points: {
-          zh: ['建立 spec → ticket → 實作 → 跨模型審查 → MR 的 AI 協作流程（Claude Code 主導、Codex 交叉審查）', '把維運知識（ArgoCD 排錯、憑證輪替、RCA）寫成可重用的 Agent skills', '開發團隊小工具：工時自動彙整、憑證自動更新、webhook 訊息推播'],
-          en: ['An AI-assisted flow: spec → ticket → implementation → cross-model review → MR (Claude Code leads, Codex reviews)', 'Turned ops know-how (ArgoCD triage, cert rotation, RCA) into reusable agent skills', 'Team tools: automatic timesheets, certificate renewal and webhook message push'],
+          zh: ['在 MetaMEC 歸納並推廣 8 個 AI 工作流準則，讓團隊用同一套方式導入 AI', '建立 spec → ticket → 實作 → 跨模型審查 → MR 的 AI 協作流程（Claude Code 主導、Codex 交叉審查）', '把維運知識（ArgoCD 排錯、憑證輪替、RCA）寫成可重用的 Agent skills', '開發團隊小工具：工時自動彙整、憑證自動更新、webhook 訊息推播'],
+          en: ['Distilled and promoted eight AI-workflow principles at MetaMEC so the team adopts AI one consistent way', 'An AI-assisted flow: spec → ticket → implementation → cross-model review → MR (Claude Code leads, Codex reviews)', 'Turned ops know-how (ArgoCD triage, cert rotation, RCA) into reusable agent skills', 'Team tools: automatic timesheets, certificate renewal and webhook message push'],
         },
-        result: { zh: '每個變更都有第二位審查者，重複的事交給工具', en: 'Every change gets a second reviewer; repetitive work goes to tools' },
+        result: { zh: 'AI 從個人試用變成團隊有規範、可控管、可觀測的日常流程', en: 'AI moved from individual experiments to a governed, observable team practice' },
+        stack: {
+          title: { zh: 'AI 工作流 8 準則：01–04 能力 · 05–08 治理', en: 'Eight AI-workflow principles: 01–04 capability · 05–08 governance' },
+          layers: [
+            { name: { zh: 'Model 模型', en: 'Model' }, text: { zh: '依任務選模型：Claude 主導，Codex 實作與審查', en: 'Pick the model per task: Claude leads, Codex implements and reviews' } },
+            { name: { zh: 'System Prompt 系統提示', en: 'System prompt' }, text: { zh: '團隊共用的角色、語言與寫作規範', en: 'Shared role, language and writing rules for the team' } },
+            { name: { zh: 'RAG 知識檢索', en: 'RAG' }, text: { zh: '以 repo 文件、規格、ADR 與 runbook 作為知識來源', en: 'Repo docs, specs, ADRs and runbooks as the knowledge source' } },
+            { name: { zh: 'Tools 工具', en: 'Tools' }, text: { zh: 'MCP 串接 Jira 與 GitLab，Skills 封裝維運知識，Agents 平行分工', en: 'MCP for Jira and GitLab, skills for ops know-how, agents working in parallel' } },
+            { name: { zh: 'Access 權限', en: 'Access' }, text: { zh: '以權限政策控管 AI 能執行的指令與能存取的資料', en: 'Permission policies decide which commands and data an agent may use' } },
+            { name: { zh: 'Guardrails 護欄', en: 'Guardrails' }, text: { zh: '以 hooks 擋下推送 main、force push，機密不進程式碼與紀錄', en: 'Hooks block pushes to main and force pushes; secrets stay out of code and logs' } },
+            { name: { zh: 'Cache & Routes 快取與路由', en: 'Cache & routes' }, text: { zh: 'Prompt cache 降低成本，依任務難度路由到合適的模型與推理強度', en: 'Prompt caching cuts cost; route each task to the right model and effort level' } },
+            { name: { zh: 'Observability 可觀測性', en: 'Observability' }, text: { zh: '追蹤 AI 用量、成本與審查結果，持續調整流程', en: 'Track AI usage, cost and review outcomes, and keep tuning the flow' } },
+          ],
+        },
       },
       {
         id: 'lead',

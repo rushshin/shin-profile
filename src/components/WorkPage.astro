@@ -97,6 +97,16 @@ const describe: [string, string][] = [
       <h2 class="reveal"><span>{pad(n)}</span>{t(s.title)}</h2>
       <p class="lead reveal">{t(s.lead)}</p>
       <ul class="reveal">{s.points[lang].map((p) => <li>{p}</li>)}</ul>
+      {s.stack && (
+        <div class="stack reveal">
+          <p class="stack-title">{t(s.stack.title)}</p>
+          <ol>
+            {s.stack.layers.map((l, n) => (
+              <li><span class="num">{pad(n)}</span><strong>{t(l.name)}</strong><span>{t(l.text)}</span></li>
+            ))}
+          </ol>
+        </div>
+      )}
       <p class="result reveal"><b>{t(ui.result)}</b>{t(s.result)}</p>
     </section>
   ))}
@@ -216,6 +226,12 @@ const describe: [string, string][] = [
   .compare:has(#cmp-ours:checked) .typical, .compare:has(#cmp-typical:checked) .ours { display: none; }
   @keyframes pop { from { opacity: 0; transform: translateY(6px); } }
 
+  .stack { margin: 20px 0 0; }
+  .stack-title { margin: 0 0 10px; font: 13px var(--mono); color: var(--accent); }
+  .stack ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .stack li { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13px; color: var(--muted); }
+  .stack li strong { color: var(--text); font-size: 15px; }
+  .stack li:nth-child(n+5) { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
   .block.hl h2 { color: var(--accent); }
   .cards a.hl { border-color: var(--accent); }
 
@@ -250,6 +266,7 @@ const describe: [string, string][] = [
   @keyframes blink { 50% { opacity: 0; } }
   @media (max-width: 720px) {
     .story { grid-template-columns: 1fr 1fr; row-gap: 12px; }
+    .stack ol { grid-template-columns: 1fr 1fr; }
     .events li { grid-template-columns: 7ch 1fr; }
     .events li span:last-child { grid-column: 2; }
   }

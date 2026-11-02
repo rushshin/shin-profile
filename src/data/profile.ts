@@ -23,7 +23,7 @@ export const profile = {
   pillars: [
     { key: { zh: '平台', en: 'Platform' } as T, icon: 'box', text: { zh: '裸機 → VM → Kubernetes → AI 機群，全部用程式碼建置與交付。', en: 'Bare metal → VMs → Kubernetes → AI fleets, all built and delivered as code.' } as T },
     { key: { zh: '團隊', en: 'Team' } as T, icon: 'team', text: { zh: '帶過 5–8 人的網銀維運團隊，現在帶 3–5 人專案小組，並打造讓大家更快的工具。', en: 'Led a 5–8 person banking ops team; now leads a 3–5 engineer squad and builds tools that speed everyone up.' } as T },
-    { key: { zh: 'AI', en: 'AI' } as T, icon: 'spark', text: { zh: 'AI Agent 是團隊的一員：寫規格、實作、交叉審查，讓小團隊也能穩定交付。', en: 'AI agents are part of the team: specs, implementation and cross-review, so a small team ships steadily.' } as T },
+    { key: { zh: 'AI', en: 'AI' } as T, icon: 'spark', text: { zh: '用 8 個準則把 AI 帶進團隊：從模型、權限、護欄到可觀測性，讓 AI 安全地成為團隊的一員。', en: 'Brought AI into the team with eight principles — from model and access to guardrails and observability — so AI joins the team safely.' } as T },
   ],
   proof: [
     { zh: '銀行等級穩定：國泰世華 CUBE 網銀', en: 'Banking-grade: Cathay United Bank CUBE' } as T,
@@ -50,8 +50,8 @@ export const profile = {
       current: true,
       team: { zh: '帶領 3–5 人專案小組', en: 'Leads a 3–5 engineer project squad' } as T,
       points: {
-        zh: ['設計 Kubernetes 私有雲與 AI 資料中心平台（Kubespray HA、KubeVirt、Rook-Ceph）', '以 Terraform 與 ArgoCD 建立從 VM 到叢集的 IaC 與 GitOps 交付', '建置 NVIDIA NICo 開發環境，模擬 DGX B200 機群，並以 Redfish / PXE 自動化裸機佈建', '開發離線安裝器（Go、Web UI），支援客戶現場交付', '導入 AI Agent 工作流，並開發團隊自動化工具（工時、憑證、訊息推播）', '主導專案、分派任務給 3–5 位工程師，擔任企業客戶技術窗口'],
-        en: ['Architect the Kubernetes private cloud and AI data-center platform (Kubespray HA, KubeVirt, Rook-Ceph)', 'Built IaC and GitOps delivery from VMs to clusters with Terraform and ArgoCD', 'Run an NVIDIA NICo dev environment with a simulated DGX B200 fleet and Redfish / PXE bare-metal provisioning', 'Built an air-gapped installer (Go, web UI) for on-site customer delivery', 'Introduced AI-agent workflows and built team automation (timesheets, certificates, message push)', 'Lead projects, assign work to 3–5 engineers, and act as technical contact for enterprise customers'],
+        zh: ['設計 Kubernetes 私有雲與 AI 資料中心平台（Kubespray HA、KubeVirt、Rook-Ceph）', '以 Terraform 與 ArgoCD 建立從 VM 到叢集的 IaC 與 GitOps 交付', '建置 NVIDIA NICo 開發環境，模擬 DGX B200 機群，並以 Redfish / PXE 自動化裸機佈建', '開發離線安裝器（Go、Web UI），支援客戶現場交付', '歸納並推廣 8 個 AI 工作流準則（模型、提示、RAG、工具、權限、護欄、快取路由、可觀測性），導入團隊開發流程', '主導專案、分派任務給 3–5 位工程師，擔任企業客戶技術窗口'],
+        en: ['Architect the Kubernetes private cloud and AI data-center platform (Kubespray HA, KubeVirt, Rook-Ceph)', 'Built IaC and GitOps delivery from VMs to clusters with Terraform and ArgoCD', 'Run an NVIDIA NICo dev environment with a simulated DGX B200 fleet and Redfish / PXE bare-metal provisioning', 'Built an air-gapped installer (Go, web UI) for on-site customer delivery', 'Distilled and promoted eight AI-workflow principles (model, prompt, RAG, tools, access, guardrails, cache & routes, observability) across the team', 'Lead projects, assign work to 3–5 engineers, and act as technical contact for enterprise customers'],
       } as Record<Lang, string[]>,
       tags: ['Kubernetes', 'ArgoCD', 'Terraform', 'KubeVirt', 'NVIDIA NICo', 'OpenBao', 'AI Agents'],
     },
