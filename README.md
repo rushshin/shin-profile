@@ -1,43 +1,46 @@
 # shin-profile
 
-Shin Lin 的個人履歷網站（中英雙語）。Astro 靜態網站，部署在 Cloudflare Workers（Static Assets）。
+Shin Lin 的個人履歷網站，提供中英雙語版本。
 
-- 中文：`/`　英文：`/en/`
-- **內容都在 `src/data/profile.ts`**，改這個檔案就能更新網站
+| 項目 | 值 |
+|---|---|
+| 框架 | Astro 7（純靜態，無 UI 框架、無外部字型或 CDN） |
+| 部署 | Cloudflare Workers Static Assets（`wrangler.jsonc`） |
+| 路由 | `/` 中文、`/en/` 英文、`/404` |
+| 網址 | `https://shin-profile.pages.dev`（暫定，未綁自訂網域） |
 
-## 本機開發
+## 結構
 
-```bash
-npm install
-npm run dev      # http://localhost:4321
-npm run build    # 輸出到 dist/
-```
+| 路徑 | 內容 |
+|---|---|
+| `src/data/profile.ts` | 所有文字內容（雙語） |
+| `src/components/Resume.astro` | 版面、互動腳本、樣式 |
+| `src/layouts/Base.astro` | head、SEO / hreflang、CSS tokens、深淺色 |
+| `src/pages/` | `index.astro`、`en/index.astro`、`404.astro` |
 
-## 部署到 Cloudflare（第一次設定）
+## 狀態
 
-1. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Import a repository**
-2. 選 GitHub `rushshin/shin-profile`
-3. 設定：
-   - Build command：`npm run build`
-   - Deploy command：`npx wrangler deploy`（會讀取 `wrangler.jsonc`）
-4. 之後每次 push 到 `main` 都會自動部署
-
-綁定自訂網域後，記得把 `astro.config.mjs` 的 `site` 改成正式網址。
+| 項目 | 狀態 |
+|---|---|
+| 網站程式碼 | 完成 |
+| Cloudflare 自動部署 | 未設定 |
+| 明泰、凌群工作內容 | 未完成（`profile.ts` TODO） |
+| 自訂網域 | 未購買 |
+| OG 分享圖、Web Analytics | 未實作 |
 
 ## 動態效果
 
-參考 [Motion Library](https://kittenjam-motion-library.vercel.app/) 實作：
+全部效果遵守 `prefers-reduced-motion`。
 
 | 效果 | 位置 |
 |---|---|
-| 亂碼解讀 Scramble Decode | 首頁姓名（滑過會重播） |
-| 打字換句 Typing Swap | 首頁 `$ 我專注在…` |
-| 捲動逐字點亮 Scroll Text Reveal | 關於我段落 |
-| 數據捲到才計數 Count Up | 數據卡片 |
-| 捲動繪製路徑 Scroll Draw Path | 經歷時間軸 |
-| 邊框聚光 Border Spotlight | 所有卡片 |
-| 磁吸按鈕 Magnetic Button | 連結按鈕 |
-| 無限跑馬燈 Infinite Wall | 技能區 |
+| Scramble Decode | Hero 姓名 |
+| Typing Swap | Hero 標語 |
+| Uptime 徽章 | Hero |
+| Scroll Text Reveal | 關於我 |
+| Count Up | 數據卡 |
+| Scroll Draw Path | 經歷時間軸 |
+| Border Spotlight | 所有卡片 |
+| Magnetic Button | 連結按鈕 |
+| Infinite Marquee | 技能區 |
 | 指令面板 | `Ctrl/⌘ + K` |
-
-所有動畫都會尊重系統的「減少動態效果」設定。
