@@ -1,0 +1,351 @@
+---
+import { blueprintModules, blueprintUi, type ModuleId } from '../data/blueprint';
+import type { Lang } from '../data/profile';
+
+interface Props {
+  lang: Lang;
+  initial?: ModuleId;
+}
+
+const { lang, initial = 'identity' } = Astro.props;
+---
+
+<div class="blueprint" data-blueprint>
+  <div class="bp-frame" aria-hidden="true">
+    <span class="tick tl">+</span>
+    <span class="tick tr">+</span>
+    <span class="tick bl">+</span>
+    <span class="tick br">+</span>
+    <span class="dim-top"><span>SPEC // SL-ARCH-v2.0</span><span>4-NODE SYSTEM</span></span>
+  </div>
+
+  <!-- Central Dimensional SVG connecting the 4 quadrant nodes -->
+  <svg class="bp-wires" viewBox="0 0 600 380" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="pulse-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0" />
+        <stop offset="50%" stop-color="var(--accent)" stop-opacity="0.85" />
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+      </linearGradient>
+    </defs>
+    <!-- Hairline architectural axes -->
+    <line x1="300" y1="16" x2="300" y2="364" class="axis" />
+    <line x1="16" y1="190" x2="584" y2="190" class="axis" />
+    <circle cx="300" cy="190" r="54" class="orbit" />
+    <circle cx="300" cy="190" r="88" class="orbit dashed" />
+
+    <!-- Animated signal paths from Core to each quadrant -->
+    <path d="M 300 190 L 220 190 L 150 95" class="wire" />
+    <path d="M 300 190 L 380 190 L 450 95" class="wire" />
+    <path d="M 300 190 L 220 190 L 150 285" class="wire" />
+    <path d="M 300 190 L 380 190 L 450 285" class="wire" />
+
+    <path d="M 300 190 L 220 190 L 150 95" class="pulse p1" />
+    <path d="M 300 190 L 380 190 L 450 95" class="pulse p2" />
+    <path d="M 300 190 L 220 190 L 150 285" class="pulse p3" />
+    <path d="M 300 190 L 380 190 L 450 285" class="pulse p4" />
+  </svg>
+
+  <!-- Central Core Hub -->
+  <div class="bp-core" aria-hidden="true">
+    <span class="core-ring"></span>
+    <span class="core-dot"></span>
+    <span class="core-title">{blueprintUi.coreLabel[lang]}</span>
+    <span class="core-sub">{blueprintUi.coreSub[lang]}</span>
+  </div>
+
+  <!-- 4 Interactive Quadrant Nodes -->
+  <div class="bp-grid" role="list" aria-label={lang === 'zh' ? '架構四大模組' : 'Four architecture modules'}>
+    {blueprintModules.map((mod) => (
+      <button
+        type="button"
+        role="listitem"
+        class:list={['bp-node', { active: mod.id === initial }]}
+        data-select-module={mod.id}
+      >
+        <div class="node-head">
+          <span class="node-code">{mod.code}</span>
+          <span class="node-coords">{mod.coords}</span>
+        </div>
+        <div class="node-body">
+          <h3>{mod.title[lang]}</h3>
+          <p class="node-hook">{mod.hook[lang]}</p>
+        </div>
+        <div class="node-foot">
+          <span class="node-metric">{mod.metric[lang]}</span>
+          <span class="node-cta">{blueprintUi.exploreCta[lang]} →</span>
+        </div>
+      </button>
+    ))}
+  </div>
+</div>
+
+<style>
+  .blueprint {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      linear-gradient(to right, color-mix(in srgb, var(--line) 38%, transparent) 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(to bottom, color-mix(in srgb, var(--line) 38%, transparent) 1px, transparent 1px) 0 0 / 28px 28px,
+      var(--surface);
+    padding: 34px 20px 20px;
+    overflow: hidden;
+  }
+
+  .bp-frame {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .tick {
+    position: absolute;
+    line-height: 1;
+    opacity: 0.55;
+  }
+  .tl { top: 8px; left: 10px; }
+  .tr { top: 8px; right: 10px; }
+  .bl { bottom: 8px; left: 10px; }
+  .br { bottom: 8px; right: 10px; }
+  .dim-top {
+    position: absolute;
+    top: 9px;
+    left: 28px;
+    right: 28px;
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+  }
+
+  .bp-wires {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .axis {
+    stroke: var(--line);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+  .orbit {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1;
+    opacity: 0.7;
+  }
+  .orbit.dashed {
+    stroke-dasharray: 4 6;
+    animation: spin 42s linear infinite;
+    transform-origin: 300px 190px;
+  }
+  .wire {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1.25;
+  }
+  .pulse {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-dasharray: 28 240;
+    stroke-linecap: round;
+    animation: flow 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    opacity: 0.85;
+  }
+  .p2 { animation-delay: 0.9s; }
+  .p3 { animation-delay: 1.8s; }
+  .p4 { animation-delay: 2.7s; }
+
+  @keyframes flow {
+    from { stroke-dashoffset: 268; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .bp-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 132px;
+    height: 68px;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    background: var(--surface);
+    box-shadow: 0 8px 28px -10px var(--glow), 0 0 0 4px var(--bg);
+    pointer-events: none;
+    text-align: center;
+  }
+  .core-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .core-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent);
+    margin-bottom: 4px;
+  }
+  .core-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  .core-sub {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .bp-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .bp-node {
+    appearance: none;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition:
+      transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.22s ease,
+      box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .bp-node:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+    box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.25);
+  }
+  .bp-node:active {
+    transform: scale(0.985);
+  }
+  .bp-node.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 12px 28px -12px var(--glow);
+  }
+
+  .node-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .node-code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .node-coords {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .node-body {
+    margin: 10px 0 12px;
+  }
+  .node-body h3 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .node-hook {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .node-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    font-size: 11.5px;
+  }
+  .node-metric {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .node-cta {
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .bp-node:hover .node-cta {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 720px) {
+    .bp-grid {
+      grid-template-columns: 1fr;
+    }
+    .bp-core,
+    .bp-wires {
+      display: none;
+    }
+    .bp-node {
+      min-height: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse,
+    .orbit.dashed {
+      animation: none;
+    }
+    .bp-node,
+    .node-cta {
+      transition: none;
+    }
+  }
+</style>

@@ -1,144 +1,364 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
-import Offers from './Offers.astro';
-import CityStory from './CityStory.astro';
-import Bgm from './Bgm.astro';
+import { chapters } from '../data/story';
+import {
+  blueprintModules,
+  blueprintUi,
+  capabilityPillars,
+  valueOutcomes,
+  type ModuleId,
+} from '../data/blueprint';
+import BlueprintOverview from './BlueprintOverview.astro';
 import SkillStack from './SkillStack.astro';
+import Bgm from './Bgm.astro';
+
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const other = lang === 'zh' ? '/en/' : '/';
-const sections = ['story', 'offers', 'experience', 'skills', 'education', 'contact'] as const;
 const t = (o: Record<Lang, string>) => o[lang];
-const mottoParts = t(profile.motto).split(/(\[[^\]]+\])/).filter(Boolean).map((p) => ({ text: p.replace(/^\[|\]$/g, ''), hl: p.startsWith('[') }));
-const mottoPlain = mottoParts.map((p) => p.text).join('');
-const current = profile.experience.find((e) => e.current);
-const previous = profile.experience.filter((e) => !e.current);
 const workHref = (slug: string) => `${lang === 'zh' ? '' : '/en'}/work/${slug}/`;
 const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
 // mailto must not open a blank tab.
 const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
 const arrow = (href: string) => (href.startsWith('mailto:') ? '' : ' ↗');
-const introTokens = lang === 'zh' ? [...t(profile.pitch)] : t(profile.pitch).split(/(\s+)/);
-const allSkills = profile.skills.flatMap((g) => g.items);
+
+const mottoParts = t(profile.motto)
+  .split(/(\[[^\]]+\])/)
+  .filter(Boolean)
+  .map((p) => ({ text: p.replace(/^\[|\]$/g, ''), hl: p.startsWith('[') }));
+
+const chapterBySlug = new Map(chapters.map((c) => [c.slug, c]));
+const initialModule: ModuleId = 'identity';
 ---
+
 <header class="nav">
   <a href="#top" class="brand">SL<span class="cursor">_</span></a>
-  <nav aria-label="Sections">
-    {sections.map((s) => <a href={`#${s}`} data-nav={s}>{t(ui.nav[s])}</a>)}
+  <nav aria-label="Modules">
+    {blueprintModules.map((m) => (
+      <a href={`#${m.id}`} data-nav-module={m.id}>
+        <span class="nav-code">{m.code}</span>
+        <span>{t(m.title)}</span>
+      </a>
+    ))}
   </nav>
   <div class="actions">
-    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button>
+    <button class="icon-btn" id="palette-btn" type="button" aria-label={t(blueprintUi.palette)}>
+      <kbd>⌘K</kbd>
+    </button>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" />
+      </svg>
+    </button>
     <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
   </div>
 </header>
 
 <main id="top">
-  <section class="hero">
-    {current && <a class="deploy reveal" href={`${lang === 'zh' ? '' : '/en'}/work/${current.slug}/`}><span class="dot" aria-hidden="true"></span>{t(ui.now)}<span class="go" aria-hidden="true">→</span></a>}
-    <p class="hello reveal">{t(ui.hello)}</p>
-    <h1 class="reveal" id="name" data-text={t(profile.name)}>{t(profile.name)}</h1>
-    <p class="role reveal">{t(profile.title)}</p>
-    <p class="motto reveal" aria-label={mottoPlain}>
-      <span id="motto" aria-hidden="true">{mottoParts.map((p) => <span class:list={{ hl: p.hl }} data-full={p.text}>{p.text}</span>)}</span><span class="caret" aria-hidden="true"></span>
-    </p>
-    <div class="links reveal">
-      {profile.links.map((l) => <a class="btn" href={l.href} {...ext(l.href)}>{l.label}{arrow(l.href)}</a>)}
-      <a class="btn" href={resumeHref} download>{t(ui.resumePdf)}</a>
-      <span class="loc">📍 {t(profile.location)} · {t(profile.workMode)}</span>
+  <!-- Layer 1: Focused First-Screen Hook + 4-Module Animated Blueprint -->
+  <section class="hero-stage">
+    <div class="hero-copy">
+      <a class="status-pill" href={workHref('metamec')}>
+        <span class="dot" aria-hidden="true"></span>
+        <span>{t(blueprintUi.badge)}</span>
+        <span aria-hidden="true">→</span>
+      </a>
+      <h1 id="name">{t(profile.name)}</h1>
+      <p class="hero-hook">{t(blueprintUi.hook)}</p>
+      <p class="hero-sub">{t(blueprintUi.subhook)}</p>
+      <div class="hero-actions">
+        <a class="btn primary" href={resumeHref} download>{t(ui.resumePdf)}</a>
+        {profile.links.map((l) => (
+          <a class="btn" href={l.href} {...ext(l.href)}>
+            {l.label}{arrow(l.href)}
+          </a>
+        ))}
+      </div>
     </div>
-    <p class="employers reveal">
-      {current && <span class="employer-group"><span>{t(ui.employerNow)}</span> <a class="employer-current" href={workHref(current.slug)}>{t(current.company)}</a></span>}
-      {current && previous.length > 0 && <span class="employer-separator" aria-hidden="true">{lang === 'zh' ? '｜' : '|'}</span>}
-      {previous.length > 0 && <span class="employer-group"><span>{t(ui.employerPreviously)}</span> {previous.map((job, index) => <span class="previous-company">{index > 0 && <span aria-hidden="true"> · </span>}<a href={workHref(job.slug)}>{t(job.company)}</a></span>)}</span>}
-    </p>
-    <p class="hint reveal"><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd> — {t(ui.palette)}</p>
-    <a class="cue reveal" href="#prelude"><span aria-hidden="true">↓</span> {t(ui.cue)}</a>
+
+    <div class="hero-visual">
+      <BlueprintOverview lang={lang} initial={initialModule} />
+    </div>
   </section>
 
-  <section id="prelude" class="prelude">
-    <p class="intro" id="intro" aria-label={t(profile.pitch)}>{introTokens.map((w) => <span aria-hidden="true">{w}</span>)}</p>
-    <div class="stats">
-      {profile.stats.map((s) => (
-        <div class="stat reveal">
-          <strong data-count={s.value}>{s.value}</strong>
-          <span>{t(s.label)}</span>
-        </div>
+  <!-- Layer 2: Progressive Disclosure Explorer Stage -->
+  <section id="explorer" class="explorer" aria-label={lang === 'zh' ? '詳細架構展開區' : 'Module explorer'}>
+    <div class="tab-bar" role="tablist" aria-label={lang === 'zh' ? '四大模組切換' : 'Switch module'}>
+      {blueprintModules.map((m) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${m.id}`}
+          aria-selected={m.id === initialModule}
+          aria-controls={`panel-${m.id}`}
+          class:list={['tab-btn', { active: m.id === initialModule }]}
+          data-tab-module={m.id}
+        >
+          <span class="tab-code">{m.code}</span>
+          <span class="tab-label">{t(m.title)}</span>
+        </button>
       ))}
     </div>
-  </section>
 
-  <CityStory lang={lang} />
-
-  <Offers lang={lang} />
-
-  <section id="experience" class="block">
-    <h2 class="reveal"><span>03</span>{t(ui.nav.experience)}</h2>
-    <ol class="timeline">
-      {profile.experience.map((e) => (
-        <li class:list={['job card reveal', { current: e.current }]}>
-          <div class="job-head">
-            <div>
-              <h3>{t(e.role)}</h3>
-              <p class="company">{t(e.company)}</p>
-              {e.team && <p class="team">{t(e.team)}</p>}
+    <div class="panels">
+      <!-- 01 · Identity -->
+      <div
+        id="panel-identity"
+        role="tabpanel"
+        aria-labelledby="tab-identity"
+        class="panel active"
+        data-panel-module="identity"
+      >
+        <div class="bento-identity">
+          <article class="bento-card span-2">
+            <span class="card-kicker">01 · CORE STATEMENT</span>
+            <h2 class="motto-line">
+              {mottoParts.map((p) => (
+                <span class:list={{ hl: p.hl }}>{p.text}</span>
+              ))}
+            </h2>
+            <p class="lead-text">{t(profile.intro)}</p>
+            <div class="meta-row">
+              <span>📍 {t(profile.location)}</span>
+              <span>·</span>
+              <span>{t(profile.workMode)}</span>
             </div>
-            <span class="period">{e.period}</span>
-          </div>
-          {e.points[lang].length > 0 && <ul>{e.points[lang].map((p) => <li>{p}</li>)}</ul>}
-          <div class="tags">{e.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
-          <a class="more" href={`${lang === 'zh' ? '' : '/en'}/work/${e.slug}/`}>{t(ui.viewWork)}</a>
-        </li>
-      ))}
-    </ol>
-  </section>
+          </article>
 
-  <section id="skills" class="block">
-    <h2 class="reveal"><span>04</span>{t(ui.nav.skills)}</h2>
-    <SkillStack lang={lang} />
-    <div class="marquee" aria-hidden="true">
-      <div class="track">{[...allSkills, ...allSkills].map((i) => <span>{i}</span>)}</div>
-      <div class="track rev">{[...allSkills].reverse().concat([...allSkills].reverse()).map((i) => <span>{i}</span>)}</div>
-    </div>
-  </section>
+          <article class="bento-card stats-card">
+            <span class="card-kicker">METRICS</span>
+            <div class="stats-grid">
+              {profile.stats.map((s) => (
+                <div class="stat-item">
+                  <strong data-count={s.value}>{s.value}</strong>
+                  <span>{t(s.label)}</span>
+                </div>
+              ))}
+            </div>
+          </article>
 
-  <section id="education" class="block">
-    <h2 class="reveal"><span>05</span>{t(ui.nav.education)}</h2>
-    <div class="edu">
-      {profile.education.map((ed) => (
-        <div class="card reveal">
-          <div class="job-head">
-            <h3>{t(ed.school)}</h3>
-            <span class="period">{ed.period}</span>
-          </div>
-          <p class="company">{t(ed.degree)}</p>
+          <article class="bento-card span-2">
+            <span class="card-kicker">{t(ui.nav.education).toUpperCase()}</span>
+            <div class="edu-list">
+              {profile.education.map((ed) => (
+                <div class="edu-item">
+                  <div>
+                    <strong>{t(ed.school)}</strong>
+                    <span class="edu-deg">{t(ed.degree)}</span>
+                  </div>
+                  <span class="mono-dim">{ed.period}</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article class="bento-card contact-card">
+            <span class="card-kicker">{t(ui.contactTitle).toUpperCase()}</span>
+            <p class="muted-sm">{t(ui.contactText)}</p>
+            <div class="mini-links">
+              {profile.links.map((l) => (
+                <a class="chip-link" href={l.href} {...ext(l.href)}>
+                  {l.label}{arrow(l.href)}
+                </a>
+              ))}
+            </div>
+          </article>
         </div>
-      ))}
-    </div>
-  </section>
+      </div>
 
-  <section id="contact" class="block contact">
-    <p class="kicker reveal">{t(ui.nextStop)}</p>
-    <h2 class="reveal"><span>06</span>{t(ui.contactTitle)}</h2>
-    <p class="reveal">{t(ui.contactText)}</p>
-    <div class="links reveal">
-      {profile.links.map((l) => <a class="btn primary" href={l.href} {...ext(l.href)}>{l.label}{arrow(l.href)}</a>)}
-      <a class="btn primary" href={resumeHref} download>{t(ui.resumePdf)}</a>
+      <!-- 02 · Track Record -->
+      <div
+        id="panel-experience"
+        role="tabpanel"
+        aria-labelledby="tab-experience"
+        class="panel"
+        data-panel-module="experience"
+        hidden
+      >
+        <p class="panel-hint">{t(blueprintUi.stationPrompt)}</p>
+        <div class="exp-layout">
+          <div class="station-list" role="tablist" aria-label={lang === 'zh' ? '職涯站點' : 'Career stops'}>
+            {profile.experience.map((job, idx) => {
+              const ch = chapterBySlug.get(job.slug);
+              return (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={idx === 0}
+                  class:list={['station-btn', { active: idx === 0 }]}
+                  data-station-btn={job.slug}
+                >
+                  <div class="st-top">
+                    <span class="st-company">{t(job.company)}</span>
+                    <span class="st-period">{job.period}</span>
+                  </div>
+                  <span class="st-story">{ch ? t(ch.title) : t(job.role)}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div class="station-detail">
+            {profile.experience.map((job, idx) => {
+              const ch = chapterBySlug.get(job.slug);
+              return (
+                <article
+                  class:list={['detail-card', { active: idx === 0 }]}
+                  data-station-panel={job.slug}
+                  hidden={idx !== 0}
+                >
+                  <div class="detail-head">
+                    <div>
+                      {ch && <span class="card-kicker">{t(ch.label)} · {t(ch.title)}</span>}
+                      <h3>{t(job.role)}</h3>
+                      <p class="detail-sub">
+                        {t(job.company)}
+                        {job.team && ` · ${t(job.team)}`}
+                      </p>
+                    </div>
+                    <span class="period-pill">{job.period}</span>
+                  </div>
+                  {ch && <p class="story-line">“{t(ch.line)}”</p>}
+                  <ul class="impact-list">
+                    {job.points[lang].slice(0, 4).map((pt) => (
+                      <li>{pt}</li>
+                    ))}
+                  </ul>
+                  <div class="detail-foot">
+                    <div class="tags">
+                      {job.tags.map((tag) => (
+                        <span class="tag">{tag}</span>
+                      ))}
+                    </div>
+                    <a class="case-link" href={workHref(job.slug)}>
+                      {t(blueprintUi.caseStudy)}
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 · Capabilities (Tech, Communication, Problem Solving, Management) -->
+      <div
+        id="panel-capabilities"
+        role="tabpanel"
+        aria-labelledby="tab-capabilities"
+        class="panel"
+        data-panel-module="capabilities"
+        hidden
+      >
+        <div class="bento-2x2">
+          {capabilityPillars.map((cap) => (
+            <article class="bento-card cap-card">
+              <div class="cap-head">
+                <span class="node-code">{cap.code}</span>
+                <h3>{t(cap.title)}</h3>
+              </div>
+              <p class="cap-summary">{t(cap.summary)}</p>
+              <ul class="impact-list">
+                {cap.highlights[lang].map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+
+        <div class="matrix-drawer">
+          <button
+            type="button"
+            class="drawer-toggle"
+            id="matrix-toggle"
+            aria-expanded="false"
+            aria-controls="matrix-body"
+          >
+            <span data-label-open={t(blueprintUi.matrixToggle)} data-label-close={t(blueprintUi.matrixHide)}>
+              {t(blueprintUi.matrixToggle)}
+            </span>
+            <span class="chevron" aria-hidden="true">▾</span>
+          </button>
+          <div id="matrix-body" class="matrix-body" hidden>
+            <SkillStack lang={lang} />
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 · Value & ROI for Audience -->
+      <div
+        id="panel-impact"
+        role="tabpanel"
+        aria-labelledby="tab-impact"
+        class="panel"
+        data-panel-module="impact"
+        hidden
+      >
+        <div class="bento-2x2">
+          {valueOutcomes.map((val) => (
+            <a class="bento-card roi-card" href={`${lang === 'zh' ? '' : '/en'}${val.href}`}>
+              <div class="roi-top">
+                <span class="card-kicker">{t(val.tag)}</span>
+                <span class="roi-arrow" aria-hidden="true">↗</span>
+              </div>
+              <h3>{t(val.title)}</h3>
+              <p class="cap-summary">{t(val.outcome)}</p>
+              <div class="tags">
+                {val.proof.map((p) => (
+                  <span class="tag">{p}</span>
+                ))}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   </section>
 </main>
 
 <Bgm />
 
-<footer>© {new Date().getFullYear()} Shin Lin · Built with Astro, served by Cloudflare</footer>
+<footer>© {new Date().getFullYear()} Shin Lin · Architecture Blueprint v2.0</footer>
 
 <dialog id="palette" aria-label="Command palette">
-  <input id="palette-input" type="text" placeholder={lang === 'zh' ? '輸入要前往的區塊…' : 'Type a section…'} autocomplete="off" />
+  <input
+    id="palette-input"
+    type="text"
+    placeholder={lang === 'zh' ? '輸入模組或指令…' : 'Jump to module or action…'}
+    autocomplete="off"
+  />
   <ul id="palette-list">
-    {sections.map((s) => <li><a href={`#${s}`} data-cmd>{t(ui.nav[s])} <small>#{s}</small></a></li>)}
-    {profile.links.map((l) => <li><a href={l.href} {...ext(l.href)} data-cmd>{l.label} <small>{arrow(l.href) || 'mail'}</small></a></li>)}
-    <li><a href={resumeHref} download data-cmd>{t(ui.resumePdf)} <small>PDF</small></a></li>
-    <li><a href={other} data-cmd>{lang === 'zh' ? 'Switch to English' : '切換為中文'} <small>lang</small></a></li>
-    <li><a href="#" data-cmd data-action="theme">{lang === 'zh' ? '切換深淺色' : 'Toggle theme'} <small>theme</small></a></li>
+    {blueprintModules.map((m) => (
+      <li>
+        <a href={`#${m.id}`} data-cmd data-jump-module={m.id}>
+          {m.code} · {t(m.title)} <small>{t(m.subtitle)}</small>
+        </a>
+      </li>
+    ))}
+    {profile.links.map((l) => (
+      <li>
+        <a href={l.href} {...ext(l.href)} data-cmd>
+          {l.label} <small>{arrow(l.href) || 'mail'}</small>
+        </a>
+      </li>
+    ))}
+    <li>
+      <a href={resumeHref} download data-cmd>
+        {t(ui.resumePdf)} <small>PDF</small>
+      </a>
+    </li>
+    <li>
+      <a href={other} data-cmd>
+        {lang === 'zh' ? 'Switch to English' : '切換為中文'} <small>lang</small>
+      </a>
+    </li>
+    <li>
+      <a href="#" data-cmd data-action="theme">
+        {lang === 'zh' ? '切換深淺色' : 'Toggle theme'} <small>theme</small>
+      </a>
+    </li>
   </ul>
 </dialog>
 
@@ -146,286 +366,826 @@ const allSkills = profile.skills.flatMap((g) => g.items);
   const root = document.documentElement;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 滑鼠聚光燈 + 卡片光暈
+  // Pointer spotlight
   addEventListener('pointermove', (e) => {
     root.style.setProperty('--mx', e.clientX + 'px');
     root.style.setProperty('--my', e.clientY + 'px');
-    const card = (e.target as HTMLElement).closest<HTMLElement>('.card');
-    if (card) {
-      const r = card.getBoundingClientRect();
-      card.style.setProperty('--cx', e.clientX - r.left + 'px');
-      card.style.setProperty('--cy', e.clientY - r.top + 'px');
+  });
+
+  // Scroll progress bar
+  const bar = document.querySelector<HTMLElement>('.progress');
+  if (bar) {
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // Theme toggle
+  const themeBtn = document.getElementById('theme-btn');
+  const toggleTheme = () => {
+    const dark = root.dataset.theme
+      ? root.dataset.theme === 'dark'
+      : matchMedia('(prefers-color-scheme: dark)').matches;
+    const next = dark ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {}
+  };
+  themeBtn?.addEventListener('click', toggleTheme);
+
+  // Module switching across Blueprint nodes, Top Nav, and Explorer Tabs
+  const validModules = new Set(['identity', 'experience', 'capabilities', 'impact']);
+  const explorer = document.getElementById('explorer');
+  const blueprintNodes = document.querySelectorAll<HTMLElement>('[data-select-module]');
+  const tabBtns = document.querySelectorAll<HTMLElement>('[data-tab-module]');
+  const panels = document.querySelectorAll<HTMLElement>('[data-panel-module]');
+  const navLinks = document.querySelectorAll<HTMLElement>('[data-nav-module]');
+
+  const activateModule = (id: string, scrollIntoView = false) => {
+    if (!validModules.has(id)) return;
+    blueprintNodes.forEach((el) => el.classList.toggle('active', el.dataset.selectModule === id));
+    tabBtns.forEach((el) => {
+      const active = el.dataset.tabModule === id;
+      el.classList.toggle('active', active);
+      el.setAttribute('aria-selected', String(active));
+    });
+    panels.forEach((el) => {
+      const active = el.dataset.panelModule === id;
+      el.classList.toggle('active', active);
+      el.hidden = !active;
+    });
+    navLinks.forEach((el) => el.classList.toggle('active', el.dataset.navModule === id));
+    try {
+      history.replaceState(null, '', `#${id}`);
+    } catch {}
+    if (scrollIntoView && explorer) {
+      explorer.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }
+  };
+
+  blueprintNodes.forEach((el) =>
+    el.addEventListener('click', () => activateModule(el.dataset.selectModule!, true))
+  );
+  tabBtns.forEach((el) =>
+    el.addEventListener('click', () => activateModule(el.dataset.tabModule!, false))
+  );
+  navLinks.forEach((el) =>
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      activateModule(el.dataset.navModule!, true);
+    })
+  );
+
+  // Restore module from URL hash on load
+  const initialHash = location.hash.replace('#', '');
+  if (validModules.has(initialHash)) {
+    activateModule(initialHash, false);
+  }
+
+  // Station selector inside 02 Track Record
+  const stationBtns = document.querySelectorAll<HTMLElement>('[data-station-btn]');
+  const stationPanels = document.querySelectorAll<HTMLElement>('[data-station-panel]');
+  stationBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const slug = btn.dataset.stationBtn;
+      stationBtns.forEach((b) => {
+        const active = b.dataset.stationBtn === slug;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', String(active));
+      });
+      stationPanels.forEach((p) => {
+        const active = p.dataset.stationPanel === slug;
+        p.classList.toggle('active', active);
+        p.hidden = !active;
+      });
+    });
+  });
+
+  // Expandable Skill Matrix drawer inside 03 Capabilities
+  const matrixToggle = document.getElementById('matrix-toggle');
+  const matrixBody = document.getElementById('matrix-body');
+  if (matrixToggle && matrixBody) {
+    const labelSpan = matrixToggle.querySelector<HTMLElement>('span[data-label-open]');
+    matrixToggle.addEventListener('click', () => {
+      const expanded = matrixToggle.getAttribute('aria-expanded') === 'true';
+      const next = !expanded;
+      matrixToggle.setAttribute('aria-expanded', String(next));
+      matrixBody.hidden = !next;
+      if (labelSpan) {
+        labelSpan.textContent = next
+          ? labelSpan.dataset.labelClose || ''
+          : labelSpan.dataset.labelOpen || '';
+      }
+    });
+  }
+
+  // Command palette (Cmd/Ctrl + K)
+  const palette = document.getElementById('palette') as HTMLDialogElement | null;
+  const paletteInput = document.getElementById('palette-input') as HTMLInputElement | null;
+  const paletteBtn = document.getElementById('palette-btn');
+  const openPalette = () => {
+    if (!palette || !paletteInput) return;
+    palette.showModal();
+    paletteInput.value = '';
+    filterPalette();
+    paletteInput.focus();
+  };
+  const filterPalette = () => {
+    if (!palette || !paletteInput) return;
+    const q = paletteInput.value.toLowerCase();
+    palette.querySelectorAll<HTMLElement>('li').forEach((li) => {
+      li.hidden = !li.textContent?.toLowerCase().includes(q);
+    });
+  };
+  paletteBtn?.addEventListener('click', openPalette);
+  paletteInput?.addEventListener('input', filterPalette);
+  palette?.addEventListener('click', (e) => {
+    if (e.target === palette) palette.close();
+  });
+  palette?.querySelectorAll<HTMLElement>('[data-cmd]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      if (a.dataset.action === 'theme') {
+        e.preventDefault();
+        toggleTheme();
+      } else if (a.dataset.jumpModule) {
+        e.preventDefault();
+        activateModule(a.dataset.jumpModule, true);
+      }
+      palette.close();
+    });
+  });
+  addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      palette?.open ? palette.close() : openPalette();
     }
   });
-
-  // 捲動進度條 + 目前區塊高亮
-  const bar = document.querySelector<HTMLElement>('.progress')!;
-  const onScroll = () => {
-    const max = document.documentElement.scrollHeight - innerHeight;
-    bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
-  };
-  addEventListener('scroll', onScroll, { passive: true }); onScroll();
-
-  const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-nav]');
-  const spy = new IntersectionObserver((entries) => {
-    entries.forEach((en) => {
-      if (en.isIntersecting) navLinks.forEach((a) => a.classList.toggle('active', a.dataset.nav === en.target.id));
-    });
-  }, { rootMargin: '-45% 0px -50% 0px' });
-  document.querySelectorAll('section[id]').forEach((s) => spy.observe(s));
-
-  // 進場動畫（依序延遲）
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
-  }, { threshold: 0.12 });
-  document.querySelectorAll<HTMLElement>('.reveal').forEach((el, i) => {
-    el.style.transitionDelay = `${Math.min((i % 6) * 70, 350)}ms`;
-    io.observe(el);
-  });
-
-  // 數字跳動
-  const counter = new IntersectionObserver((entries) => {
-    entries.forEach((en) => {
-      if (!en.isIntersecting) return;
-      const el = en.target as HTMLElement; counter.unobserve(el);
-      const raw = el.dataset.count!; const n = parseInt(raw, 10); const suffix = raw.replace(/\d+/, '');
-      if (reduce || isNaN(n)) return;
-      let i = 0; const step = () => { i++; el.textContent = Math.round((n * i) / 30) + suffix; if (i < 30) requestAnimationFrame(step); };
-      step();
-    });
-  }, { threshold: 0.6 });
-  document.querySelectorAll('[data-count]').forEach((el) => counter.observe(el));
-
-  // Type the motto once; server-rendered text stays as the no-JS fallback.
-  const mottoParts = [...document.querySelectorAll<HTMLElement>('#motto [data-full]')];
-  const mottoEl = document.querySelector<HTMLElement>('.motto')!;
-  if (reduce) mottoEl.classList.add('done');
-  else {
-    mottoParts.forEach((s) => (s.textContent = ''));
-    let part = 0, c = 0;
-    const tick = () => {
-      const full = [...(mottoParts[part].dataset.full ?? '')];
-      mottoParts[part].textContent = full.slice(0, ++c).join('');
-      if (c >= full.length) { part++; c = 0; }
-      if (part < mottoParts.length) setTimeout(tick, 70);
-      else setTimeout(() => mottoEl.classList.add('done'), 2400);
-    };
-    setTimeout(tick, 900);
-  }
-
-  // 亂碼解讀標題（Scramble Decode）
-  const nameEl = document.getElementById('name')!;
-  const finalText = nameEl.dataset.text || '';
-  if (!reduce) {
-    const glyphs = '!<>-_\\/[]{}=+*^?#01ABCDEF';
-    let frame = 0; const total = 28;
-    const run = () => {
-      frame++;
-      nameEl.textContent = [...finalText].map((ch, i) =>
-        ch === ' ' ? ' ' : frame / total > i / finalText.length ? ch : glyphs[Math.floor(Math.random() * glyphs.length)]
-      ).join('');
-      if (frame < total) requestAnimationFrame(() => setTimeout(run, 30)); else nameEl.textContent = finalText;
-    };
-    setTimeout(run, 250);
-    nameEl.addEventListener('mouseenter', () => { if (frame >= total) { frame = 0; run(); } });
-  }
-
-  // 自我介紹隨捲動逐字點亮 + 時間軸隨捲動繪製
-  const introSpans = [...document.querySelectorAll<HTMLElement>('#intro span')];
-  const timeline = document.querySelector<HTMLElement>('.timeline')!;
-  const progressOf = (el: HTMLElement, start = 0.85, end = 0.35) => {
-    const r = el.getBoundingClientRect();
-    const a = innerHeight * start - r.top, b = innerHeight * start - innerHeight * end + r.height;
-    return Math.max(0, Math.min(1, a / b));
-  };
-  const onScrollFx = () => {
-    const p = reduce ? 1 : progressOf(document.getElementById('intro')!, 0.9, 0.5);
-    const lit = Math.round(p * introSpans.length);
-    introSpans.forEach((s, i) => s.classList.toggle('lit', i < lit));
-    timeline.style.setProperty('--draw', String(reduce ? 1 : progressOf(timeline, 0.8, 0.5)));
-  };
-  addEventListener('scroll', onScrollFx, { passive: true }); onScrollFx();
-
-  // 磁吸按鈕（Magnetic Button）
-  if (!reduce && matchMedia('(pointer: fine)').matches) {
-    document.querySelectorAll<HTMLElement>('.btn').forEach((b) => {
-      b.addEventListener('pointermove', (e) => {
-        const r = b.getBoundingClientRect();
-        b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`;
-      });
-      b.addEventListener('pointerleave', () => { b.style.transform = ''; });
-    });
-  }
-
-  // 深淺色切換
-  const toggleTheme = () => {
-    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-    root.dataset.theme = dark ? 'light' : 'dark';
-    try { localStorage.setItem('theme', root.dataset.theme); } catch {}
-  };
-  document.getElementById('theme-btn')!.addEventListener('click', toggleTheme);
-
-  // Ctrl/⌘ + K 指令面板
-  const dlg = document.getElementById('palette') as HTMLDialogElement;
-  const input = document.getElementById('palette-input') as HTMLInputElement;
-  const items = [...dlg.querySelectorAll<HTMLAnchorElement>('[data-cmd]')];
-  let sel = 0;
-  const visible = () => items.filter((a) => a.parentElement!.style.display !== 'none');
-  const paint = () => visible().forEach((a, i) => a.classList.toggle('sel', i === sel));
-  const open = () => { input.value = ''; items.forEach((a) => (a.parentElement!.style.display = '')); sel = 0; paint(); dlg.showModal(); input.focus(); };
-  addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); dlg.open ? dlg.close() : open(); }
-  });
-  document.querySelector('.hint')?.addEventListener('click', open);
-  input.addEventListener('input', () => {
-    const q = input.value.toLowerCase();
-    items.forEach((a) => (a.parentElement!.style.display = a.textContent!.toLowerCase().includes(q) ? '' : 'none'));
-    sel = 0; paint();
-  });
-  input.addEventListener('keydown', (e) => {
-    const v = visible();
-    if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, v.length - 1); paint(); }
-    if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); paint(); }
-    if (e.key === 'Enter' && v[sel]) { e.preventDefault(); v[sel].click(); }
-  });
-  items.forEach((a) => a.addEventListener('click', (e) => {
-    if (a.dataset.action === 'theme') { e.preventDefault(); toggleTheme(); }
-    dlg.close();
-  }));
-  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
 </script>
 
 <style>
-  .nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 14px max(16px, calc((100vw - 880px) / 2)); background: color-mix(in srgb, var(--bg) 80%, transparent);
-    backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
-  .brand { font-family: var(--mono); font-weight: 700; text-decoration: none; letter-spacing: .02em; }
-  .cursor { color: var(--accent); animation: blink 1s steps(1) infinite; }
-  nav { display: flex; gap: 22px; font-size: 14px; }
-  nav a { text-decoration: none; color: var(--muted); transition: color .2s; position: relative; }
-  nav a:hover, nav a.active { color: var(--text); }
-  nav a.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; background: var(--accent); border-radius: 2px; }
-  .actions { display: flex; gap: 8px; align-items: center; }
-  .icon-btn { display: inline-grid; place-items: center; padding: 6px 8px !important; }
-  .icon-btn, .lang { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px;
-    padding: 4px 12px; font-size: 13px; cursor: pointer; text-decoration: none; font-family: inherit; }
-  .icon-btn:hover, .lang:hover { border-color: var(--accent); }
-
-  main, footer { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  .hero { min-height: calc(100vh - 60px); display: flex; flex-direction: column; justify-content: center; padding: 64px 0; }
-  .deploy { display: inline-flex; align-self: flex-start; align-items: center; gap: 10px; font: 12px var(--mono);
-    border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; text-decoration: none; margin-bottom: 32px; }
-  .deploy { font: 13px var(--font); transition: border-color .2s; }
-  .deploy:hover { border-color: var(--accent); }
-  .go { color: var(--accent); transition: transform .2s; }
-  .deploy:hover .go { transform: translateX(3px); }
-  .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 2s infinite; }
-  .hello { margin: 0; color: var(--muted); font-size: 18px; }
-  h1 { font-size: clamp(44px, 9vw, 88px); line-height: 1.02; margin: 4px 0 12px; letter-spacing: -0.03em;
-    background: linear-gradient(120deg, var(--text) 40%, var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .role { font-size: clamp(17px, 2.6vw, 22px); margin: 0 0 20px; }
-  .motto { font-family: var(--font); font-size: clamp(20px, 3vw, 26px); font-weight: 600; letter-spacing: -0.01em; color: var(--text); margin: 4px 0 32px; min-height: 1.5em; }
-  .motto .hl { color: var(--accent); background: linear-gradient(transparent 62%, var(--accent-soft) 62%); }
-  .caret { display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -0.12em; background: var(--accent); animation: blink 1s steps(1) infinite; transition: opacity .4s; }
-  .motto.done .caret { opacity: 0; animation: none; }
-  .links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  .btn { display: inline-block; text-decoration: none; padding: 9px 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
-    font-size: 14px; font-weight: 500; transition: transform .25s cubic-bezier(.2,.8,.2,1), border-color .2s, box-shadow .2s; }
-  .btn:hover { border-color: var(--accent); box-shadow: 0 8px 24px -12px var(--accent); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .loc { color: var(--muted); font-size: 14px; margin-left: 6px; }
-  .employers { display: flex; flex-wrap: wrap; gap: 0 8px; margin: 18px 0 0; color: var(--muted); font: 14px/1.7 var(--font); }
-  .employer-group { display: inline-flex; flex-wrap: wrap; gap: 0 4px; min-width: 0; }
-  .employers a { color: var(--muted); text-decoration: none; transition: color .2s; }
-  .employers a:hover { color: var(--accent); }
-  .employers .employer-current { color: var(--text); font-weight: 700; }
-  .previous-company { white-space: nowrap; }
-  .hint { margin-top: 40px; font-size: 12px; color: var(--muted); cursor: pointer; }
-  kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; background: var(--surface); }
-
-  .block { padding: 72px 0; scroll-margin-top: 64px; }
-  h2 { font-size: 28px; margin: 0 0 28px; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 12px; }
-  h2 span { font: 13px var(--mono); color: var(--accent); }
-  .intro { font-size: clamp(24px, 3.6vw, 34px); line-height: 1.4; max-width: 760px; margin: 0 0 36px; font-weight: 700; }
-  .intro span { color: var(--line); transition: color .25s; }
-  .intro span.lit { color: var(--text); }
-  .prelude { padding: 96px 0 8px; scroll-margin-top: 64px; }
-  .cue { align-self: flex-start; margin-top: 28px; font-size: 14px; color: var(--accent); text-decoration: none; }
-  .cue span { display: inline-block; animation: bob 1.8s ease-in-out infinite; }
-  .kicker { margin: 0 0 6px; color: var(--muted); font-size: 16px; }
-
-  .card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; overflow: hidden;
-    transition: border-color .3s, transform .3s; }
-  .card::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
-    background: radial-gradient(320px circle at var(--cx, 50%) var(--cy, 50%), var(--accent-soft), transparent 70%); }
-  .card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
-  .card:hover::before { opacity: 1; }
-  /* 邊框聚光（Border Spotlight） */
-  .card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; opacity: 0; transition: opacity .3s;
-    background: radial-gradient(220px circle at var(--cx, 50%) var(--cy, 50%), var(--accent), transparent 70%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-  .card:hover::after { opacity: 1; }
-  .card > * { position: relative; }
-
-  .stats { display: flex; flex-wrap: wrap; gap: 12px 40px; }
-  .stat strong { display: block; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; color: var(--accent); }
-  .stat span { color: var(--muted); font-size: 14px; }
-
-  .timeline { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; display: grid; gap: 18px; }
-  .timeline::before, .timeline::after { content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; }
-  .timeline::before { background: var(--line); }
-  .timeline::after { background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 40%, transparent)); transform-origin: top; transform: scaleY(var(--draw, 0)); }
-  .job { overflow: visible; }
-  .job > .job-head::before { content: ''; position: absolute; left: -52px; top: 6px; width: 12px; height: 12px; border-radius: 50%;
-    background: var(--bg); border: 2px solid var(--accent); }
-  .job.current > .job-head::before { background: var(--accent); box-shadow: 0 0 0 5px var(--accent-soft); }
-  .job-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-  h3 { margin: 0; font-size: 17px; }
-  .company { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
-  .period { font: 12px var(--mono); color: var(--muted); white-space: nowrap; padding-top: 3px; }
-  .job ul { margin: 14px 0 0; padding-left: 18px; font-size: 15px; }
-  .job li { margin: 4px 0; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-  .team { display: inline-block; margin: 8px 0 0; font: 12px var(--mono); padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
-  .more { display: inline-block; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--accent); text-decoration: none; }
-  .more:hover { text-decoration: underline; }
-  .tag { font: 12px var(--mono); padding: 3px 9px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
-
-  .edu { display: grid; gap: 14px; }
-  /* 技能無限跑馬燈 */
-  .marquee { margin-top: 28px; display: grid; gap: 10px; overflow: hidden;
-    -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
-  .track { display: flex; gap: 10px; width: max-content; animation: slide 40s linear infinite; }
-  .track.rev { animation-direction: reverse; animation-duration: 48s; }
-  .marquee:hover .track { animation-play-state: paused; }
-  .track span { font: 13px var(--mono); padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); white-space: nowrap; }
-  @keyframes slide { to { transform: translateX(-50%); } }
-  .contact p { font-size: 17px; max-width: 600px; }
-  footer { padding: 40px 16px 56px; color: var(--muted); font-size: 13px; text-align: center; border-top: 1px solid var(--line); }
-
-  dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(520px, calc(100vw - 32px)); background: var(--surface); color: var(--text);
-    box-shadow: 0 30px 80px -20px rgba(0,0,0,.4); margin-top: 18vh; }
-  dialog::backdrop { background: rgba(0,0,0,.35); backdrop-filter: blur(3px); }
-  #palette-input { width: 100%; border: 0; border-bottom: 1px solid var(--line); padding: 16px 18px; font: 16px var(--font); background: transparent; color: var(--text); outline: none; }
-  #palette-list { list-style: none; margin: 0; padding: 8px; max-height: 50vh; overflow: auto; }
-  #palette-list a { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 8px; text-decoration: none; font-size: 15px; }
-  #palette-list a small { color: var(--muted); font-family: var(--mono); }
-  #palette-list a.sel, #palette-list a:hover { background: var(--accent-soft); color: var(--accent); }
-
-  @keyframes bob { 50% { transform: translateY(4px); } }
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px clamp(20px, 5vw, 56px);
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+  .cursor {
+    color: var(--accent);
+    animation: blink 1.1s steps(1) infinite;
+  }
   @keyframes blink { 50% { opacity: 0; } }
-  @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+  .nav nav {
+    display: flex;
+    gap: 18px;
+    font-size: 13px;
+  }
+  .nav nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--muted);
+    transition: color 0.2s ease;
+  }
+  .nav nav a:hover,
+  .nav nav a.active {
+    color: var(--text);
+  }
+  .nav-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-btn,
+  .lang {
+    font: inherit;
+    font-size: 12px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 10px;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .icon-btn:hover,
+  .lang:hover {
+    color: var(--text);
+    border-color: var(--text);
+  }
+  .icon-btn kbd {
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 48px);
+  }
+
+  /* Layer 1: Hero + Blueprint Stage */
+  .hero-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.28fr);
+    gap: clamp(24px, 4vw, 48px);
+    align-items: center;
+    padding: clamp(28px, 5vh, 52px) 0 clamp(28px, 4vh, 44px);
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .status-pill:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 24%, transparent);
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 750;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+  }
+  .hero-hook {
+    margin: 0 0 10px;
+    font-size: clamp(1.05rem, 1.8vw, 1.25rem);
+    font-weight: 550;
+    line-height: 1.45;
+    color: var(--text);
+  }
+  .hero-sub {
+    margin: 0 0 22px;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--text);
+  }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Layer 2: Explorer Stage */
+  .explorer {
+    padding: 20px 0 64px;
+    scroll-margin-top: 68px;
+  }
+  .tab-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    appearance: none;
+    font: inherit;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition:
+      background 0.22s ease,
+      color 0.22s ease,
+      border-color 0.22s ease,
+      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .tab-btn:hover {
+    color: var(--text);
+  }
+  .tab-btn:active {
+    transform: scale(0.985);
+  }
+  .tab-btn.active {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .tab-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .panel {
+    animation: panelIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .bento-identity {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .span-2 {
+    grid-column: span 2;
+  }
+  .bento-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .bento-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    padding: 20px 22px;
+  }
+  .card-kicker {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .motto-line {
+    margin: 0 0 10px;
+    font-size: clamp(1.3rem, 2.2vw, 1.65rem);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .motto-line .hl {
+    color: var(--accent);
+  }
+  .lead-text {
+    margin: 0 0 14px;
+    font-size: 14.5px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .stats-grid {
+    display: grid;
+    gap: 12px;
+  }
+  .stat-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .stat-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .stat-item strong {
+    font-size: 26px;
+    font-weight: 750;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+  .stat-item span {
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .edu-list {
+    display: grid;
+    gap: 10px;
+  }
+  .edu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .edu-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .edu-deg {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .mono-dim {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .muted-sm {
+    margin: 0 0 14px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .mini-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip-link {
+    display: inline-flex;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 12.5px;
+    text-decoration: none;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .chip-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* 02 Track Record */
+  .panel-hint {
+    margin: 0 0 12px;
+    font-size: 12.5px;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+  .exp-layout {
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .station-list {
+    display: grid;
+    gap: 8px;
+  }
+  .station-btn {
+    appearance: none;
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .station-btn:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  }
+  .station-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .st-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+  .st-company {
+    font-weight: 650;
+    font-size: 14px;
+  }
+  .st-period {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .st-story {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .detail-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    padding: 22px 24px;
+  }
+  .detail-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .detail-head h3 {
+    margin: 0 0 4px;
+    font-size: 19px;
+  }
+  .detail-sub {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .period-pill {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .story-line {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px;
+    color: var(--text);
+  }
+  .impact-list {
+    margin: 0 0 16px;
+    padding-left: 18px;
+    font-size: 14px;
+    color: var(--muted);
+    display: grid;
+    gap: 6px;
+  }
+  .detail-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .case-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .case-link:hover {
+    text-decoration: underline;
+  }
+
+  /* 03 Capabilities & 04 ROI */
+  .cap-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .node-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .cap-card h3,
+  .roi-card h3 {
+    margin: 0;
+    font-size: 16.5px;
+  }
+  .cap-summary {
+    margin: 6px 0 12px;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .cap-card .impact-list {
+    margin-bottom: 0;
+  }
+
+  .matrix-drawer {
+    margin-top: 16px;
+  }
+  .drawer-toggle {
+    width: 100%;
+    appearance: none;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+  .drawer-toggle:hover {
+    border-color: var(--accent);
+  }
+  .drawer-toggle[aria-expanded='true'] .chevron {
+    transform: rotate(180deg);
+  }
+  .chevron {
+    transition: transform 0.2s ease;
+  }
+  .matrix-body {
+    margin-top: 12px;
+  }
+
+  .roi-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-decoration: none;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
+  }
+  .roi-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .roi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .roi-arrow {
+    color: var(--accent);
+    font-size: 15px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 28px 20px 44px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+
+  dialog {
+    width: min(480px, 92vw);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    padding: 10px;
+  }
+  dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+  }
+  #palette-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+  #palette-list {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    max-height: 280px;
+    overflow: auto;
+  }
+  #palette-list a {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13.5px;
+  }
+  #palette-list a:hover {
+    background: var(--accent-soft);
+  }
+  #palette-list small {
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+
+  @media (max-width: 960px) {
+    .hero-stage {
+      grid-template-columns: 1fr;
+    }
+    .bento-identity {
+      grid-template-columns: 1fr;
+    }
+    .span-2 {
+      grid-column: span 1;
+    }
+    .exp-layout {
+      grid-template-columns: 1fr;
+    }
+  }
 
   @media (max-width: 720px) {
-    nav { display: none; }
-    .stats { gap: 12px 28px; }
-    .job-head { flex-direction: column; gap: 4px; }
-    .hint { display: none; }
-    .employers { flex-direction: column; }
-    .employer-separator { display: none; }
-    .block { padding: 56px 0; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .dot, .cursor, .caret, .track, .cue span { animation: none; }
+    .nav nav {
+      display: none;
+    }
+    .tab-bar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .bento-2x2 {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
