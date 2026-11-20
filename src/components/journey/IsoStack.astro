@@ -1,0 +1,205 @@
+---
+import type { Lang } from '../../data/profile';
+
+interface Props {
+  lang: Lang;
+  mode?: 'boot' | 'legacy' | 'architected';
+}
+
+const { lang, mode = 'boot' } = Astro.props;
+const labels =
+  mode === 'legacy'
+    ? [
+        { code: 'L3', name: lang === 'zh' ? '影子 AI / 散落腳本' : 'Shadow AI / Ad-hoc Scripts' },
+        { code: 'L2', name: lang === 'zh' ? '人工維運 K8s / 漂移' : 'Manual K8s / Config Drift' },
+        { code: 'L1', name: lang === 'zh' ? '單點 VM / 手動掛載' : 'Siloed VMs / Manual Storage' },
+        { code: 'L0', name: lang === 'zh' ? '裸機等待人工上架' : 'Bare Metal · Manual Rack' },
+      ]
+    : [
+        { code: 'L3', name: lang === 'zh' ? 'AI 工作流與團隊賦能' : 'AI Workflows & Team' },
+        { code: 'L2', name: lang === 'zh' ? 'K8s HA · GitOps · PKI' : 'K8s HA · GitOps · PKI' },
+        { code: 'L1', name: lang === 'zh' ? 'KubeVirt · Rook-Ceph' : 'KubeVirt · Rook-Ceph' },
+        { code: 'L0', name: lang === 'zh' ? '裸機 / DGX · Redfish PXE' : 'Bare Metal / DGX · PXE' },
+      ];
+---
+
+<svg
+  class:list={['iso-stack', `mode-${mode}`]}
+  viewBox="0 0 460 360"
+  role="img"
+  aria-label={lang === 'zh' ? '四層平台架構立體圖' : 'Four-layer platform architecture stack'}
+>
+  <defs>
+    <linearGradient id={`plane-cyan-${mode}`} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3ee6ff" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#3ee6ff" stop-opacity="0.04" />
+    </linearGradient>
+    <linearGradient id={`plane-amber-${mode}`} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb547" stop-opacity="0.24" />
+      <stop offset="100%" stop-color="#ffb547" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id={`plane-dim-${mode}`} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7d8b99" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#7d8b99" stop-opacity="0.03" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dimensional vertical guide rails -->
+  <line x1="66" y1="48" x2="66" y2="306" class="dim-rail" />
+  <line x1="394" y1="48" x2="394" y2="306" class="dim-rail" />
+  <line x1="230" y1="26" x2="230" y2="334" class="center-beam" />
+
+  {labels.map((layer, idx) => {
+    const y = 62 + idx * 66;
+    const isHuman = idx === 0 && mode !== 'legacy';
+    const fillId =
+      mode === 'legacy'
+        ? `url(#plane-dim-${mode})`
+        : isHuman
+          ? `url(#plane-amber-${mode})`
+          : `url(#plane-cyan-${mode})`;
+    return (
+      <g class:list={['iso-layer', `layer-${idx}`]} style={`--idx:${idx}`}>
+        <!-- Isometric diamond plane -->
+        <polygon
+          points={`230,${y - 34} 364,${y} 230,${y + 34} 96,${y}`}
+          fill={fillId}
+          class:list={['plane', { human: isHuman, dim: mode === 'legacy' }]}
+        />
+        <!-- Dimension callout leader line -->
+        <line x1="96" y1={y} x2="54" y2={y} class="leader" />
+        <circle cx="96" cy={y} r="2.5" class:list={['anchor', { human: isHuman }]} />
+        <text x="16" y={y + 4} class="layer-code">{layer.code}</text>
+        <text x="230" y={y + 4} text-anchor="middle" class="layer-name">{layer.name}</text>
+
+        <!-- Node glyphs on each plane -->
+        {mode !== 'legacy' && (
+          <g class="plane-nodes">
+            <circle cx="182" cy={y} r="3" class:list={['node-dot', { human: isHuman }]} />
+            <circle cx="278" cy={y} r="3" class:list={['node-dot', { human: isHuman }]} />
+          </g>
+        )}
+      </g>
+    );
+  })}
+
+  <!-- Vertical upward signal pulse -->
+  {mode !== 'legacy' && (
+    <line x1="230" y1="296" x2="230" y2="56" class="signal-up" />
+  )}
+</svg>
+
+<style>
+  .iso-stack {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+  }
+  .dim-rail {
+    stroke: var(--grid);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+  }
+  .center-beam {
+    stroke: color-mix(in srgb, var(--signal) 28%, transparent);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 5;
+  }
+  .mode-legacy .center-beam {
+    stroke: color-mix(in srgb, var(--mute) 30%, transparent);
+  }
+  .plane {
+    stroke: color-mix(in srgb, var(--signal) 60%, transparent);
+    stroke-width: 1.2;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.25s ease;
+  }
+  .plane.human {
+    stroke: color-mix(in srgb, var(--human) 75%, transparent);
+  }
+  .plane.dim {
+    stroke: color-mix(in srgb, var(--mute) 45%, transparent);
+    stroke-dasharray: 4 4;
+  }
+  .leader {
+    stroke: var(--grid);
+    stroke-width: 1;
+  }
+  .anchor {
+    fill: var(--signal);
+  }
+  .anchor.human {
+    fill: var(--human);
+  }
+  .mode-legacy .anchor {
+    fill: var(--mute);
+  }
+  .layer-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--mute);
+  }
+  .layer-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--ink);
+    letter-spacing: 0.02em;
+    paint-order: stroke;
+    stroke: #0b1018;
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+  .mode-legacy .layer-name {
+    fill: var(--mute);
+  }
+  .node-dot {
+    fill: var(--signal);
+    opacity: 0.85;
+  }
+  .node-dot.human {
+    fill: var(--human);
+  }
+
+  .signal-up {
+    stroke: var(--signal);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 22 218;
+    animation: rise 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  @keyframes rise {
+    from { stroke-dashoffset: 0; }
+    to { stroke-dashoffset: 240; }
+  }
+
+  .mode-boot .iso-layer {
+    animation: bootIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc((3 - var(--idx)) * 120ms);
+  }
+  @keyframes bootIn {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .iso-stack:hover .iso-layer:hover .plane {
+    stroke: var(--signal);
+  }
+  .iso-stack:hover .iso-layer:hover .plane.human {
+    stroke: var(--human);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .signal-up,
+    .mode-boot .iso-layer {
+      animation: none;
+    }
+  }
+</style>

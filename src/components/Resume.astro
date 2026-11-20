@@ -1,346 +1,78 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
-import { chapters } from '../data/story';
-import {
-  blueprintModules,
-  blueprintUi,
-  capabilityPillars,
-  valueOutcomes,
-  type ModuleId,
-} from '../data/blueprint';
-import BlueprintOverview from './BlueprintOverview.astro';
-import SkillStack from './SkillStack.astro';
+import { journeyUi } from '../data/journey';
+import ActIdentity from './journey/ActIdentity.astro';
+import ActHops from './journey/ActHops.astro';
+import ActControlPlane from './journey/ActControlPlane.astro';
+import ActValue from './journey/ActValue.astro';
 import Bgm from './Bgm.astro';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const other = lang === 'zh' ? '/en/' : '/';
 const t = (o: Record<Lang, string>) => o[lang];
-const workHref = (slug: string) => `${lang === 'zh' ? '' : '/en'}/work/${slug}/`;
 const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
-// mailto must not open a blank tab.
 const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
-const arrow = (href: string) => (href.startsWith('mailto:') ? '' : ' ↗');
-
-const mottoParts = t(profile.motto)
-  .split(/(\[[^\]]+\])/)
-  .filter(Boolean)
-  .map((p) => ({ text: p.replace(/^\[|\]$/g, ''), hl: p.startsWith('[') }));
-
-const chapterBySlug = new Map(chapters.map((c) => [c.slug, c]));
-const initialModule: ModuleId = 'identity';
 ---
 
-<header class="nav">
-  <a href="#top" class="brand">SL<span class="cursor">_</span></a>
-  <nav aria-label="Modules">
-    {blueprintModules.map((m) => (
-      <a href={`#${m.id}`} data-nav-module={m.id}>
-        <span class="nav-code">{m.code}</span>
-        <span>{t(m.title)}</span>
-      </a>
-    ))}
-  </nav>
-  <div class="actions">
-    <button class="icon-btn" id="palette-btn" type="button" aria-label={t(blueprintUi.palette)}>
-      <kbd>⌘K</kbd>
-    </button>
-    <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" />
-      </svg>
-    </button>
-    <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
+<div class="journey-shell">
+  <!-- Single DPR-capped Canvas 2D ambient packet overlay -->
+  <canvas id="packet-canvas" class="packet-canvas" aria-hidden="true"></canvas>
+
+  <!-- Continuous Signal Spine threading all 4 acts -->
+  <div class="spine-rail" aria-hidden="true">
+    <div class="spine-fill" id="spine-fill"></div>
   </div>
-</header>
 
-<main id="top">
-  <!-- Layer 1: Focused First-Screen Hook + 4-Module Animated Blueprint -->
-  <section class="hero-stage">
-    <div class="hero-copy">
-      <a class="status-pill" href={workHref('metamec')}>
-        <span class="dot" aria-hidden="true"></span>
-        <span>{t(blueprintUi.badge)}</span>
-        <span aria-hidden="true">→</span>
-      </a>
-      <h1 id="name">{t(profile.name)}</h1>
-      <p class="hero-hook">{t(blueprintUi.hook)}</p>
-      <p class="hero-sub">{t(blueprintUi.subhook)}</p>
-      <div class="hero-actions">
-        <a class="btn primary" href={resumeHref} download>{t(ui.resumePdf)}</a>
-        {profile.links.map((l) => (
-          <a class="btn" href={l.href} {...ext(l.href)}>
-            {l.label}{arrow(l.href)}
-          </a>
-        ))}
-      </div>
-    </div>
-
-    <div class="hero-visual">
-      <BlueprintOverview lang={lang} initial={initialModule} />
-    </div>
-  </section>
-
-  <!-- Layer 2: Progressive Disclosure Explorer Stage -->
-  <section id="explorer" class="explorer" aria-label={lang === 'zh' ? '詳細架構展開區' : 'Module explorer'}>
-    <div class="tab-bar" role="tablist" aria-label={lang === 'zh' ? '四大模組切換' : 'Switch module'}>
-      {blueprintModules.map((m) => (
-        <button
-          type="button"
-          role="tab"
-          id={`tab-${m.id}`}
-          aria-selected={m.id === initialModule}
-          aria-controls={`panel-${m.id}`}
-          class:list={['tab-btn', { active: m.id === initialModule }]}
-          data-tab-module={m.id}
-        >
-          <span class="tab-code">{m.code}</span>
-          <span class="tab-label">{t(m.title)}</span>
-        </button>
+  <header class="nav">
+    <a href="#act-1" class="brand">SL<span class="cursor">_</span></a>
+    <nav aria-label="Journey acts">
+      {journeyUi.nav.map((item) => (
+        <a href={`#${item.id}`} data-act-nav={item.id}>
+          <span class="nav-code">{item.code}</span>
+          <span>{t(item.label)}</span>
+        </a>
       ))}
+    </nav>
+    <div class="actions">
+      <button class="icon-btn" id="palette-btn" type="button" aria-label="Quick jump">
+        <kbd>⌘K</kbd>
+      </button>
+      <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
     </div>
+  </header>
 
-    <div class="panels">
-      <!-- 01 · Identity -->
-      <div
-        id="panel-identity"
-        role="tabpanel"
-        aria-labelledby="tab-identity"
-        class="panel active"
-        data-panel-module="identity"
-      >
-        <div class="bento-identity">
-          <article class="bento-card span-2">
-            <span class="card-kicker">01 · CORE STATEMENT</span>
-            <h2 class="motto-line">
-              {mottoParts.map((p) => (
-                <span class:list={{ hl: p.hl }}>{p.text}</span>
-              ))}
-            </h2>
-            <p class="lead-text">{t(profile.intro)}</p>
-            <div class="meta-row">
-              <span>📍 {t(profile.location)}</span>
-              <span>·</span>
-              <span>{t(profile.workMode)}</span>
-            </div>
-          </article>
+  <main id="top" class="journey-main">
+    <ActIdentity lang={lang} />
+    <ActHops lang={lang} />
+    <ActControlPlane lang={lang} />
+    <ActValue lang={lang} />
+  </main>
 
-          <article class="bento-card stats-card">
-            <span class="card-kicker">METRICS</span>
-            <div class="stats-grid">
-              {profile.stats.map((s) => (
-                <div class="stat-item">
-                  <strong data-count={s.value}>{s.value}</strong>
-                  <span>{t(s.label)}</span>
-                </div>
-              ))}
-            </div>
-          </article>
+  <Bgm />
 
-          <article class="bento-card span-2">
-            <span class="card-kicker">{t(ui.nav.education).toUpperCase()}</span>
-            <div class="edu-list">
-              {profile.education.map((ed) => (
-                <div class="edu-item">
-                  <div>
-                    <strong>{t(ed.school)}</strong>
-                    <span class="edu-deg">{t(ed.degree)}</span>
-                  </div>
-                  <span class="mono-dim">{ed.period}</span>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article class="bento-card contact-card">
-            <span class="card-kicker">{t(ui.contactTitle).toUpperCase()}</span>
-            <p class="muted-sm">{t(ui.contactText)}</p>
-            <div class="mini-links">
-              {profile.links.map((l) => (
-                <a class="chip-link" href={l.href} {...ext(l.href)}>
-                  {l.label}{arrow(l.href)}
-                </a>
-              ))}
-            </div>
-          </article>
-        </div>
-      </div>
-
-      <!-- 02 · Track Record -->
-      <div
-        id="panel-experience"
-        role="tabpanel"
-        aria-labelledby="tab-experience"
-        class="panel"
-        data-panel-module="experience"
-        hidden
-      >
-        <p class="panel-hint">{t(blueprintUi.stationPrompt)}</p>
-        <div class="exp-layout">
-          <div class="station-list" role="tablist" aria-label={lang === 'zh' ? '職涯站點' : 'Career stops'}>
-            {profile.experience.map((job, idx) => {
-              const ch = chapterBySlug.get(job.slug);
-              return (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={idx === 0}
-                  class:list={['station-btn', { active: idx === 0 }]}
-                  data-station-btn={job.slug}
-                >
-                  <div class="st-top">
-                    <span class="st-company">{t(job.company)}</span>
-                    <span class="st-period">{job.period}</span>
-                  </div>
-                  <span class="st-story">{ch ? t(ch.title) : t(job.role)}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div class="station-detail">
-            {profile.experience.map((job, idx) => {
-              const ch = chapterBySlug.get(job.slug);
-              return (
-                <article
-                  class:list={['detail-card', { active: idx === 0 }]}
-                  data-station-panel={job.slug}
-                  hidden={idx !== 0}
-                >
-                  <div class="detail-head">
-                    <div>
-                      {ch && <span class="card-kicker">{t(ch.label)} · {t(ch.title)}</span>}
-                      <h3>{t(job.role)}</h3>
-                      <p class="detail-sub">
-                        {t(job.company)}
-                        {job.team && ` · ${t(job.team)}`}
-                      </p>
-                    </div>
-                    <span class="period-pill">{job.period}</span>
-                  </div>
-                  {ch && <p class="story-line">“{t(ch.line)}”</p>}
-                  <ul class="impact-list">
-                    {job.points[lang].slice(0, 4).map((pt) => (
-                      <li>{pt}</li>
-                    ))}
-                  </ul>
-                  <div class="detail-foot">
-                    <div class="tags">
-                      {job.tags.map((tag) => (
-                        <span class="tag">{tag}</span>
-                      ))}
-                    </div>
-                    <a class="case-link" href={workHref(job.slug)}>
-                      {t(blueprintUi.caseStudy)}
-                    </a>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <!-- 03 · Capabilities (Tech, Communication, Problem Solving, Management) -->
-      <div
-        id="panel-capabilities"
-        role="tabpanel"
-        aria-labelledby="tab-capabilities"
-        class="panel"
-        data-panel-module="capabilities"
-        hidden
-      >
-        <div class="bento-2x2">
-          {capabilityPillars.map((cap) => (
-            <article class="bento-card cap-card">
-              <div class="cap-head">
-                <span class="node-code">{cap.code}</span>
-                <h3>{t(cap.title)}</h3>
-              </div>
-              <p class="cap-summary">{t(cap.summary)}</p>
-              <ul class="impact-list">
-                {cap.highlights[lang].map((item) => (
-                  <li>{item}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-
-        <div class="matrix-drawer">
-          <button
-            type="button"
-            class="drawer-toggle"
-            id="matrix-toggle"
-            aria-expanded="false"
-            aria-controls="matrix-body"
-          >
-            <span data-label-open={t(blueprintUi.matrixToggle)} data-label-close={t(blueprintUi.matrixHide)}>
-              {t(blueprintUi.matrixToggle)}
-            </span>
-            <span class="chevron" aria-hidden="true">▾</span>
-          </button>
-          <div id="matrix-body" class="matrix-body" hidden>
-            <SkillStack lang={lang} />
-          </div>
-        </div>
-      </div>
-
-      <!-- 04 · Value & ROI for Audience -->
-      <div
-        id="panel-impact"
-        role="tabpanel"
-        aria-labelledby="tab-impact"
-        class="panel"
-        data-panel-module="impact"
-        hidden
-      >
-        <div class="bento-2x2">
-          {valueOutcomes.map((val) => (
-            <a class="bento-card roi-card" href={`${lang === 'zh' ? '' : '/en'}${val.href}`}>
-              <div class="roi-top">
-                <span class="card-kicker">{t(val.tag)}</span>
-                <span class="roi-arrow" aria-hidden="true">↗</span>
-              </div>
-              <h3>{t(val.title)}</h3>
-              <p class="cap-summary">{t(val.outcome)}</p>
-              <div class="tags">
-                {val.proof.map((p) => (
-                  <span class="tag">{p}</span>
-                ))}
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<Bgm />
-
-<footer>© {new Date().getFullYear()} Shin Lin · Architecture Blueprint v2.0</footer>
+  <footer>© {new Date().getFullYear()} Shin Lin · The Living Request</footer>
+</div>
 
 <dialog id="palette" aria-label="Command palette">
   <input
     id="palette-input"
     type="text"
-    placeholder={lang === 'zh' ? '輸入模組或指令…' : 'Jump to module or action…'}
+    placeholder={lang === 'zh' ? '跳轉章節或開啟連結…' : 'Jump to act or action…'}
     autocomplete="off"
   />
   <ul id="palette-list">
-    {blueprintModules.map((m) => (
+    {journeyUi.nav.map((item) => (
       <li>
-        <a href={`#${m.id}`} data-cmd data-jump-module={m.id}>
-          {m.code} · {t(m.title)} <small>{t(m.subtitle)}</small>
+        <a href={`#${item.id}`} data-cmd>
+          {item.code} · {t(item.label)} <small>#{item.id}</small>
         </a>
       </li>
     ))}
     {profile.links.map((l) => (
       <li>
         <a href={l.href} {...ext(l.href)} data-cmd>
-          {l.label} <small>{arrow(l.href) || 'mail'}</small>
+          {l.label} <small>link</small>
         </a>
       </li>
     ))}
@@ -354,179 +86,116 @@ const initialModule: ModuleId = 'identity';
         {lang === 'zh' ? 'Switch to English' : '切換為中文'} <small>lang</small>
       </a>
     </li>
-    <li>
-      <a href="#" data-cmd data-action="theme">
-        {lang === 'zh' ? '切換深淺色' : 'Toggle theme'} <small>theme</small>
-      </a>
-    </li>
   </ul>
 </dialog>
 
 <script>
-  const root = document.documentElement;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  import { mountPacketCanvas } from '../scripts/motion/packet';
 
-  // Pointer spotlight
-  addEventListener('pointermove', (e) => {
-    root.style.setProperty('--mx', e.clientX + 'px');
-    root.style.setProperty('--my', e.clientY + 'px');
-  });
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.getElementById('packet-canvas') as HTMLCanvasElement | null;
+  if (canvas) mountPacketCanvas(canvas, reduced);
 
-  // Scroll progress bar
-  const bar = document.querySelector<HTMLElement>('.progress');
-  if (bar) {
-    const onScroll = () => {
-      const max = document.documentElement.scrollHeight - innerHeight;
-      bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
-    };
-    addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-  }
-
-  // Theme toggle
-  const themeBtn = document.getElementById('theme-btn');
-  const toggleTheme = () => {
-    const dark = root.dataset.theme
-      ? root.dataset.theme === 'dark'
-      : matchMedia('(prefers-color-scheme: dark)').matches;
-    const next = dark ? 'light' : 'dark';
-    root.dataset.theme = next;
-    try {
-      localStorage.setItem('theme', next);
-    } catch {}
+  // Scroll-bound Signal Spine progress
+  const spineFill = document.getElementById('spine-fill');
+  const onScroll = () => {
+    if (!spineFill) return;
+    const max = document.documentElement.scrollHeight - innerHeight;
+    const p = max > 0 ? Math.min(Math.max(scrollY / max, 0), 1) : 0;
+    spineFill.style.transform = `scaleY(${p})`;
   };
-  themeBtn?.addEventListener('click', toggleTheme);
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
-  // Module switching across Blueprint nodes, Top Nav, and Explorer Tabs
-  const validModules = new Set(['identity', 'experience', 'capabilities', 'impact']);
-  const explorer = document.getElementById('explorer');
-  const blueprintNodes = document.querySelectorAll<HTMLElement>('[data-select-module]');
-  const tabBtns = document.querySelectorAll<HTMLElement>('[data-tab-module]');
-  const panels = document.querySelectorAll<HTMLElement>('[data-panel-module]');
-  const navLinks = document.querySelectorAll<HTMLElement>('[data-nav-module]');
-
-  const activateModule = (id: string, scrollIntoView = false) => {
-    if (!validModules.has(id)) return;
-    blueprintNodes.forEach((el) => el.classList.toggle('active', el.dataset.selectModule === id));
-    tabBtns.forEach((el) => {
-      const active = el.dataset.tabModule === id;
-      el.classList.toggle('active', active);
-      el.setAttribute('aria-selected', String(active));
-    });
-    panels.forEach((el) => {
-      const active = el.dataset.panelModule === id;
-      el.classList.toggle('active', active);
-      el.hidden = !active;
-    });
-    navLinks.forEach((el) => el.classList.toggle('active', el.dataset.navModule === id));
-    try {
-      history.replaceState(null, '', `#${id}`);
-    } catch {}
-    if (scrollIntoView && explorer) {
-      explorer.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    }
-  };
-
-  blueprintNodes.forEach((el) =>
-    el.addEventListener('click', () => activateModule(el.dataset.selectModule!, true))
-  );
-  tabBtns.forEach((el) =>
-    el.addEventListener('click', () => activateModule(el.dataset.tabModule!, false))
-  );
-  navLinks.forEach((el) =>
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      activateModule(el.dataset.navModule!, true);
-    })
-  );
-
-  // Restore module from URL hash on load
-  const initialHash = location.hash.replace('#', '');
-  if (validModules.has(initialHash)) {
-    activateModule(initialHash, false);
-  }
-
-  // Station selector inside 02 Track Record
-  const stationBtns = document.querySelectorAll<HTMLElement>('[data-station-btn]');
-  const stationPanels = document.querySelectorAll<HTMLElement>('[data-station-panel]');
-  stationBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const slug = btn.dataset.stationBtn;
-      stationBtns.forEach((b) => {
-        const active = b.dataset.stationBtn === slug;
-        b.classList.toggle('active', active);
-        b.setAttribute('aria-selected', String(active));
+  // Active act indicator in top nav
+  const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-act-nav]');
+  const spy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          navLinks.forEach((a) => a.classList.toggle('active', a.dataset.actNav === en.target.id));
+        }
       });
-      stationPanels.forEach((p) => {
-        const active = p.dataset.stationPanel === slug;
-        p.classList.toggle('active', active);
-        p.hidden = !active;
-      });
-    });
-  });
+    },
+    { rootMargin: '-40% 0px -50% 0px' }
+  );
+  document.querySelectorAll('section[id^="act-"]').forEach((s) => spy.observe(s));
 
-  // Expandable Skill Matrix drawer inside 03 Capabilities
-  const matrixToggle = document.getElementById('matrix-toggle');
-  const matrixBody = document.getElementById('matrix-body');
-  if (matrixToggle && matrixBody) {
-    const labelSpan = matrixToggle.querySelector<HTMLElement>('span[data-label-open]');
-    matrixToggle.addEventListener('click', () => {
-      const expanded = matrixToggle.getAttribute('aria-expanded') === 'true';
-      const next = !expanded;
-      matrixToggle.setAttribute('aria-expanded', String(next));
-      matrixBody.hidden = !next;
-      if (labelSpan) {
-        labelSpan.textContent = next
-          ? labelSpan.dataset.labelClose || ''
-          : labelSpan.dataset.labelOpen || '';
-      }
-    });
-  }
-
-  // Command palette (Cmd/Ctrl + K)
+  // Command palette
   const palette = document.getElementById('palette') as HTMLDialogElement | null;
   const paletteInput = document.getElementById('palette-input') as HTMLInputElement | null;
   const paletteBtn = document.getElementById('palette-btn');
-  const openPalette = () => {
-    if (!palette || !paletteInput) return;
-    palette.showModal();
-    paletteInput.value = '';
-    filterPalette();
-    paletteInput.focus();
-  };
-  const filterPalette = () => {
+  const filter = () => {
     if (!palette || !paletteInput) return;
     const q = paletteInput.value.toLowerCase();
     palette.querySelectorAll<HTMLElement>('li').forEach((li) => {
       li.hidden = !li.textContent?.toLowerCase().includes(q);
     });
   };
-  paletteBtn?.addEventListener('click', openPalette);
-  paletteInput?.addEventListener('input', filterPalette);
+  const open = () => {
+    if (!palette || !paletteInput) return;
+    palette.showModal();
+    paletteInput.value = '';
+    filter();
+    paletteInput.focus();
+  };
+  paletteBtn?.addEventListener('click', open);
+  paletteInput?.addEventListener('input', filter);
   palette?.addEventListener('click', (e) => {
     if (e.target === palette) palette.close();
   });
-  palette?.querySelectorAll<HTMLElement>('[data-cmd]').forEach((a) => {
-    a.addEventListener('click', (e) => {
-      if (a.dataset.action === 'theme') {
-        e.preventDefault();
-        toggleTheme();
-      } else if (a.dataset.jumpModule) {
-        e.preventDefault();
-        activateModule(a.dataset.jumpModule, true);
-      }
-      palette.close();
-    });
-  });
+  palette?.querySelectorAll('[data-cmd]').forEach((a) => a.addEventListener('click', () => palette.close()));
   addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      palette?.open ? palette.close() : openPalette();
+      palette?.open ? palette.close() : open();
     }
   });
 </script>
 
 <style>
+  /* Dark-blueprint palette locked for the interactive journey */
+  .journey-shell {
+    --bg: #0a0d12;
+    --grid: #16202b;
+    --signal: #3ee6ff;
+    --human: #ffb547;
+    --ok: #5cf29a;
+    --ink: #e6edf3;
+    --mute: #7d8b99;
+    position: relative;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .packet-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .spine-rail {
+    position: fixed;
+    top: 64px;
+    bottom: 24px;
+    left: clamp(8px, 1.8vw, 24px);
+    width: 2px;
+    background: var(--grid);
+    z-index: 20;
+    pointer-events: none;
+  }
+  .spine-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--signal), var(--ok));
+    transform-origin: 50% 0%;
+    transform: scaleY(0);
+  }
+
   .nav {
     position: sticky;
     top: 0;
@@ -536,9 +205,9 @@ const initialModule: ModuleId = 'identity';
     justify-content: space-between;
     gap: 16px;
     padding: 12px clamp(20px, 5vw, 56px);
-    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    background: rgba(10, 13, 18, 0.86);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--grid);
   }
   .brand {
     font-family: var(--mono);
@@ -546,13 +215,11 @@ const initialModule: ModuleId = 'identity';
     font-size: 14px;
     letter-spacing: 0.08em;
     text-decoration: none;
+    color: var(--ink);
   }
   .cursor {
-    color: var(--accent);
-    animation: blink 1.1s steps(1) infinite;
+    color: var(--signal);
   }
-  @keyframes blink { 50% { opacity: 0; } }
-
   .nav nav {
     display: flex;
     gap: 18px;
@@ -563,17 +230,17 @@ const initialModule: ModuleId = 'identity';
     align-items: center;
     gap: 6px;
     text-decoration: none;
-    color: var(--muted);
+    color: var(--mute);
     transition: color 0.2s ease;
   }
   .nav nav a:hover,
   .nav nav a.active {
-    color: var(--text);
+    color: var(--ink);
   }
   .nav-code {
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--accent);
+    color: var(--signal);
   }
 
   .actions {
@@ -585,555 +252,60 @@ const initialModule: ModuleId = 'identity';
   .lang {
     font: inherit;
     font-size: 12px;
-    color: var(--muted);
+    color: var(--mute);
     background: transparent;
-    border: 1px solid var(--line);
+    border: 1px solid var(--grid);
     border-radius: 999px;
     padding: 5px 10px;
     text-decoration: none;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: border-color 0.2s ease, color 0.2s ease;
   }
   .icon-btn:hover,
   .lang:hover {
-    color: var(--text);
-    border-color: var(--text);
+    color: var(--ink);
+    border-color: var(--signal);
   }
   .icon-btn kbd {
     font-family: var(--mono);
     font-size: 11px;
   }
 
-  main {
+  .journey-main {
     position: relative;
     z-index: 1;
     max-width: 1120px;
     margin: 0 auto;
-    padding: 0 clamp(20px, 5vw, 48px);
-  }
-
-  /* Layer 1: Hero + Blueprint Stage */
-  .hero-stage {
-    display: grid;
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.28fr);
-    gap: clamp(24px, 4vw, 48px);
-    align-items: center;
-    padding: clamp(28px, 5vh, 52px) 0 clamp(28px, 4vh, 44px);
-  }
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    font-family: var(--mono);
-    font-size: 11.5px;
-    color: var(--muted);
-    text-decoration: none;
-    margin-bottom: 16px;
-    transition: border-color 0.2s ease, color 0.2s ease;
-  }
-  .status-pill:hover {
-    border-color: var(--accent);
-    color: var(--text);
-  }
-  .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--ok);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 24%, transparent);
-  }
-
-  h1 {
-    margin: 0 0 10px;
-    font-size: clamp(2.4rem, 5vw, 3.6rem);
-    font-weight: 750;
-    line-height: 1.06;
-    letter-spacing: -0.03em;
-  }
-  .hero-hook {
-    margin: 0 0 10px;
-    font-size: clamp(1.05rem, 1.8vw, 1.25rem);
-    font-weight: 550;
-    line-height: 1.45;
-    color: var(--text);
-  }
-  .hero-sub {
-    margin: 0 0 22px;
-    font-size: 13.5px;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    font-size: 13px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
-  }
-  .btn:hover {
-    transform: translateY(-1px);
-    border-color: var(--text);
-  }
-  .btn.primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
-  /* Layer 2: Explorer Stage */
-  .explorer {
-    padding: 20px 0 64px;
-    scroll-margin-top: 68px;
-  }
-  .tab-bar {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    padding: 6px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: var(--surface);
-    margin-bottom: 20px;
-  }
-  .tab-btn {
-    appearance: none;
-    font: inherit;
-    color: var(--muted);
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    transition:
-      background 0.22s ease,
-      color 0.22s ease,
-      border-color 0.22s ease,
-      transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .tab-btn:hover {
-    color: var(--text);
-  }
-  .tab-btn:active {
-    transform: scale(0.985);
-  }
-  .tab-btn.active {
-    background: var(--accent-soft);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    color: var(--text);
-    font-weight: 600;
-  }
-  .tab-code {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-  }
-
-  .panel {
-    animation: panelIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  @keyframes panelIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: none; }
-  }
-
-  .bento-identity {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-  .span-2 {
-    grid-column: span 2;
-  }
-  .bento-2x2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-  .bento-card {
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--surface);
-    padding: 20px 22px;
-  }
-  .card-kicker {
-    display: block;
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-  .motto-line {
-    margin: 0 0 10px;
-    font-size: clamp(1.3rem, 2.2vw, 1.65rem);
-    font-weight: 700;
-    line-height: 1.3;
-  }
-  .motto-line .hl {
-    color: var(--accent);
-  }
-  .lead-text {
-    margin: 0 0 14px;
-    font-size: 14.5px;
-    color: var(--muted);
-    line-height: 1.65;
-  }
-  .meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 12.5px;
-    color: var(--muted);
-    font-family: var(--mono);
-  }
-
-  .stats-grid {
-    display: grid;
-    gap: 12px;
-  }
-  .stat-item {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed var(--line);
-  }
-  .stat-item:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-  }
-  .stat-item strong {
-    font-size: 26px;
-    font-weight: 750;
-    color: var(--accent);
-    font-family: var(--mono);
-  }
-  .stat-item span {
-    font-size: 12.5px;
-    color: var(--muted);
-  }
-
-  .edu-list {
-    display: grid;
-    gap: 10px;
-  }
-  .edu-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed var(--line);
-  }
-  .edu-item:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-  }
-  .edu-deg {
-    display: block;
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .mono-dim {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .muted-sm {
-    margin: 0 0 14px;
-    font-size: 13.5px;
-    color: var(--muted);
-  }
-  .mini-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .chip-link {
-    display: inline-flex;
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    font-size: 12.5px;
-    text-decoration: none;
-    transition: border-color 0.2s ease, color 0.2s ease;
-  }
-  .chip-link:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* 02 Track Record */
-  .panel-hint {
-    margin: 0 0 12px;
-    font-size: 12.5px;
-    font-family: var(--mono);
-    color: var(--muted);
-  }
-  .exp-layout {
-    display: grid;
-    grid-template-columns: 270px minmax(0, 1fr);
-    gap: 14px;
-    align-items: start;
-  }
-  .station-list {
-    display: grid;
-    gap: 8px;
-  }
-  .station-btn {
-    appearance: none;
-    font: inherit;
-    text-align: left;
-    color: inherit;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .station-btn:hover {
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  }
-  .station-btn.active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-  .st-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 3px;
-  }
-  .st-company {
-    font-weight: 650;
-    font-size: 14px;
-  }
-  .st-period {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .st-story {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .detail-card {
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--surface);
-    padding: 22px 24px;
-  }
-  .detail-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .detail-head h3 {
-    margin: 0 0 4px;
-    font-size: 19px;
-  }
-  .detail-sub {
-    margin: 0;
-    font-size: 13.5px;
-    color: var(--muted);
-  }
-  .period-pill {
-    font-family: var(--mono);
-    font-size: 11.5px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    color: var(--muted);
-    white-space: nowrap;
-  }
-  .story-line {
-    margin: 0 0 14px;
-    padding: 10px 14px;
-    border-left: 2px solid var(--accent);
-    background: var(--accent-soft);
-    border-radius: 0 8px 8px 0;
-    font-size: 13.5px;
-    color: var(--text);
-  }
-  .impact-list {
-    margin: 0 0 16px;
-    padding-left: 18px;
-    font-size: 14px;
-    color: var(--muted);
-    display: grid;
-    gap: 6px;
-  }
-  .detail-foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding-top: 14px;
-    border-top: 1px dashed var(--line);
-  }
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .tag {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--line);
-    color: var(--muted);
-  }
-  .case-link {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--accent);
-    text-decoration: none;
-  }
-  .case-link:hover {
-    text-decoration: underline;
-  }
-
-  /* 03 Capabilities & 04 ROI */
-  .cap-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-  }
-  .node-code {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 6px;
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-  .cap-card h3,
-  .roi-card h3 {
-    margin: 0;
-    font-size: 16.5px;
-  }
-  .cap-summary {
-    margin: 6px 0 12px;
-    font-size: 13.5px;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-  .cap-card .impact-list {
-    margin-bottom: 0;
-  }
-
-  .matrix-drawer {
-    margin-top: 16px;
-  }
-  .drawer-toggle {
-    width: 100%;
-    appearance: none;
-    font: inherit;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--text);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: border-color 0.2s ease;
-  }
-  .drawer-toggle:hover {
-    border-color: var(--accent);
-  }
-  .drawer-toggle[aria-expanded='true'] .chevron {
-    transform: rotate(180deg);
-  }
-  .chevron {
-    transition: transform 0.2s ease;
-  }
-  .matrix-body {
-    margin-top: 12px;
-  }
-
-  .roi-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    text-decoration: none;
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
-  }
-  .roi-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-  }
-  .roi-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .roi-arrow {
-    color: var(--accent);
-    font-size: 15px;
+    padding: 0 clamp(24px, 5vw, 56px);
   }
 
   footer {
+    position: relative;
+    z-index: 1;
     text-align: center;
     padding: 28px 20px 44px;
-    font-size: 12px;
     font-family: var(--mono);
-    color: var(--muted);
-    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--mute);
+    border-top: 1px solid var(--grid);
   }
 
   dialog {
-    width: min(480px, 92vw);
-    border: 1px solid var(--line);
+    width: min(460px, 92vw);
+    border: 1px solid var(--grid);
     border-radius: 14px;
-    background: var(--surface);
-    color: var(--text);
+    background: #0d1219;
+    color: #e6edf3;
     padding: 10px;
   }
   dialog::backdrop {
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(4px);
   }
   #palette-input {
     width: 100%;
     padding: 10px 12px;
     border: 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid #16202b;
     background: transparent;
     color: inherit;
     font: inherit;
@@ -1143,8 +315,6 @@ const initialModule: ModuleId = 'identity';
     list-style: none;
     margin: 6px 0 0;
     padding: 0;
-    max-height: 280px;
-    overflow: auto;
   }
   #palette-list a {
     display: flex;
@@ -1153,39 +323,20 @@ const initialModule: ModuleId = 'identity';
     border-radius: 8px;
     text-decoration: none;
     font-size: 13.5px;
+    color: inherit;
   }
   #palette-list a:hover {
-    background: var(--accent-soft);
+    background: rgba(62, 230, 255, 0.1);
   }
   #palette-list small {
     font-family: var(--mono);
-    color: var(--muted);
-  }
-
-  @media (max-width: 960px) {
-    .hero-stage {
-      grid-template-columns: 1fr;
-    }
-    .bento-identity {
-      grid-template-columns: 1fr;
-    }
-    .span-2 {
-      grid-column: span 1;
-    }
-    .exp-layout {
-      grid-template-columns: 1fr;
-    }
+    color: #7d8b99;
   }
 
   @media (max-width: 720px) {
-    .nav nav {
+    .nav nav,
+    .spine-rail {
       display: none;
-    }
-    .tab-bar {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .bento-2x2 {
-      grid-template-columns: 1fr;
     }
   }
 </style>

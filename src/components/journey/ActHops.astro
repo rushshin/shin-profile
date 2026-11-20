@@ -1,0 +1,394 @@
+---
+import type { Lang } from '../../data/profile';
+import { hops, journeyUi } from '../../data/journey';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const workHref = (slug: string) => `${lang === 'zh' ? '' : '/en'}/work/${slug}/`;
+const busPath = hops.map((h, i) => `${i === 0 ? 'M' : 'L'} ${h.cx} ${h.cy}`).join(' ');
+---
+
+<section id="act-2" class="act act-hops" aria-labelledby="act2-title">
+  <div class="act-head">
+    <span class="kicker">{t(journeyUi.act2.kicker)}</span>
+    <div class="head-row">
+      <div>
+        <h2 id="act2-title">{t(journeyUi.act2.headline)}</h2>
+        <p class="subline">{t(journeyUi.act2.subline)}</p>
+      </div>
+      <button type="button" class="zoom-reset" id="hop-zoom-reset" hidden>
+        {t(journeyUi.act2.zoomOut)}
+      </button>
+    </div>
+  </div>
+
+  <!-- Interactive SVG Signal Bus with real viewBox camera dive -->
+  <div class="bus-stage">
+    <svg
+      id="hops-svg"
+      class="hops-svg"
+      viewBox="0 0 1000 360"
+      role="img"
+      aria-label={lang === 'zh' ? '職涯五站訊號匯流排' : 'Five-hop career signal bus'}
+    >
+      <!-- Subtle coordinate grid -->
+      <line x1="20" y1="180" x2="980" y2="180" class="ref-line" />
+      <path d={busPath} class="bus-track" />
+      <path d={busPath} class="bus-pulse" />
+
+      {hops.map((hop, idx) => (
+        <g
+          class="hop-node"
+          data-hop-trigger={hop.slug}
+          data-cx={hop.cx}
+          data-cy={hop.cy}
+          tabindex="0"
+          role="button"
+          aria-label={`${hop.code} ${t(hop.company)}`}
+        >
+          <!-- Outer radar ring -->
+          <circle cx={hop.cx} cy={hop.cy} r="44" class="hop-aura" />
+          <circle cx={hop.cx} cy={hop.cy} r="32" class="hop-core" />
+
+          <!-- Bespoke glyph per station -->
+          {idx === 0 && (
+            <g class="glyph">
+              <rect x={hop.cx - 12} y={hop.cy - 10} width="24" height="20" rx="2" />
+              <line x1={hop.cx - 6} y1={hop.cy} x2={hop.cx + 6} y2={hop.cy} />
+              <line x1={hop.cx} y1={hop.cy - 5} x2={hop.cx} y2={hop.cy + 5} />
+            </g>
+          )}
+          {idx === 1 && (
+            <g class="glyph">
+              <polygon points={`${hop.cx},${hop.cy - 13} ${hop.cx + 12},${hop.cy + 9} ${hop.cx - 12},${hop.cy + 9}`} />
+              <circle cx={hop.cx} cy={hop.cy + 2} r="3" />
+            </g>
+          )}
+          {idx === 2 && (
+            <g class="glyph">
+              <polygon points={`${hop.cx - 7},${hop.cy - 10} ${hop.cx + 11},${hop.cy} ${hop.cx - 7},${hop.cy + 10}`} />
+            </g>
+          )}
+          {idx === 3 && (
+            <g class="glyph human-glyph">
+              <path d={`M ${hop.cx} ${hop.cy - 13} L ${hop.cx + 12} ${hop.cy - 7} V ${hop.cy + 3} C ${hop.cx + 12} ${hop.cy + 10} ${hop.cx} ${hop.cy + 14} ${hop.cx} ${hop.cy + 14} C ${hop.cx} ${hop.cy + 14} ${hop.cx - 12} ${hop.cy + 10} ${hop.cx - 12} ${hop.cy + 3} V ${hop.cy - 7} Z`} />
+            </g>
+          )}
+          {idx === 4 && (
+            <g class="glyph">
+              <rect x={hop.cx - 12} y={hop.cy - 12} width="10" height="10" rx="1.5" />
+              <rect x={hop.cx + 2} y={hop.cy - 12} width="10" height="10" rx="1.5" />
+              <rect x={hop.cx - 12} y={hop.cy + 2} width="10" height="10" rx="1.5" />
+              <rect x={hop.cx + 2} y={hop.cy + 2} width="10" height="10" rx="1.5" />
+            </g>
+          )}
+
+          <!-- Labels anchored above/below to avoid path overlap -->
+          <text x={hop.cx} y={hop.cy - 44} text-anchor="middle" class="hop-code">{hop.code} · {hop.period}</text>
+          <text x={hop.cx} y={hop.cy + 52} text-anchor="middle" class="hop-name">{t(hop.company)}</text>
+          <text x={hop.cx} y={hop.cy + 69} text-anchor="middle" class="hop-tag">{t(hop.tag)}</text>
+        </g>
+      ))}
+    </svg>
+
+    <!-- Zoomed-in Hop Inspector (shown when camera dives into a hop) -->
+    <div id="hop-inspector" class="hop-inspector" hidden>
+      {hops.map((hop) => (
+        <div class="hop-detail" data-hop-detail={hop.slug} hidden>
+          <div class="hd-top">
+            <div>
+              <span class="kicker">{hop.code} · {hop.period}</span>
+              <h3>{t(hop.company)} — {t(hop.role)}</h3>
+            </div>
+            <div class="flow-strip" aria-label="Internal data flow">
+              <span>{hop.flowNodes[0]}</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-mid">{hop.flowNodes[1]}</span>
+              <span class="flow-arrow">→</span>
+              <span>{hop.flowNodes[2]}</span>
+            </div>
+          </div>
+          <ul class="hd-list">
+            {hop.proof[lang].map((line) => (
+              <li>{line}</li>
+            ))}
+          </ul>
+          <div class="hd-foot">
+            <a class="case-cta" href={workHref(hop.slug)}>{t(journeyUi.act2.caseLink)}</a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { animateViewBox, parseViewBox, type ViewBox } from '../../scripts/motion/camera';
+
+  const svg = document.getElementById('hops-svg') as SVGSVGElement | null;
+  const resetBtn = document.getElementById('hop-zoom-reset');
+  const inspector = document.getElementById('hop-inspector');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fullBox: ViewBox = { x: 0, y: 0, w: 1000, h: 360 };
+  let cancelAnim: (() => void) | null = null;
+  let activeSlug: string | null = null;
+
+  const zoomOut = () => {
+    if (!svg) return;
+    activeSlug = null;
+    cancelAnim?.();
+    cancelAnim = animateViewBox(svg, parseViewBox(svg), fullBox, 420, reduced);
+    if (resetBtn) resetBtn.hidden = true;
+    if (inspector) inspector.hidden = true;
+    document.querySelectorAll<HTMLElement>('[data-hop-trigger]').forEach((n) => n.classList.remove('active'));
+    document.querySelectorAll<HTMLElement>('[data-hop-detail]').forEach((d) => (d.hidden = true));
+  };
+
+  const diveToHop = (slug: string, cx: number, cy: number) => {
+    if (!svg) return;
+    if (activeSlug === slug) {
+      zoomOut();
+      return;
+    }
+    activeSlug = slug;
+    const target: ViewBox = {
+      x: Math.max(0, Math.min(cx - 155, 690)),
+      y: Math.max(0, Math.min(cy - 88, 150)),
+      w: 310,
+      h: 210,
+    };
+    cancelAnim?.();
+    cancelAnim = animateViewBox(svg, parseViewBox(svg), target, 480, reduced);
+    if (resetBtn) resetBtn.hidden = false;
+    if (inspector) inspector.hidden = false;
+
+    document.querySelectorAll<HTMLElement>('[data-hop-trigger]').forEach((n) => {
+      n.classList.toggle('active', n.dataset.hopTrigger === slug);
+    });
+    document.querySelectorAll<HTMLElement>('[data-hop-detail]').forEach((d) => {
+      d.hidden = d.dataset.hopDetail !== slug;
+    });
+  };
+
+  document.querySelectorAll<SVGGElement>('[data-hop-trigger]').forEach((node) => {
+    const slug = node.dataset.hopTrigger!;
+    const cx = Number(node.dataset.cx);
+    const cy = Number(node.dataset.cy);
+    node.addEventListener('click', () => diveToHop(slug, cx, cy));
+    node.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        diveToHop(slug, cx, cy);
+      }
+    });
+  });
+
+  resetBtn?.addEventListener('click', zoomOut);
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeSlug) zoomOut();
+  });
+</script>
+
+<style>
+  .act-hops {
+    padding: clamp(36px, 6vh, 68px) 0;
+  }
+  .kicker {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--signal);
+    margin-bottom: 10px;
+  }
+  .head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  h2 {
+    margin: 0 0 6px;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+  .subline {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--mute);
+  }
+  .zoom-reset {
+    appearance: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--signal);
+    background: rgba(62, 230, 255, 0.08);
+    border: 1px solid color-mix(in srgb, var(--signal) 45%, transparent);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+
+  .bus-stage {
+    border: 1px solid var(--grid);
+    border-radius: 18px;
+    background:
+      linear-gradient(to right, rgba(62, 230, 255, 0.03) 1px, transparent 1px) 0 0 / 32px 32px,
+      linear-gradient(to bottom, rgba(62, 230, 255, 0.03) 1px, transparent 1px) 0 0 / 32px 32px,
+      rgba(12, 16, 23, 0.92);
+    padding: 16px;
+    overflow: hidden;
+  }
+  .hops-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .ref-line {
+    stroke: var(--grid);
+    stroke-width: 1;
+    stroke-dasharray: 3 5;
+  }
+  .bus-track {
+    fill: none;
+    stroke: var(--grid);
+    stroke-width: 2;
+  }
+  .bus-pulse {
+    fill: none;
+    stroke: var(--signal);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 44 900;
+    animation: busFlow 4.2s linear infinite;
+  }
+  @keyframes busFlow {
+    from { stroke-dashoffset: 944; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .hop-node {
+    cursor: pointer;
+    outline: none;
+  }
+  .hop-aura {
+    fill: rgba(62, 230, 255, 0.04);
+    stroke: var(--grid);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+    transition: stroke 0.25s ease, fill 0.25s ease;
+  }
+  .hop-core {
+    fill: #0d131c;
+    stroke: color-mix(in srgb, var(--signal) 55%, var(--grid));
+    stroke-width: 1.5;
+    transition: stroke 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .hop-node:hover .hop-core,
+  .hop-node:focus-visible .hop-core,
+  .hop-node.active .hop-core {
+    stroke: var(--signal);
+    fill: rgba(62, 230, 255, 0.12);
+  }
+  .hop-node:hover .hop-aura,
+  .hop-node.active .hop-aura {
+    stroke: color-mix(in srgb, var(--signal) 50%, transparent);
+  }
+
+  .glyph {
+    fill: none;
+    stroke: var(--signal);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .human-glyph {
+    stroke: var(--human);
+  }
+  .hop-code {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--mute);
+    letter-spacing: 0.06em;
+  }
+  .hop-name {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .hop-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--signal);
+  }
+
+  .hop-inspector {
+    margin-top: 14px;
+    border-top: 1px dashed var(--grid);
+    padding-top: 16px;
+    animation: fadeSlide 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  .hd-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .hd-top h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .flow-strip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--grid);
+    background: rgba(62, 230, 255, 0.06);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+  .flow-arrow {
+    color: var(--signal);
+  }
+  .flow-mid {
+    color: var(--signal);
+    font-weight: 700;
+  }
+  .hd-list {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--mute);
+  }
+  .case-cta {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--signal);
+    text-decoration: none;
+  }
+  .case-cta:hover {
+    text-decoration: underline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bus-pulse {
+      animation: none;
+    }
+  }
+</style>

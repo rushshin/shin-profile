@@ -1,0 +1,385 @@
+---
+import type { Lang } from '../../data/profile';
+import { journeyUi, scenarios, subsystems } from '../../data/journey';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const initialScenario = scenarios[0];
+const initialSub = subsystems[0];
+---
+
+<section id="act-3" class="act act-control" aria-labelledby="act3-title">
+  <span class="kicker">{t(journeyUi.act3.kicker)}</span>
+  <h2 id="act3-title">{t(journeyUi.act3.headline)}</h2>
+  <p class="subline">{t(journeyUi.act3.subline)}</p>
+
+  <!-- 3 Real-World Scenario Switchboard -->
+  <div class="scenario-bar" role="tablist" aria-label={lang === 'zh' ? '真實場景切換' : 'Scenario switchboard'}>
+    {scenarios.map((sc, idx) => (
+      <button
+        type="button"
+        role="tab"
+        aria-selected={idx === 0}
+        class:list={['sc-btn', { active: idx === 0 }]}
+        data-scenario={sc.id}
+        data-active-nodes={sc.activeNodes.join(',')}
+      >
+        {t(sc.label)}
+      </button>
+    ))}
+  </div>
+
+  <div class="cp-grid">
+    <!-- Control-Plane SVG Topology -->
+    <div class="cp-canvas">
+      <div class="cp-legend">
+        <span><i class="dot-amber"></i>{lang === 'zh' ? '人的協作與管理' : 'Human Craft'}</span>
+        <span><i class="dot-cyan"></i>{lang === 'zh' ? '硬核技術與收斂' : 'System Tech'}</span>
+      </div>
+
+      <svg class="cp-svg" viewBox="0 0 560 320" role="img" aria-label="Control plane diagram">
+        <!-- Interconnect wires -->
+        <line x1="150" y1="90" x2="410" y2="90" class="cp-wire" />
+        <line x1="150" y1="90" x2="150" y2="230" class="cp-wire" />
+        <line x1="410" y1="90" x2="410" y2="230" class="cp-wire" />
+        <line x1="150" y1="230" x2="410" y2="230" class="cp-wire" />
+        <line x1="150" y1="90" x2="410" y2="230" class="cp-wire diag" />
+        <line x1="410" y1="90" x2="150" y2="230" class="cp-wire diag" />
+
+        <!-- Reconcile orbit around center -->
+        <circle cx="280" cy="160" r="36" class="reconcile-ring" />
+        <text x="280" y="164" text-anchor="middle" class="reconcile-txt">DESIRED = ACTUAL</text>
+
+        {subsystems.map((sub, idx) => {
+          const coords = [
+            { x: 150, y: 90 },
+            { x: 410, y: 90 },
+            { x: 150, y: 230 },
+            { x: 410, y: 230 },
+          ][idx];
+          const isLit = initialScenario.activeNodes.includes(sub.id);
+          return (
+            <g
+              class:list={['cp-node', sub.kind, { lit: isLit, selected: sub.id === initialSub.id }]}
+              data-cp-node={sub.id}
+              tabindex="0"
+              role="button"
+              aria-label={t(sub.title)}
+            >
+              <rect x={coords.x - 102} y={coords.y - 36} width="204" height="72" rx="12" class="cp-box" />
+              <text x={coords.x} y={coords.y - 10} text-anchor="middle" class="cp-kicker">{sub.nodeName}</text>
+              <text x={coords.x} y={coords.y + 10} text-anchor="middle" class="cp-title">{t(sub.title)}</text>
+              <text x={coords.x} y={coords.y + 26} text-anchor="middle" class="cp-years">{sub.years}</text>
+            </g>
+          );
+        })}
+      </svg>
+
+      <!-- Live Scenario Trace Bar -->
+      <div class="trace-bar">
+        {scenarios.map((sc, idx) => (
+          <div class="trace-item" data-scenario-trace={sc.id} hidden={idx !== 0}>
+            <span class="trace-path">{t(sc.traceLabel)}</span>
+            <span class="trace-out">{t(sc.outcome)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- OTel Evidence Span Inspector -->
+    <div class="cp-evidence">
+      {subsystems.map((sub, idx) => (
+        <article class="ev-panel" data-ev-panel={sub.id} hidden={idx !== 0}>
+          <div class="ev-head">
+            <span class:list={['ev-badge', sub.kind]}>{sub.nodeName}</span>
+            <span class="ev-years">{sub.years}</span>
+          </div>
+          <h3>{t(sub.title)}</h3>
+          <p class="ev-desc">{t(sub.roleDesc)}</p>
+          <ul class="ev-list">
+            {sub.evidence[lang].map((line) => (
+              <li>{line}</li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const scBtns = document.querySelectorAll<HTMLElement>('[data-scenario]');
+  const scTraces = document.querySelectorAll<HTMLElement>('[data-scenario-trace]');
+  const cpNodes = document.querySelectorAll<SVGGElement>('[data-cp-node]');
+  const evPanels = document.querySelectorAll<HTMLElement>('[data-ev-panel]');
+
+  scBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.scenario!;
+      const activeList = (btn.dataset.activeNodes || '').split(',');
+      scBtns.forEach((b) => {
+        const on = b.dataset.scenario === id;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      scTraces.forEach((tr) => {
+        tr.hidden = tr.dataset.scenarioTrace !== id;
+      });
+      cpNodes.forEach((node) => {
+        node.classList.toggle('lit', activeList.includes(node.dataset.cpNode || ''));
+      });
+    });
+  });
+
+  const selectSub = (id: string) => {
+    cpNodes.forEach((n) => n.classList.toggle('selected', n.dataset.cpNode === id));
+    evPanels.forEach((p) => (p.hidden = p.dataset.evPanel !== id));
+  };
+
+  cpNodes.forEach((node) => {
+    const id = node.dataset.cpNode!;
+    node.addEventListener('click', () => selectSub(id));
+    node.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectSub(id);
+      }
+    });
+  });
+</script>
+
+<style>
+  .act-control {
+    padding: clamp(36px, 6vh, 68px) 0;
+  }
+  .kicker {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--signal);
+    margin-bottom: 10px;
+  }
+  h2 {
+    margin: 0 0 6px;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+  .subline {
+    margin: 0 0 20px;
+    font-size: 14.5px;
+    color: var(--mute);
+  }
+
+  .scenario-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .sc-btn {
+    appearance: none;
+    font: inherit;
+    font-size: 13px;
+    color: var(--mute);
+    background: rgba(14, 19, 27, 0.85);
+    border: 1px solid var(--grid);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .sc-btn:hover {
+    color: var(--ink);
+    border-color: var(--signal);
+  }
+  .sc-btn.active {
+    color: var(--ink);
+    border-color: var(--signal);
+    background: rgba(62, 230, 255, 0.1);
+  }
+
+  .cp-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .cp-canvas,
+  .cp-evidence {
+    border: 1px solid var(--grid);
+    border-radius: 18px;
+    background: rgba(12, 16, 23, 0.92);
+    padding: 16px;
+  }
+  .cp-legend {
+    display: flex;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mute);
+    margin-bottom: 8px;
+  }
+  .cp-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot-amber,
+  .dot-cyan {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .dot-amber { background: var(--human); }
+  .dot-cyan { background: var(--signal); }
+
+  .cp-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .cp-wire {
+    stroke: var(--grid);
+    stroke-width: 1.5;
+  }
+  .cp-wire.diag {
+    stroke-dasharray: 4 5;
+  }
+  .reconcile-ring {
+    fill: rgba(10, 13, 18, 0.9);
+    stroke: color-mix(in srgb, var(--signal) 45%, var(--grid));
+    stroke-width: 1.2;
+    stroke-dasharray: 6 4;
+    animation: spinRing 26s linear infinite;
+    transform-origin: 280px 160px;
+  }
+  @keyframes spinRing {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .reconcile-txt {
+    font-family: var(--mono);
+    font-size: 7.5px;
+    fill: var(--mute);
+    letter-spacing: 0.06em;
+  }
+
+  .cp-node {
+    cursor: pointer;
+    outline: none;
+    opacity: 0.45;
+    transition: opacity 0.25s ease;
+  }
+  .cp-node.lit,
+  .cp-node.selected,
+  .cp-node:hover {
+    opacity: 1;
+  }
+  .cp-box {
+    fill: #0f151f;
+    stroke: var(--grid);
+    stroke-width: 1.5;
+    transition: stroke 0.22s ease, fill 0.22s ease;
+  }
+  .cp-node.human.lit .cp-box,
+  .cp-node.human.selected .cp-box {
+    stroke: var(--human);
+    fill: rgba(255, 181, 71, 0.09);
+  }
+  .cp-node.system.lit .cp-box,
+  .cp-node.system.selected .cp-box {
+    stroke: var(--signal);
+    fill: rgba(62, 230, 255, 0.09);
+  }
+  .cp-kicker {
+    font-family: var(--mono);
+    font-size: 9px;
+    fill: var(--mute);
+    letter-spacing: 0.08em;
+  }
+  .cp-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    fill: var(--ink);
+  }
+  .cp-years {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--mute);
+  }
+
+  .trace-bar {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--grid);
+  }
+  .trace-path {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--signal);
+    margin-bottom: 4px;
+  }
+  .trace-out {
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  .ev-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .ev-badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .ev-badge.human {
+    background: rgba(255, 181, 71, 0.14);
+    color: var(--human);
+  }
+  .ev-badge.system {
+    background: rgba(62, 230, 255, 0.14);
+    color: var(--signal);
+  }
+  .ev-years {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--mute);
+  }
+  .ev-panel h3 {
+    margin: 0 0 6px;
+    font-size: 19px;
+  }
+  .ev-desc {
+    margin: 0 0 14px;
+    font-size: 13.5px;
+    color: var(--mute);
+    line-height: 1.55;
+  }
+  .ev-list {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  @media (max-width: 900px) {
+    .cp-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reconcile-ring {
+      animation: none;
+    }
+  }
+</style>

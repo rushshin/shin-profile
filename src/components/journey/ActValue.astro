@@ -1,0 +1,345 @@
+---
+import { profile, ui, type Lang } from '../../data/profile';
+import { journeyUi, roleRois, verifiedStates } from '../../data/journey';
+import IsoStack from './IsoStack.astro';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
+const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
+---
+
+<section id="act-4" class="act act-value" aria-labelledby="act4-title">
+  <span class="kicker">{t(journeyUi.act4.kicker)}</span>
+  <h2 id="act4-title">{t(journeyUi.act4.headline)}</h2>
+  <p class="subline">{t(journeyUi.act4.subline)}</p>
+
+  <div class="value-grid">
+    <!-- Left: Bookended IsoStack with Before/After Interactive Divider -->
+    <div class="compare-shell">
+      <div class="compare-labels">
+        <span class="lbl-before">{t(journeyUi.act4.beforeLabel)}</span>
+        <span class="lbl-after">{t(journeyUi.act4.afterLabel)}</span>
+      </div>
+
+      <div class="compare-stage" id="compare-stage" style="--split: 58%">
+        <div class="layer-base">
+          <IsoStack lang={lang} mode="legacy" />
+        </div>
+        <div class="layer-overlay">
+          <IsoStack lang={lang} mode="architected" />
+        </div>
+        <div class="divider-line" aria-hidden="true">
+          <span class="divider-handle">↔</span>
+        </div>
+        <input
+          type="range"
+          min="10"
+          max="90"
+          value="58"
+          class="split-range"
+          id="split-range"
+          aria-label={lang === 'zh' ? '拖動對比架構前後差異' : 'Drag to compare before and after'}
+        />
+      </div>
+
+      <div class="verified-strip" aria-label="Verified capabilities">
+        {verifiedStates.map((st) => (
+          <span class="v-chip"><i aria-hidden="true">✓</i> {st.label}</span>
+        ))}
+      </div>
+    </div>
+
+    <!-- Right: Role Picker returning tailored 200 OK payload -->
+    <div class="role-shell">
+      <div class="role-tabs" role="tablist" aria-label={lang === 'zh' ? '選擇你的角色' : 'Select your role'}>
+        {roleRois.map((r, idx) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={idx === 0}
+            class:list={['role-btn', { active: idx === 0 }]}
+            data-role-btn={r.id}
+          >
+            {t(r.label)}
+          </button>
+        ))}
+      </div>
+
+      <div class="payload-box">
+        {roleRois.map((r, idx) => (
+          <div class="payload-panel" data-role-panel={r.id} hidden={idx !== 0}>
+            <div class="http-head">
+              <span class="http-status">{r.status}</span>
+              <span class="http-ok">READY</span>
+            </div>
+            <h3>{t(r.summary)}</h3>
+            <ul class="roi-list">
+              {r.bullets[lang].map((b) => (
+                <li>{b}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        <div class="final-cta">
+          <a class="btn-signal" href="mailto:pig840814@gmail.com">Email Shin →</a>
+          <a class="btn-ghost" href={resumeHref} download>{t(ui.resumePdf)}</a>
+          {profile.links.slice(0, 2).map((l) => (
+            <a class="btn-ghost" href={l.href} {...ext(l.href)}>{l.label} ↗</a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const stage = document.getElementById('compare-stage');
+  const range = document.getElementById('split-range') as HTMLInputElement | null;
+  if (stage && range) {
+    const sync = () => stage.style.setProperty('--split', `${range.value}%`);
+    range.addEventListener('input', sync);
+    sync();
+  }
+
+  const roleBtns = document.querySelectorAll<HTMLElement>('[data-role-btn]');
+  const rolePanels = document.querySelectorAll<HTMLElement>('[data-role-panel]');
+  roleBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.roleBtn!;
+      roleBtns.forEach((b) => {
+        const on = b.dataset.roleBtn === id;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+      });
+      rolePanels.forEach((p) => {
+        p.hidden = p.dataset.rolePanel !== id;
+      });
+    });
+  });
+</script>
+
+<style>
+  .act-value {
+    padding: clamp(36px, 6vh, 68px) 0 clamp(48px, 8vh, 84px);
+  }
+  .kicker {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ok);
+    margin-bottom: 10px;
+  }
+  h2 {
+    margin: 0 0 6px;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+  .subline {
+    margin: 0 0 22px;
+    font-size: 14.5px;
+    color: var(--mute);
+  }
+
+  .value-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .compare-shell,
+  .role-shell {
+    border: 1px solid var(--grid);
+    border-radius: 18px;
+    background: rgba(12, 16, 23, 0.92);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .compare-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+  .lbl-before { color: var(--mute); }
+  .lbl-after { color: var(--signal); }
+
+  .compare-stage {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--grid);
+    background: #0a0d12;
+  }
+  .layer-overlay {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 0 0 calc(100% - var(--split)));
+    background: #0b1018;
+  }
+  .divider-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(100% - var(--split));
+    width: 2px;
+    background: var(--signal);
+    pointer-events: none;
+    box-shadow: 0 0 12px rgba(62, 230, 255, 0.55);
+  }
+  .divider-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0a0d12;
+    border: 1.5px solid var(--signal);
+    color: var(--signal);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+  .split-range {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: ew-resize;
+    margin: 0;
+  }
+
+  .verified-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .v-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--grid);
+    color: var(--ink);
+    background: rgba(92, 242, 154, 0.06);
+  }
+  .v-chip i {
+    font-style: normal;
+    color: var(--ok);
+  }
+
+  .role-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .role-btn {
+    appearance: none;
+    font: inherit;
+    font-size: 12px;
+    color: var(--mute);
+    background: #0a0d12;
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    padding: 9px 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .role-btn:hover {
+    color: var(--ink);
+  }
+  .role-btn.active {
+    color: var(--ink);
+    border-color: var(--ok);
+    background: rgba(92, 242, 154, 0.09);
+    font-weight: 600;
+  }
+
+  .payload-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+  }
+  .http-head {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--grid);
+    margin-bottom: 12px;
+  }
+  .http-status { color: var(--ok); }
+  .http-ok { color: var(--signal); }
+
+  .payload-panel h3 {
+    margin: 0 0 12px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .roi-list {
+    margin: 0 0 18px;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--mute);
+  }
+
+  .final-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--grid);
+  }
+  .btn-signal {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 16px;
+    border-radius: 10px;
+    background: var(--ok);
+    color: #06130b;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--grid);
+    color: var(--ink);
+    font-size: 12.5px;
+    text-decoration: none;
+  }
+  .btn-ghost:hover {
+    border-color: var(--signal);
+  }
+
+  @media (max-width: 900px) {
+    .value-grid {
+      grid-template-columns: 1fr;
+    }
+    .role-tabs {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
