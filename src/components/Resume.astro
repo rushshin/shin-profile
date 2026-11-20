@@ -1,7 +1,9 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
 import { journeyUi } from '../data/journey';
+import '../components/journey/journey.css';
 import ActIdentity from './journey/ActIdentity.astro';
+import Dossier from './journey/Dossier.astro';
 import ActHops from './journey/ActHops.astro';
 import ActControlPlane from './journey/ActControlPlane.astro';
 import ActValue from './journey/ActValue.astro';
@@ -15,18 +17,18 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
 const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
 ---
 
-<div class="journey-shell">
-  <!-- Single DPR-capped Canvas 2D ambient packet overlay -->
+<div class="journey-shell" id="journey-shell" data-ready="0">
+  <div class="room-glow" aria-hidden="true"></div>
   <canvas id="packet-canvas" class="packet-canvas" aria-hidden="true"></canvas>
 
-  <!-- Continuous Signal Spine threading all 4 acts -->
   <div class="spine-rail" aria-hidden="true">
-    <div class="spine-fill" id="spine-fill"></div>
+    <div class="spine-fill"></div>
+    <span class="spine-pct" id="spine-pct">0%</span>
   </div>
 
   <header class="nav">
     <a href="#act-1" class="brand">SL<span class="cursor">_</span></a>
-    <nav aria-label="Journey acts">
+    <nav aria-label={lang === 'zh' ? '故事章節' : 'Story beats'}>
       {journeyUi.nav.map((item) => (
         <a href={`#${item.id}`} data-act-nav={item.id}>
           <span class="nav-code">{item.code}</span>
@@ -35,9 +37,10 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
       ))}
     </nav>
     <div class="actions">
-      <button class="icon-btn" id="palette-btn" type="button" aria-label="Quick jump">
-        <kbd>⌘K</kbd>
+      <button type="button" class="icon-btn dossier-btn" data-dossier-open="dossier-essentials" aria-haspopup="dialog" aria-controls="dossier">
+        {t(journeyUi.dossier.open)}
       </button>
+      <button class="icon-btn" id="palette-btn" type="button" aria-label="Quick jump"><kbd>⌘K</kbd></button>
       <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
     </div>
   </header>
@@ -49,9 +52,21 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     <ActValue lang={lang} />
   </main>
 
+  <nav class="act-bar" aria-label={lang === 'zh' ? '章節導覽' : 'Beat navigation'}>
+    <span class="act-bar-fill" aria-hidden="true"></span>
+    {journeyUi.nav.map((item) => (
+      <a href={`#${item.id}`} data-act-nav={item.id}>
+        <span class="nav-code">{item.ready}%</span>
+        <span>{t(item.label)}</span>
+      </a>
+    ))}
+  </nav>
+
+  <Dossier lang={lang} />
+
   <Bgm />
 
-  <footer>© {new Date().getFullYear()} Shin Lin · The Living Request</footer>
+  <footer>© {new Date().getFullYear()} Shin Lin · The Night the Room Goes Live</footer>
 </div>
 
 <dialog id="palette" aria-label="Command palette">
@@ -70,6 +85,11 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
         </a>
       </li>
     ))}
+    <li>
+      <a href="#dossier" data-dossier-open="dossier-essentials" data-cmd>
+        {t(journeyUi.dossier.open)} <small>dossier</small>
+      </a>
+    </li>
     {profile.links.map((l) => (
       <li>
         <a href={l.href} {...ext(l.href)} data-cmd>
@@ -97,33 +117,87 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
   const canvas = document.getElementById('packet-canvas') as HTMLCanvasElement | null;
   if (canvas) mountPacketCanvas(canvas, reduced);
 
-  // Scroll-bound Signal Spine progress
-  const spineFill = document.getElementById('spine-fill');
-  const onScroll = () => {
-    if (!spineFill) return;
-    const max = document.documentElement.scrollHeight - innerHeight;
-    const p = max > 0 ? Math.min(Math.max(scrollY / max, 0), 1) : 0;
-    spineFill.style.transform = `scaleY(${p})`;
+  const shell = document.getElementById('journey-shell');
+  const pct = document.getElementById('spine-pct');
+  const setReady = (n: number) => {
+    shell?.style.setProperty('--ready', String(n));
+    if (pct) pct.textContent = `${n}%`;
   };
-  addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
+  setReady(0);
 
-  // Active act indicator in top nav
   const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-act-nav]');
   const spy = new IntersectionObserver(
     (entries) => {
       entries.forEach((en) => {
-        if (en.isIntersecting) {
-          navLinks.forEach((a) => a.classList.toggle('active', a.dataset.actNav === en.target.id));
-        }
+        if (!en.isIntersecting) return;
+        navLinks.forEach((a) => {
+          const on = a.dataset.actNav === en.target.id;
+          a.classList.toggle('active', on);
+          on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
+        });
+        setReady(Number((en.target as HTMLElement).dataset.ready) || 0);
       });
     },
     { rootMargin: '-40% 0px -50% 0px' }
   );
-  document.querySelectorAll('section[id^="act-"]').forEach((s) => spy.observe(s));
+  document.querySelectorAll('section[id^="act-"]').forEach((sec) => spy.observe(sec));
+
+  const palette = document.getElementById('palette') as HTMLDialogElement | null;
+  const dossier = document.getElementById('dossier');
+  const backdrop = document.getElementById('dossier-backdrop');
+  let opener: HTMLElement | null = null;
+  const closeDossier = () => {
+    if (!dossier || dossier.hidden) return;
+    dossier.hidden = true;
+    if (backdrop) backdrop.hidden = true;
+    document.body.style.overflow = '';
+    opener?.focus();
+  };
+  const openDossier = (targetId: string | undefined, from: HTMLElement) => {
+    if (!dossier) return;
+    opener = from;
+    dossier.hidden = false;
+    if (backdrop) backdrop.hidden = false;
+    document.body.style.overflow = 'hidden';
+    dossier.querySelectorAll('.focus').forEach((el) => el.classList.remove('focus'));
+    const target = targetId ? document.getElementById(targetId) : null;
+    if (target) {
+      target.classList.add('focus');
+      target.scrollIntoView({ block: 'start' });
+    } else {
+      dossier.scrollTop = 0;
+    }
+    dossier.focus({ preventScroll: true });
+  };
+  document.querySelectorAll<HTMLElement>('[data-dossier-open]').forEach((el) =>
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      palette?.open && palette.close();
+      openDossier(el.dataset.dossierOpen, el);
+    })
+  );
+  document.getElementById('dossier-close')?.addEventListener('click', closeDossier);
+  backdrop?.addEventListener('click', closeDossier);
+  dossier?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDossier();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const f = [...dossier.querySelectorAll<HTMLElement>('a[href], button, input, [tabindex]:not([tabindex="-1"])')].filter((x) => !x.closest('[hidden]'));
+    if (!f.length) return;
+    const first = f[0];
+    const last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === dossier)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 
   // Command palette
-  const palette = document.getElementById('palette') as HTMLDialogElement | null;
   const paletteInput = document.getElementById('palette-input') as HTMLInputElement | null;
   const paletteBtn = document.getElementById('palette-btn');
   const filter = () => {
@@ -154,6 +228,14 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
   });
 </script>
 
+<style is:global>
+  @property --ready {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+</style>
+
 <style>
   /* Dark-blueprint palette locked for the interactive journey */
   .journey-shell {
@@ -164,6 +246,17 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     --ok: #5cf29a;
     --ink: #e6edf3;
     --mute: #7d8b99;
+    --warn: #ff7b72;
+    --ready: 0;
+    --text: #e6edf3;
+    --muted: #7d8b99;
+    --line: #1f2b38;
+    --surface: #0f151f;
+    --accent: #3ee6ff;
+    --accent-soft: rgba(62, 230, 255, 0.1);
+    --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    font-family: var(--font);
+    transition: --ready 0.9s ease;
     position: relative;
     min-height: 100vh;
     background: var(--bg);
@@ -194,7 +287,32 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     height: 100%;
     background: linear-gradient(to bottom, var(--signal), var(--ok));
     transform-origin: 50% 0%;
-    transform: scaleY(0);
+    transform: scaleY(calc(var(--ready) / 100));
+  }
+  .spine-pct {
+    position: absolute;
+    bottom: -18px;
+    left: -6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--ok);
+  }
+  .room-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% 38%, rgba(92, 242, 154, 0.16), rgba(62, 230, 255, 0.07) 45%, transparent 75%);
+    opacity: calc(var(--ready) / 100);
+  }
+  .dossier-btn {
+    color: var(--ok);
+    border-color: color-mix(in srgb, var(--ok) 45%, var(--grid));
+    font-family: var(--mono);
+  }
+
+  .act-bar {
+    display: none;
   }
 
   .nav {
@@ -338,6 +456,50 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     .nav nav,
     .spine-rail {
       display: none;
+    }
+    .dossier-btn {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .act-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 45;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      background: rgba(10, 13, 18, 0.94);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--grid);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .act-bar a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      padding: 7px 2px 8px;
+      font-size: 11px;
+      color: var(--mute);
+      text-decoration: none;
+    }
+    .act-bar a.active {
+      color: var(--ink);
+    }
+    .act-bar a.active .nav-code {
+      color: var(--ok);
+    }
+    .act-bar-fill {
+      position: absolute;
+      top: -1px;
+      left: 0;
+      height: 2px;
+      width: calc(var(--ready) * 1%);
+      background: linear-gradient(to right, var(--signal), var(--ok));
+    }
+    footer {
+      padding-bottom: 76px;
     }
   }
 </style>

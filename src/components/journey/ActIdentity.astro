@@ -1,92 +1,57 @@
 ---
 import { profile, ui, type Lang } from '../../data/profile';
-import { certFields, journeyUi } from '../../data/journey';
+import { journeyUi, essentials } from '../../data/journey';
 import IsoStack from './IsoStack.astro';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
 const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
+const quick = [essentials[1], essentials[4]];
 ---
 
-<section id="act-1" class="act act-identity" aria-labelledby="act1-title">
+<section id="act-1" class="act act-identity" aria-labelledby="act1-title" data-ready="0">
   <div class="act-grid">
     <div class="copy-col">
       <span class="kicker">{t(journeyUi.act1.kicker)}</span>
       <h1 id="act1-title">{t(journeyUi.act1.headline)}</h1>
       <p class="subline">{t(journeyUi.act1.subline)}</p>
 
-      <!-- Compact verified node badge; expands into TLS certificate -->
-      <div class="badge-row">
-        <button
-          type="button"
-          class="node-badge"
-          id="cert-toggle"
-          aria-expanded="false"
-          aria-controls="tls-cert"
-        >
-          <span class="pulse-dot" aria-hidden="true"></span>
-          <span class="badge-main">{t(journeyUi.act1.badgeStatus)}</span>
-          <span class="badge-sep" aria-hidden="true">·</span>
-          <span class="badge-meta">{t(journeyUi.act1.badgeMeta)}</span>
-          <span class="badge-action" data-open={t(journeyUi.act1.certToggle)} data-close={t(journeyUi.act1.certClose)}>
-            {t(journeyUi.act1.certToggle)}
-          </span>
+      <ul class="value-row">
+        {journeyUi.act1.values.map((v) => <li>{t(v)}</li>)}
+      </ul>
+
+      <div class="hero-cta">
+        <a class="btn-signal" href="#act-2" id="fire-request">{t(journeyUi.act1.ctaStart)}</a>
+        <button type="button" class="toggle-btn" data-dossier-open="dossier-essentials" aria-haspopup="dialog" aria-controls="dossier">
+          {t(journeyUi.dossier.open)}
         </button>
       </div>
 
-      <div id="tls-cert" class="tls-cert" hidden>
-        <div class="cert-head">
-          <span>X.509 IDENTITY CERTIFICATE</span>
-          <span class="cert-ok">VERIFIED</span>
-        </div>
-        <dl class="cert-dl">
-          {certFields.map((f) => (
-            <div class="cert-row">
-              <dt>{f.key}</dt>
-              <dd>{t(f.value)}</dd>
-            </div>
+      <div class="ds-strip" aria-label={journeyUi.dossier.header}>
+        <span class="ds-strip-tag">{journeyUi.dossier.header}</span>
+        <p class="ds-strip-trust">{t(journeyUi.act1.trust)}</p>
+        <ul class="ds-strip-meta">
+          {quick.map((q) => <li>{t(q.value)}</li>)}
+          <li><a href={resumeHref} download>{t(ui.resumePdf)}</a></li>
+          {profile.links.slice(0, 2).map((l) => (
+            <li><a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a></li>
           ))}
-        </dl>
-      </div>
-
-      <div class="hero-cta">
-        <a class="btn-signal" href="#act-2" id="fire-request">{t(journeyUi.act1.ctaTrace)}</a>
-        <a class="btn-ghost" href={resumeHref} download>{t(ui.resumePdf)}</a>
-        {profile.links.slice(0, 2).map((l) => (
-          <a class="btn-ghost" href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>
-        ))}
+        </ul>
       </div>
     </div>
 
     <div class="visual-col">
       <div class="blueprint-box">
         <div class="bp-bar">
-          <span>SYS // 4-LAYER STACK</span>
-          <span>BOOT: OK</span>
+          <span>{t(journeyUi.storyTitle)}</span>
+          <span>0% · {lang === 'zh' ? '暗' : 'DARK'}</span>
         </div>
-        <IsoStack lang={lang} mode="boot" />
+        <IsoStack lang={lang} mode="dark" />
       </div>
     </div>
   </div>
 </section>
-
-<script>
-  const certToggle = document.getElementById('cert-toggle');
-  const certPanel = document.getElementById('tls-cert');
-  if (certToggle && certPanel) {
-    const label = certToggle.querySelector<HTMLElement>('.badge-action');
-    certToggle.addEventListener('click', () => {
-      const open = certToggle.getAttribute('aria-expanded') === 'true';
-      const next = !open;
-      certToggle.setAttribute('aria-expanded', String(next));
-      certPanel.hidden = !next;
-      if (label) {
-        label.textContent = next ? label.dataset.close || '' : label.dataset.open || '';
-      }
-    });
-  }
-</script>
 
 <style>
   .act-identity {
@@ -98,158 +63,74 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
     gap: clamp(24px, 4vw, 52px);
     align-items: center;
   }
-  .kicker {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--signal);
-    margin-bottom: 14px;
-  }
   h1 {
     margin: 0 0 14px;
     font-size: clamp(2rem, 4.2vw, 3.1rem);
     font-weight: 750;
     line-height: 1.12;
     letter-spacing: -0.025em;
-    color: var(--ink);
   }
   .subline {
-    margin: 0 0 22px;
-    font-size: 15.5px;
-    line-height: 1.65;
-    color: var(--mute);
     max-width: 48ch;
+    font-size: 15.5px;
   }
-
-  .badge-row {
-    margin-bottom: 16px;
-  }
-  .node-badge {
-    appearance: none;
-    font: inherit;
-    color: var(--ink);
-    background: rgba(18, 24, 34, 0.85);
-    border: 1px solid var(--grid);
-    border-radius: 12px;
-    padding: 10px 14px;
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 12.5px;
-    transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .node-badge:hover {
-    border-color: var(--signal);
-  }
-  .node-badge:active {
-    transform: scale(0.985);
-  }
-  .pulse-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--ok);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent);
-  }
-  .badge-main {
-    font-family: var(--mono);
-    font-weight: 700;
-  }
-  .badge-meta {
-    color: var(--mute);
-  }
-  .badge-action {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--signal);
-    padding-left: 6px;
-    border-left: 1px solid var(--grid);
-  }
-
-  .tls-cert {
-    margin-bottom: 20px;
-    border: 1px solid color-mix(in srgb, var(--signal) 45%, var(--grid));
-    border-radius: 12px;
-    background: rgba(12, 17, 24, 0.94);
-    padding: 14px 16px;
-    font-family: var(--mono);
-    font-size: 12px;
-    animation: fadeSlide 0.24s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  @keyframes fadeSlide {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: none; }
-  }
-  .cert-head {
+  .value-row {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
     display: flex;
-    justify-content: space-between;
-    color: var(--mute);
-    font-size: 10.5px;
-    letter-spacing: 0.1em;
-    padding-bottom: 8px;
-    border-bottom: 1px dashed var(--grid);
-    margin-bottom: 10px;
-  }
-  .cert-ok {
-    color: var(--ok);
-  }
-  .cert-dl {
-    margin: 0;
-    display: grid;
-    gap: 6px;
-  }
-  .cert-row {
-    display: grid;
-    grid-template-columns: 78px minmax(0, 1fr);
+    flex-wrap: wrap;
     gap: 8px;
   }
-  .cert-row dt {
-    color: var(--signal);
+  .value-row li {
+    padding: 5px 11px;
+    border: 1px solid color-mix(in srgb, var(--human) 45%, transparent);
+    border-radius: 999px;
+    background: rgba(255, 181, 71, 0.08);
+    color: var(--human);
+    font-size: 12.5px;
   }
-  .cert-row dd {
-    margin: 0;
-    color: var(--ink);
-  }
-
   .hero-cta {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    margin-bottom: 22px;
   }
-  .btn-signal {
-    display: inline-flex;
-    align-items: center;
-    padding: 10px 18px;
-    border-radius: 10px;
-    background: var(--signal);
-    color: #061018;
-    font-weight: 700;
-    font-size: 13.5px;
-    text-decoration: none;
-    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), filter 0.2s ease;
+  .ds-strip {
+    border: 1px solid #26323f;
+    border-left: 3px solid var(--ok);
+    border-radius: 8px;
+    background: #0b0f14;
+    padding: 10px 14px 12px;
+    font-family: var(--mono);
+    max-width: 52ch;
   }
-  .btn-signal:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
+  .ds-strip-tag {
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--ok);
   }
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--grid);
+  .ds-strip-trust {
+    margin: 6px 0 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
     color: var(--ink);
-    font-size: 13px;
+  }
+  .ds-strip-meta {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 11.5px;
+    color: var(--mute);
+  }
+  .ds-strip-meta a {
+    color: var(--signal);
     text-decoration: none;
-    transition: border-color 0.2s ease;
   }
-  .btn-ghost:hover {
-    border-color: var(--signal);
-  }
-
+  .ds-strip-meta a:hover { text-decoration: underline; }
   .blueprint-box {
     border: 1px solid var(--grid);
     border-radius: 18px;
@@ -268,10 +149,7 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
     color: var(--mute);
     margin-bottom: 6px;
   }
-
   @media (max-width: 900px) {
-    .act-grid {
-      grid-template-columns: 1fr;
-    }
+    .act-grid { grid-template-columns: 1fr; }
   }
 </style>

@@ -1,0 +1,241 @@
+---
+import { profile, ui, type Lang } from '../../data/profile';
+import { journeyUi, stops, essentials } from '../../data/journey';
+import SkillStack from '../SkillStack.astro';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const d = journeyUi.dossier;
+const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
+const workHref = (slug: string) => `${lang === 'zh' ? '' : '/en'}/work/${slug}/`;
+const ordered = [...stops].reverse();
+---
+
+<div id="dossier-backdrop" class="dossier-backdrop" hidden></div>
+<aside id="dossier" class="dossier" role="dialog" aria-modal="true" aria-labelledby="dossier-title" tabindex="-1" hidden>
+  <header class="ds-head">
+    <div>
+      <span class="ds-tag" id="dossier-title">{d.header}</span>
+      <span class="ds-note">{t(d.storyNote)}</span>
+    </div>
+    <button type="button" class="ds-close" id="dossier-close">{t(d.close)} ✕</button>
+  </header>
+
+  <section class="ds-sec" id="dossier-essentials">
+    <h3>{lang === 'zh' ? '基本資料' : 'Essentials'}</h3>
+    <dl class="ds-dl">
+      {essentials.map((e) => (
+        <div><dt>{t(e.key)}</dt><dd>{t(e.value)}</dd></div>
+      ))}
+    </dl>
+    <a class="ds-link" href={resumeHref} download>{t(ui.resumePdf)} ↓</a>
+  </section>
+
+  <section class="ds-sec" id="dossier-chrono">
+    <h3>{t(d.chrono)}</h3>
+    {ordered.map((s) => (
+      <article class="ds-stop" id={`dossier-stop-${s.slug}`}>
+        <div class="ds-stop-head">
+          <span class="ds-date">{s.start} — {s.end}</span>
+          <span class="ds-scope">{t(s.scopeLabel)}</span>
+        </div>
+        <h4>{t(s.company)} · {t(s.role)}</h4>
+        <p class="ds-team">{t(s.team)}</p>
+        <dl class="ds-star">
+          <dt>{t(journeyUi.act2.challenge)}</dt><dd>{t(s.challenge)}</dd>
+          <dt>{t(journeyUi.act2.decision)}</dt><dd>{t(s.decision)}</dd>
+          <dt>{t(journeyUi.act2.tradeoff)}</dt><dd>{t(s.tradeoff)}</dd>
+          <dt>{t(journeyUi.act2.result)}</dt><dd>{t(s.result)}</dd>
+        </dl>
+        <a class="ds-link" href={workHref(s.slug)}>{t(journeyUi.act2.caseLink)}</a>
+      </article>
+    ))}
+  </section>
+
+  <section class="ds-sec" id="dossier-education">
+    <h3>{t(d.education)}</h3>
+    <ul class="ds-edu">
+      {profile.education.map((e) => (
+        <li><span class="ds-date">{e.period}</span> {t(e.school)} · {t(e.degree)}</li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="ds-sec ds-skills" id="dossier-skills">
+    <h3>{t(d.skills)}</h3>
+    <SkillStack lang={lang} />
+  </section>
+</aside>
+
+<style>
+  .dossier-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+  }
+  .dossier {
+    --text: #d9e2ec;
+    --muted: #8a99a8;
+    --line: #26323f;
+    --surface: #0e131a;
+    --accent: var(--ok);
+    --accent-soft: rgba(92, 242, 154, 0.09);
+    --font: var(--mono);
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    width: min(620px, 100vw);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 20px 40px;
+    background: #0b0f14;
+    border-left: 2px solid var(--ok);
+    font-family: var(--mono);
+    color: var(--text);
+    animation: dsIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes dsIn {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  .ds-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 0 12px;
+    margin-bottom: 8px;
+    background: #0b0f14;
+    border-bottom: 1px dashed var(--line);
+  }
+  .ds-tag {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--ok);
+  }
+  .ds-note {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .ds-close {
+    appearance: none;
+    font: inherit;
+    font-size: 12px;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .ds-close:hover {
+    border-color: var(--ok);
+  }
+  .ds-sec {
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .ds-sec h3 {
+    margin: 0 0 12px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .ds-dl {
+    margin: 0 0 10px;
+    display: grid;
+    gap: 6px;
+    font-size: 12.5px;
+  }
+  .ds-dl > div {
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .ds-dl dt { color: var(--ok); }
+  .ds-dl dd { margin: 0; }
+  .ds-stop {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ok);
+    border-radius: 8px;
+    background: #0e131a;
+    scroll-margin-top: 80px;
+  }
+  .ds-stop:target,
+  .ds-stop.focus {
+    border-color: var(--ok);
+    background: rgba(92, 242, 154, 0.06);
+  }
+  .ds-stop-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .ds-date { color: var(--ok); }
+  .ds-scope { color: var(--human); }
+  .ds-stop h4 {
+    margin: 6px 0 2px;
+    font-size: 14px;
+    font-family: var(--font-sans, inherit);
+  }
+  .ds-team {
+    margin: 0 0 8px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .ds-star {
+    margin: 0 0 8px;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 6px 8px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .ds-star dt { color: var(--signal); }
+  .ds-star dd { margin: 0; }
+  .ds-link {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--signal);
+    text-decoration: none;
+  }
+  .ds-link:hover { text-decoration: underline; }
+  .ds-edu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    font-size: 12.5px;
+  }
+  .ds-skills :global(.reveal) {
+    opacity: 1;
+    transform: none;
+  }
+  .ds-skills :global(.skill-stack) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ds-skills :global(.layers) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 720px) {
+    .dossier { border-left: 0; }
+  }
+</style>
