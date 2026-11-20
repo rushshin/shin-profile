@@ -25,11 +25,12 @@ const busPath = hops.map((h, i) => `${i === 0 ? 'M' : 'L'} ${h.cx} ${h.cy}`).joi
 
   <!-- Interactive SVG Signal Bus with real viewBox camera dive -->
   <div class="bus-stage">
+    <div class="bus-scroll">
     <svg
       id="hops-svg"
       class="hops-svg"
       viewBox="0 0 1000 360"
-      role="img"
+      role="group"
       aria-label={lang === 'zh' ? '職涯五站訊號匯流排' : 'Five-hop career signal bus'}
     >
       <!-- Subtle coordinate grid -->
@@ -91,6 +92,7 @@ const busPath = hops.map((h, i) => `${i === 0 ? 'M' : 'L'} ${h.cx} ${h.cy}`).joi
         </g>
       ))}
     </svg>
+    </div>
 
     <!-- Zoomed-in Hop Inspector (shown when camera dives into a hop) -->
     <div id="hop-inspector" class="hop-inspector" hidden>
@@ -243,10 +245,19 @@ const busPath = hops.map((h, i) => `${i === 0 ? 'M' : 'L'} ${h.cx} ${h.cy}`).joi
     padding: 16px;
     overflow: hidden;
   }
+  .bus-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .hops-svg {
     width: 100%;
     height: auto;
     display: block;
+  }
+  @media (max-width: 720px) {
+    .hops-svg {
+      min-width: 680px;
+    }
   }
   .ref-line {
     stroke: var(--grid);

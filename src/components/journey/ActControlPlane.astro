@@ -38,7 +38,7 @@ const initialSub = subsystems[0];
         <span><i class="dot-cyan"></i>{lang === 'zh' ? '硬核技術與收斂' : 'System Tech'}</span>
       </div>
 
-      <svg class="cp-svg" viewBox="0 0 560 320" role="img" aria-label="Control plane diagram">
+      <svg class="cp-svg" viewBox="0 0 560 320" role="group" aria-label="Control plane diagram">
         <!-- Interconnect wires -->
         <line x1="150" y1="90" x2="410" y2="90" class="cp-wire" />
         <line x1="150" y1="90" x2="150" y2="230" class="cp-wire" />
@@ -269,9 +269,12 @@ const initialSub = subsystems[0];
 
   .cp-node {
     cursor: pointer;
-    outline: none;
     opacity: 0.45;
     transition: opacity 0.25s ease;
+  }
+  .cp-node:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 4px;
   }
   .cp-node.lit,
   .cp-node.selected,

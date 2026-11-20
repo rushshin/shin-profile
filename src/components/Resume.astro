@@ -58,6 +58,7 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
   <input
     id="palette-input"
     type="text"
+    aria-label={lang === 'zh' ? '搜尋章節或連結' : 'Search act or action'}
     placeholder={lang === 'zh' ? '跳轉章節或開啟連結…' : 'Jump to act or action…'}
     autocomplete="off"
   />

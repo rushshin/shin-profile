@@ -183,14 +183,14 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
   .layer-overlay {
     position: absolute;
     inset: 0;
-    clip-path: inset(0 0 0 calc(100% - var(--split)));
+    clip-path: inset(0 0 0 var(--split));
     background: #0b1018;
   }
   .divider-line {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: calc(100% - var(--split));
+    left: var(--split);
     width: 2px;
     background: var(--signal);
     pointer-events: none;

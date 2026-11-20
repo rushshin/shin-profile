@@ -29,16 +29,13 @@ export function mountPacketCanvas(canvas: HTMLCanvasElement, reduced: boolean): 
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
-  const io = new IntersectionObserver(
-    (entries) => {
-      active = entries[0]?.isIntersecting ?? true;
-      if (active && !rafId) {
-        rafId = requestAnimationFrame(tick);
-      }
-    },
-    { threshold: 0.01 }
-  );
-  io.observe(canvas);
+  const updateActive = () => {
+    active = !document.hidden;
+    if (active && !rafId) {
+      rafId = requestAnimationFrame(tick);
+    }
+  };
+  document.addEventListener('visibilitychange', updateActive);
 
   const tick = () => {
     rafId = 0;
