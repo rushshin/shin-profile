@@ -1,90 +1,84 @@
 ---
 import { profile, ui, type Lang } from '../../data/profile';
-import { journeyUi, roleLenses, verifiedStates } from '../../data/journey';
-import IsoStack from './IsoStack.astro';
+import { journeyUi, roleLenses } from '../../data/journey';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
-const a4 = journeyUi.act4;
 const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
 const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
 ---
 
-<section id="act-4" class="act act-value" aria-labelledby="act4-title" data-ready="100">
-  <span class="kicker">{t(a4.kicker)}</span>
-  <h2 id="act4-title">{t(a4.headline)}</h2>
-  <p class="subline">{t(a4.subline)}</p>
+<section id="act-4" class="act act-value" aria-labelledby="act4-title">
+  <span class="kicker ok">{t(journeyUi.act4.kicker)}</span>
+  <h2 id="act4-title">{t(journeyUi.act4.headline)}</h2>
+  <p class="subline">{t(journeyUi.act4.subline)}</p>
 
-  <div class="value-grid">
-    <div class="compare-shell panel">
-      <div class="compare-labels">
-        <span class="lbl-before">{t(a4.beforeLabel)}</span>
-        <span class="lbl-after">{t(a4.afterLabel)}</span>
-      </div>
-      <div class="compare-stage" id="compare-stage" style="--split: 50%">
-        <div class="layer-base"><IsoStack lang={lang} mode="legacy" /></div>
-        <div class="layer-overlay"><IsoStack lang={lang} mode="architected" /></div>
-        <div class="divider-line" aria-hidden="true"><span class="divider-handle">↔</span></div>
-        <input
-          type="range"
-          min="10"
-          max="90"
-          value="50"
-          class="split-range"
-          id="split-range"
-          aria-label={lang === 'zh' ? '拖動對比人工維運與架構後' : 'Drag to compare manual and architected operations'}
-        />
-      </div>
-      <div class="verified-strip" aria-label="Verified capabilities">
-        {verifiedStates.map((st) => <span class="v-chip"><i aria-hidden="true">✓</i> {st.label}</span>)}
-      </div>
+  <div class="panel role-panel">
+    <div class="role-tabs" role="tablist" aria-label={t(journeyUi.act4.roleLabel)}>
+      {roleLenses.map((r, idx) => (
+        <button
+          type="button"
+          role="tab"
+          id={`role-tab-${r.id}`}
+          aria-controls={`role-panel-${r.id}`}
+          aria-selected={idx === 0}
+          tabindex={idx === 0 ? 0 : -1}
+          class:list={['role-btn', { active: idx === 0 }]}
+          data-tab={r.id}
+          data-role-btn={r.id}
+        >
+          {t(r.label)}
+        </button>
+      ))}
     </div>
 
-    <div class="role-shell panel">
-      <div class="role-tabs" role="tablist" aria-label={t(a4.roleLabel)} id="role-tabs">
-        {roleLenses.map((r, i) => (
-          <button
-            type="button"
-            role="tab"
-            id={`role-tab-${r.id}`}
-            data-tab={r.id}
-            aria-selected={i === 0}
-            aria-controls={`role-panel-${r.id}`}
-            tabindex={i === 0 ? 0 : -1}
-            class:list={['role-btn', { active: i === 0 }]}
-          >
-            {t(r.label)}
-          </button>
-        ))}
-      </div>
-
-      <div class="payload-box">
-        {roleLenses.map((r, i) => (
-          <div class="payload-panel" role="tabpanel" id={`role-panel-${r.id}`} aria-labelledby={`role-tab-${r.id}`} data-role-panel={r.id} hidden={i !== 0}>
-            <h3>{t(r.headline)}</h3>
-            <ul class="roi-list">
-              {r.bullets[lang].map((b) => <li>{b}</li>)}
-            </ul>
-            <div class="stack-chips" data-stack hidden>
-              {r.stack.map((s) => <span>{s}</span>)}
-            </div>
+    <div class="lens-body">
+      {roleLenses.map((r, idx) => (
+        <div
+          id={`role-panel-${r.id}`}
+          role="tabpanel"
+          aria-labelledby={`role-tab-${r.id}`}
+          class="role-tabpanel"
+          data-role-panel={r.id}
+          hidden={idx !== 0}
+        >
+          <h3>{t(r.headline)}</h3>
+          <ul class="roi-list">
+            {r.bullets[lang].map((b) => (
+              <li>{b}</li>
+            ))}
+          </ul>
+          <div class="stack-drawer" data-stack-drawer hidden>
+            {r.stack.map((s) => (
+              <span class="stack-chip">{s}</span>
+            ))}
           </div>
-        ))}
-        <button type="button" class="toggle-btn stack-toggle" id="stack-toggle" aria-expanded="false" data-show={t(a4.stackShow)} data-hide={t(a4.stackHide)}>
-          {t(a4.stackShow)}
-        </button>
-      </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        class="toggle-btn"
+        id="stack-toggle"
+        aria-expanded="false"
+        data-show={t(journeyUi.act4.stackShow)}
+        data-hide={t(journeyUi.act4.stackHide)}
+      >
+        {t(journeyUi.act4.stackShow)}
+      </button>
     </div>
   </div>
 
-  <div class="closing">
-    <p class="closing-line">{t(a4.closing)}</p>
-    <div class="final-cta">
-      <a class="btn-signal" href="mailto:pig840814@gmail.com">{t(a4.cta)} →</a>
+  <div class="closing-cta">
+    <p class="closing-line">{t(journeyUi.act4.closing)}</p>
+    <div class="cta-row">
+      <a class="btn-ok" href="mailto:pig840814@gmail.com">{t(journeyUi.act4.cta)} →</a>
       <a class="btn-ghost" href={resumeHref} download>{t(ui.resumePdf)}</a>
-      {profile.links.slice(0, 2).map((l) => <a class="btn-ghost" href={l.href} {...ext(l.href)}>{l.label} ↗</a>)}
-      <button type="button" class="toggle-btn" data-dossier-open="dossier-chrono" aria-haspopup="dialog" aria-controls="dossier">{t(journeyUi.dossier.open)}</button>
+      {profile.links.slice(0, 2).map((l) => (
+        <a class="btn-ghost" href={l.href} {...ext(l.href)}>{l.label} ↗</a>
+      ))}
+      <button type="button" class="btn-ghost" data-open-dossier>{t(journeyUi.dossier.open)}</button>
     </div>
   </div>
 </section>
@@ -92,67 +86,136 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
 <script>
   import { bindTabs } from '../../scripts/tabs';
 
-  const stage = document.getElementById('compare-stage');
-  const range = document.getElementById('split-range') as HTMLInputElement | null;
-  if (stage && range) {
-    const sync = () => stage.style.setProperty('--split', `${range.value}%`);
-    range.addEventListener('input', sync);
-    sync();
+  const roleList = document.querySelector<HTMLElement>('.role-tabs');
+  const rolePanels = document.querySelectorAll<HTMLElement>('[data-role-panel]');
+  if (roleList) {
+    bindTabs(roleList, (id) => {
+      rolePanels.forEach((p) => {
+        p.hidden = p.dataset.rolePanel !== id;
+      });
+    });
   }
 
-  const panels = [...document.querySelectorAll<HTMLElement>('[data-role-panel]')];
-  const toggle = document.getElementById('stack-toggle');
-  let showStack = false;
-  const applyStack = () => {
-    document.querySelectorAll<HTMLElement>('[data-stack]').forEach((s) => (s.hidden = !showStack));
-    if (toggle) {
-      toggle.setAttribute('aria-expanded', String(showStack));
-      toggle.textContent = (showStack ? toggle.dataset.hide : toggle.dataset.show) || '';
-    }
-  };
-  toggle?.addEventListener('click', () => {
-    showStack = !showStack;
-    applyStack();
+  const stackToggle = document.getElementById('stack-toggle');
+  const drawers = document.querySelectorAll<HTMLElement>('[data-stack-drawer]');
+  stackToggle?.addEventListener('click', () => {
+    const next = stackToggle.getAttribute('aria-expanded') !== 'true';
+    stackToggle.setAttribute('aria-expanded', String(next));
+    drawers.forEach((d) => (d.hidden = !next));
+    stackToggle.textContent = next ? stackToggle.dataset.hide || '' : stackToggle.dataset.show || '';
   });
-  const tabs = document.getElementById('role-tabs');
-  if (tabs) bindTabs(tabs, (id) => panels.forEach((p) => (p.hidden = p.dataset.rolePanel !== id)));
 </script>
 
 <style>
-  .act-value { padding: clamp(36px, 6vh, 68px) 0 clamp(48px, 8vh, 84px); }
-  .kicker { color: var(--ok); }
-  .value-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
-  .compare-shell,
-  .role-shell { display: flex; flex-direction: column; justify-content: space-between; }
-  .compare-labels { display: flex; justify-content: space-between; gap: 8px; font-family: var(--mono); font-size: 11px; margin-bottom: 8px; }
-  .lbl-before { color: var(--warn, #ff7b72); }
-  .lbl-after { color: var(--ok); }
-  .compare-stage { position: relative; overflow: hidden; border-radius: 12px; border: 1px solid var(--grid); background: #0a0d12; }
-  .layer-overlay { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--split)); background: #0b1018; }
-  .divider-line { position: absolute; top: 0; bottom: 0; left: var(--split); width: 2px; background: var(--signal); pointer-events: none; box-shadow: 0 0 12px rgba(62, 230, 255, 0.55); }
-  .divider-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 28px; height: 28px; border-radius: 50%; background: #0a0d12; border: 1.5px solid var(--signal); color: var(--signal); display: grid; place-items: center; font-size: 12px; font-family: var(--mono); }
-  .split-range { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
-  .compare-stage:focus-within { outline: 2px solid var(--signal); outline-offset: 3px; }
-  .verified-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .v-chip { font-family: var(--mono); font-size: 11px; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--grid); background: rgba(92, 242, 154, 0.06); }
-  .v-chip i { font-style: normal; color: var(--ok); }
+  .act-value {
+    padding: clamp(44px, 7vh, 76px) 0 clamp(56px, 9vh, 92px);
+  }
+  .kicker.ok {
+    color: var(--ok);
+  }
+  .role-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .role-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .role-btn {
+    appearance: none;
+    font: inherit;
+    font-size: 12.5px;
+    color: var(--mute);
+    background: #0a0d12;
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+  }
+  .role-btn:hover {
+    color: var(--ink);
+  }
+  .role-btn.active {
+    color: var(--ink);
+    border-color: var(--ok);
+    background: rgba(92, 242, 154, 0.1);
+    font-weight: 600;
+  }
+  .role-tabpanel {
+    animation: fadeSlide 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .role-tabpanel h3 {
+    margin: 0 0 12px;
+    font-size: 19px;
+    line-height: 1.4;
+  }
+  .roi-list {
+    margin: 0 0 16px;
+    padding-left: 18px;
+    display: grid;
+    gap: 9px;
+    font-size: 14.5px;
+    color: var(--mute);
+  }
+  .stack-drawer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .stack-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--grid);
+    color: var(--signal);
+    background: rgba(62, 230, 255, 0.05);
+  }
 
-  .role-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
-  .role-btn { appearance: none; font: inherit; font-size: 12.5px; color: var(--mute); background: #0a0d12; border: 1px solid var(--grid); border-radius: 10px; padding: 9px 8px; cursor: pointer; transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease; }
-  .role-btn:hover { color: var(--ink); }
-  .role-btn.active { color: var(--ink); border-color: var(--ok); background: rgba(92, 242, 154, 0.09); font-weight: 600; }
-  .payload-box { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; flex: 1; }
-  .payload-panel { animation: fadeSlide 0.16s ease; }
-  .payload-panel h3 { margin: 0 0 12px; font-size: 18px; line-height: 1.4; }
-  .roi-list { margin: 0 0 14px; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; color: var(--mute); }
-  .stack-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .stack-chips span { font-family: var(--mono); font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(62, 230, 255, 0.1); color: var(--signal); }
-  .stack-toggle { align-self: flex-start; }
+  .closing-cta {
+    margin-top: 28px;
+    border-top: 1px solid var(--grid);
+    padding-top: 26px;
+    text-align: center;
+  }
+  .closing-line {
+    margin: 0 0 18px;
+    font-size: clamp(1.3rem, 2.6vw, 1.85rem);
+    font-weight: 750;
+    color: var(--ink);
+  }
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .btn-ok {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: var(--ok);
+    color: #06130b;
+    font-weight: 700;
+    font-size: 13.5px;
+    text-decoration: none;
+  }
+  .closing-cta .btn-ghost {
+    appearance: none;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+  }
 
-  .closing { margin-top: 28px; text-align: center; }
-  .closing-line { margin: 0 0 16px; font-size: clamp(1.3rem, 3vw, 1.9rem); font-weight: 750; letter-spacing: -0.02em; color: var(--ok); }
-  .final-cta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .final-cta .btn-signal { background: var(--ok); color: #06130b; }
-
-  @media (max-width: 900px) { .value-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 720px) {
+    .role-tabs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
 </style>

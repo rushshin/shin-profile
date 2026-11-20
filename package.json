@@ -10,7 +10,8 @@
     "pdf": "node scripts/pdf.mjs"
   },
   "dependencies": {
-    "astro": "^7.4.4"
+    "astro": "^7.4.4",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "playwright-core": "1.63.0"

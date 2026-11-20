@@ -1,13 +1,14 @@
 ---
 import { profile, ui, type Lang } from '../data/profile';
 import { journeyUi } from '../data/journey';
-import '../components/journey/journey.css';
+import HeroWelcome from './journey/HeroWelcome.astro';
 import ActIdentity from './journey/ActIdentity.astro';
-import Dossier from './journey/Dossier.astro';
 import ActHops from './journey/ActHops.astro';
 import ActControlPlane from './journey/ActControlPlane.astro';
 import ActValue from './journey/ActValue.astro';
+import Dossier from './journey/Dossier.astro';
 import Bgm from './Bgm.astro';
+import './journey/journey.css';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -17,18 +18,18 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
 const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener' });
 ---
 
-<div class="journey-shell" id="journey-shell" data-ready="0">
-  <div class="room-glow" aria-hidden="true"></div>
-  <canvas id="packet-canvas" class="packet-canvas" aria-hidden="true"></canvas>
+<div class="journey-shell" style="--ready: 0">
+  <!-- Interactive Three.js 3D lattice & particle constellation -->
+  <div id="scene-3d" class="scene-3d" aria-hidden="true"></div>
 
   <div class="spine-rail" aria-hidden="true">
-    <div class="spine-fill"></div>
+    <div class="spine-fill" id="spine-fill"></div>
     <span class="spine-pct" id="spine-pct">0%</span>
   </div>
 
   <header class="nav">
-    <a href="#act-1" class="brand">SL<span class="cursor">_</span></a>
-    <nav aria-label={lang === 'zh' ? '故事章節' : 'Story beats'}>
+    <a href="#hero" class="brand">SL<span class="cursor">_</span></a>
+    <nav aria-label={lang === 'zh' ? '章節導覽' : 'Sections'}>
       {journeyUi.nav.map((item) => (
         <a href={`#${item.id}`} data-act-nav={item.id}>
           <span class="nav-code">{item.code}</span>
@@ -37,44 +38,49 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
       ))}
     </nav>
     <div class="actions">
-      <button type="button" class="icon-btn dossier-btn" data-dossier-open="dossier-essentials" aria-haspopup="dialog" aria-controls="dossier">
+      <button type="button" class="dossier-nav-btn" data-open-dossier>
         {t(journeyUi.dossier.open)}
       </button>
-      <button class="icon-btn" id="palette-btn" type="button" aria-label="Quick jump"><kbd>⌘K</kbd></button>
+      <button class="icon-btn" id="palette-btn" type="button" aria-label="Quick jump">
+        <kbd>⌘K</kbd>
+      </button>
       <a class="lang" href={other} hreflang={lang === 'zh' ? 'en' : 'zh-Hant'}>{t(ui.switchLang)}</a>
     </div>
   </header>
 
   <main id="top" class="journey-main">
+    <HeroWelcome lang={lang} />
     <ActIdentity lang={lang} />
     <ActHops lang={lang} />
     <ActControlPlane lang={lang} />
     <ActValue lang={lang} />
   </main>
 
-  <nav class="act-bar" aria-label={lang === 'zh' ? '章節導覽' : 'Beat navigation'}>
-    <span class="act-bar-fill" aria-hidden="true"></span>
+  <nav class="mobile-act-bar" aria-label={lang === 'zh' ? '章節進度' : 'Section progress'}>
     {journeyUi.nav.map((item) => (
       <a href={`#${item.id}`} data-act-nav={item.id}>
-        <span class="nav-code">{item.ready}%</span>
-        <span>{t(item.label)}</span>
+        <span>{item.code}</span>
+        <small>{t(item.label)}</small>
       </a>
     ))}
+    <button type="button" class="mob-dossier" data-open-dossier>
+      <span>+</span>
+      <small>{lang === 'zh' ? '實證' : 'Dossier'}</small>
+    </button>
   </nav>
 
   <Dossier lang={lang} />
-
   <Bgm />
 
-  <footer>© {new Date().getFullYear()} Shin Lin · The Night the Room Goes Live</footer>
+  <footer>© {new Date().getFullYear()} Shin Lin · {t(journeyUi.storyLabel)}</footer>
 </div>
 
 <dialog id="palette" aria-label="Command palette">
   <input
     id="palette-input"
     type="text"
-    aria-label={lang === 'zh' ? '搜尋章節或連結' : 'Search act or action'}
-    placeholder={lang === 'zh' ? '跳轉章節或開啟連結…' : 'Jump to act or action…'}
+    aria-label={lang === 'zh' ? '搜尋章節或連結' : 'Search section or action'}
+    placeholder={lang === 'zh' ? '跳轉章節、開啟實證或連結…' : 'Jump to section, dossier, or link…'}
     autocomplete="off"
   />
   <ul id="palette-list">
@@ -86,8 +92,8 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
       </li>
     ))}
     <li>
-      <a href="#dossier" data-dossier-open="dossier-essentials" data-cmd>
-        {t(journeyUi.dossier.open)} <small>dossier</small>
+      <a href="#dossier" data-cmd data-open-dossier>
+        {t(journeyUi.dossier.open)} <small>drawer</small>
       </a>
     </li>
     {profile.links.map((l) => (
@@ -111,93 +117,95 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
 </dialog>
 
 <script>
-  import { mountPacketCanvas } from '../scripts/motion/packet';
+  import { mountScene3D } from '../scripts/scene3d';
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const canvas = document.getElementById('packet-canvas') as HTMLCanvasElement | null;
-  if (canvas) mountPacketCanvas(canvas, reduced);
+  const sceneEl = document.getElementById('scene-3d');
+  if (sceneEl) mountScene3D(sceneEl, reduced);
 
-  const shell = document.getElementById('journey-shell');
-  const pct = document.getElementById('spine-pct');
-  const setReady = (n: number) => {
-    shell?.style.setProperty('--ready', String(n));
-    if (pct) pct.textContent = `${n}%`;
+  const shell = document.querySelector<HTMLElement>('.journey-shell');
+  const spineFill = document.getElementById('spine-fill');
+  const spinePct = document.getElementById('spine-pct');
+
+  const setReadiness = (pct: number) => {
+    const clamped = Math.max(0, Math.min(100, Math.round(pct)));
+    if (shell) shell.style.setProperty('--ready', String(clamped));
+    if (spineFill) spineFill.style.transform = `scaleY(${clamped / 100})`;
+    if (spinePct) spinePct.textContent = `${clamped}%`;
   };
-  setReady(0);
 
   const navLinks = document.querySelectorAll<HTMLAnchorElement>('[data-act-nav]');
+  const sectionMap = new Map<string, number>([
+    ['hero', 0],
+    ['act-1', 25],
+    ['act-2', 50],
+    ['act-3', 75],
+    ['act-4', 100],
+  ]);
+
   const spy = new IntersectionObserver(
     (entries) => {
       entries.forEach((en) => {
         if (!en.isIntersecting) return;
-        navLinks.forEach((a) => {
-          const on = a.dataset.actNav === en.target.id;
-          a.classList.toggle('active', on);
-          on ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current');
-        });
-        setReady(Number((en.target as HTMLElement).dataset.ready) || 0);
+        const id = en.target.id;
+        navLinks.forEach((a) => a.classList.toggle('active', a.dataset.actNav === id));
+        const targetReady = sectionMap.get(id);
+        if (targetReady !== undefined) setReadiness(targetReady);
       });
     },
     { rootMargin: '-40% 0px -50% 0px' }
   );
-  document.querySelectorAll('section[id^="act-"]').forEach((sec) => spy.observe(sec));
+  document.querySelectorAll('section[id]').forEach((s) => spy.observe(s));
 
-  const palette = document.getElementById('palette') as HTMLDialogElement | null;
-  const dossier = document.getElementById('dossier');
-  const backdrop = document.getElementById('dossier-backdrop');
-  let opener: HTMLElement | null = null;
+  // Dossier drawer controller with focus return
+  const dossier = document.getElementById('dossier-drawer');
+  const dossierClose = document.getElementById('dossier-close');
+  let lastTrigger: HTMLElement | null = null;
+
+  const openDossier = (stopSlug?: string, openSkills = false) => {
+    if (!dossier) return;
+    lastTrigger = document.activeElement as HTMLElement | null;
+    dossier.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    if (openSkills) {
+      const sk = document.getElementById('dossier-skills') as HTMLDetailsElement | null;
+      if (sk) {
+        sk.open = true;
+        sk.scrollIntoView({ block: 'start' });
+      }
+    } else if (stopSlug) {
+      const target = dossier.querySelector<HTMLElement>(`[data-dossier-stop="${stopSlug}"]`);
+      if (target) {
+        dossier.querySelectorAll('[data-dossier-stop]').forEach((el) => el.classList.remove('highlight'));
+        target.classList.add('highlight');
+        target.scrollIntoView({ block: 'center' });
+      }
+    }
+    dossierClose?.focus();
+  };
+
   const closeDossier = () => {
     if (!dossier || dossier.hidden) return;
     dossier.hidden = true;
-    if (backdrop) backdrop.hidden = true;
     document.body.style.overflow = '';
-    opener?.focus();
+    lastTrigger?.focus();
   };
-  const openDossier = (targetId: string | undefined, from: HTMLElement) => {
-    if (!dossier) return;
-    opener = from;
-    dossier.hidden = false;
-    if (backdrop) backdrop.hidden = false;
-    document.body.style.overflow = 'hidden';
-    dossier.querySelectorAll('.focus').forEach((el) => el.classList.remove('focus'));
-    const target = targetId ? document.getElementById(targetId) : null;
-    if (target) {
-      target.classList.add('focus');
-      target.scrollIntoView({ block: 'start' });
-    } else {
-      dossier.scrollTop = 0;
-    }
-    dossier.focus({ preventScroll: true });
-  };
-  document.querySelectorAll<HTMLElement>('[data-dossier-open]').forEach((el) =>
-    el.addEventListener('click', (e) => {
+
+  document.querySelectorAll<HTMLElement>('[data-open-dossier]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
-      palette?.open && palette.close();
-      openDossier(el.dataset.dossierOpen, el);
-    })
-  );
-  document.getElementById('dossier-close')?.addEventListener('click', closeDossier);
-  backdrop?.addEventListener('click', closeDossier);
-  dossier?.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeDossier();
-      return;
-    }
-    if (e.key !== 'Tab') return;
-    const f = [...dossier.querySelectorAll<HTMLElement>('a[href], button, input, [tabindex]:not([tabindex="-1"])')].filter((x) => !x.closest('[hidden]'));
-    if (!f.length) return;
-    const first = f[0];
-    const last = f[f.length - 1];
-    if (e.shiftKey && (document.activeElement === first || document.activeElement === dossier)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+      openDossier(btn.dataset.dossierStop, btn.dataset.dossierSkills === 'true');
+    });
+  });
+  dossierClose?.addEventListener('click', closeDossier);
+  dossier?.querySelector('[data-dossier-backdrop]')?.addEventListener('click', closeDossier);
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dossier && !dossier.hidden) closeDossier();
   });
 
   // Command palette
+  const palette = document.getElementById('palette') as HTMLDialogElement | null;
   const paletteInput = document.getElementById('palette-input') as HTMLInputElement | null;
   const paletteBtn = document.getElementById('palette-btn');
   const filter = () => {
@@ -207,14 +215,14 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
       li.hidden = !li.textContent?.toLowerCase().includes(q);
     });
   };
-  const open = () => {
+  const openPalette = () => {
     if (!palette || !paletteInput) return;
     palette.showModal();
     paletteInput.value = '';
     filter();
     paletteInput.focus();
   };
-  paletteBtn?.addEventListener('click', open);
+  paletteBtn?.addEventListener('click', openPalette);
   paletteInput?.addEventListener('input', filter);
   palette?.addEventListener('click', (e) => {
     if (e.target === palette) palette.close();
@@ -223,21 +231,12 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
   addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      palette?.open ? palette.close() : open();
+      palette?.open ? palette.close() : openPalette();
     }
   });
 </script>
 
-<style is:global>
-  @property --ready {
-    syntax: '<number>';
-    inherits: true;
-    initial-value: 0;
-  }
-</style>
-
 <style>
-  /* Dark-blueprint palette locked for the interactive journey */
   .journey-shell {
     --bg: #0a0d12;
     --grid: #16202b;
@@ -246,30 +245,19 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     --ok: #5cf29a;
     --ink: #e6edf3;
     --mute: #7d8b99;
-    --warn: #ff7b72;
-    --ready: 0;
-    --text: #e6edf3;
-    --muted: #7d8b99;
-    --line: #1f2b38;
-    --surface: #0f151f;
-    --accent: #3ee6ff;
-    --accent-soft: rgba(62, 230, 255, 0.1);
-    --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-    font-family: var(--font);
-    transition: --ready 0.9s ease;
     position: relative;
     min-height: 100vh;
     background: var(--bg);
     color: var(--ink);
   }
-
-  .packet-canvas {
+  .scene-3d {
     position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
     z-index: 0;
+    opacity: 0.9;
   }
 
   .spine-rail {
@@ -287,32 +275,16 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     height: 100%;
     background: linear-gradient(to bottom, var(--signal), var(--ok));
     transform-origin: 50% 0%;
-    transform: scaleY(calc(var(--ready) / 100));
+    transform: scaleY(0);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .spine-pct {
     position: absolute;
     bottom: -18px;
     left: -6px;
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 9.5px;
     color: var(--ok);
-  }
-  .room-glow {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background: radial-gradient(ellipse 80% 60% at 50% 38%, rgba(92, 242, 154, 0.16), rgba(62, 230, 255, 0.07) 45%, transparent 75%);
-    opacity: calc(var(--ready) / 100);
-  }
-  .dossier-btn {
-    color: var(--ok);
-    border-color: color-mix(in srgb, var(--ok) 45%, var(--grid));
-    font-family: var(--mono);
-  }
-
-  .act-bar {
-    display: none;
   }
 
   .nav {
@@ -324,7 +296,7 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     justify-content: space-between;
     gap: 16px;
     padding: 12px clamp(20px, 5vw, 56px);
-    background: rgba(10, 13, 18, 0.86);
+    background: rgba(10, 13, 18, 0.78);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--grid);
   }
@@ -367,6 +339,17 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     align-items: center;
     gap: 8px;
   }
+  .dossier-nav-btn {
+    appearance: none;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ok);
+    background: rgba(92, 242, 154, 0.08);
+    border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
+    border-radius: 999px;
+    padding: 5px 11px;
+    cursor: pointer;
+  }
   .icon-btn,
   .lang {
     font: inherit;
@@ -395,6 +378,10 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     max-width: 1120px;
     margin: 0 auto;
     padding: 0 clamp(24px, 5vw, 56px);
+  }
+
+  .mobile-act-bar {
+    display: none;
   }
 
   footer {
@@ -457,49 +444,45 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
     .spine-rail {
       display: none;
     }
-    .dossier-btn {
-      padding: 5px 8px;
-      font-size: 11px;
-    }
-    .act-bar {
+    .mobile-act-bar {
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: auto 0 0 0;
       z-index: 45;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       background: rgba(10, 13, 18, 0.94);
       backdrop-filter: blur(12px);
       border-top: 1px solid var(--grid);
-      padding-bottom: env(safe-area-inset-bottom);
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
     }
-    .act-bar a {
+    .mobile-act-bar a,
+    .mob-dossier {
+      appearance: none;
+      background: none;
+      border: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1px;
-      padding: 7px 2px 8px;
-      font-size: 11px;
-      color: var(--mute);
       text-decoration: none;
+      color: var(--mute);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 2px;
+      cursor: pointer;
     }
-    .act-bar a.active {
-      color: var(--ink);
+    .mobile-act-bar a.active {
+      color: var(--signal);
     }
-    .act-bar a.active .nav-code {
+    .mob-dossier {
       color: var(--ok);
     }
-    .act-bar-fill {
-      position: absolute;
-      top: -1px;
-      left: 0;
-      height: 2px;
-      width: calc(var(--ready) * 1%);
-      background: linear-gradient(to right, var(--signal), var(--ok));
+    .mobile-act-bar small {
+      font-family: var(--font);
+      font-size: 10px;
     }
     footer {
-      padding-bottom: 76px;
+      padding-bottom: 84px;
     }
   }
 </style>

@@ -34,25 +34,49 @@ export interface RoleLens {
   stack: string[];
 }
 
+export const valuePillars = [
+  {
+    title: { zh: '商業落地與客戶信任', en: 'Commercial Delivery & Client Trust' },
+    body: {
+      zh: '擔任企業客戶技術窗口主導 POC 與提案，讓斷網、合規嚴苛的機敏客戶也能一次部署成功。',
+      en: 'Enterprise technical contact leading POCs and proposals so strict, air-gapped customers deploy predictably.',
+    },
+  },
+  {
+    title: { zh: '團隊槓桿與 AI 工作流', en: 'Team Leverage & AI Governance' },
+    body: {
+      zh: '帶過 5–8 人金融維運與 3–5 人專案小組，透過工具開發與 AI 8 準則，讓小團隊發揮倍數戰力。',
+      en: 'Led 5–8 banking SREs and 3–5 squad engineers, multiplying output with shared tooling and 8 AI principles.',
+    },
+  },
+  {
+    title: { zh: '營運效率與系統韌性', en: 'Operational Velocity & Resilience' },
+    body: {
+      zh: '把數週人工維運化為可稽核、可重建的自動化流程，守住網銀級高可用並消除單點英雄依賴。',
+      en: 'Turns weeks of manual ops into auditable, repeatable automation—protecting banking uptime without heroics.',
+    },
+  },
+];
+
 export const journeyUi = {
-  storyTitle: { zh: '機房亮起來的那一夜', en: 'The Night the Room Goes Live' } as T,
-  storyLabel: { zh: '真實交付案例縮影', en: 'A composite of real deliveries' } as T,
-  meterLabel: { zh: '機房亮度', en: 'Room readiness' } as T,
+  storyTitle: { zh: 'Shin Lin · 互動架構履歷', en: 'Shin Lin · Interactive Profile' } as T,
+  storyLabel: { zh: '真實交付與實證紀錄', en: 'Verified deliveries & outcomes' } as T,
+  meterLabel: { zh: '探索進度', en: 'Progress' } as T,
   nav: [
-    { id: 'act-1', code: '01', ready: 0, label: { zh: '燈還沒亮', en: 'Dark Room' } as T },
-    { id: 'act-2', code: '02', ready: 25, label: { zh: '一路點亮', en: 'Track Record' } as T },
-    { id: 'act-3', code: '03', ready: 60, label: { zh: '現場能力', en: 'Live Skills' } as T },
-    { id: 'act-4', code: '04', ready: 100, label: { zh: '全亮交付', en: 'Value' } as T },
+    { id: 'act-1', code: '01', ready: 25, label: { zh: '價值定位', en: 'Value' } as T },
+    { id: 'act-2', code: '02', ready: 50, label: { zh: '職涯軌跡', en: 'Journey' } as T },
+    { id: 'act-3', code: '03', ready: 75, label: { zh: '現場能力', en: 'Craft' } as T },
+    { id: 'act-4', code: '04', ready: 100, label: { zh: '角色價值', en: 'ROI' } as T },
   ],
   act1: {
-    kicker: { zh: '01 · 凌晨，機房還是暗的', en: '01 · 3 a.m., the room is still dark' } as T,
+    kicker: { zh: '01 · 價值定位與輪廓', en: '01 · VALUE & PROFILE' } as T,
     headline: {
-      zh: '把鎖死的機房，變成可重複交付、企業級的 AI 平台。',
-      en: 'Turns locked-down server rooms into repeatable, enterprise-ready AI platforms.',
+      zh: '不只寫程式、不只管系統——而是讓團隊與商業一起落地。',
+      en: 'Beyond building software — turning infra into business and team outcomes.',
     } as T,
     subline: {
-      zh: '沒有外網、沒人上架、客戶明早要看。以下是我被叫進這種房間的 4 個畫面。',
-      en: 'No internet, nobody at the rack, a customer arriving at dawn. Four scenes from the rooms I get called into.',
+      zh: '從金融核心維運到企業 AI 資料中心，我專注解決三種高價值難題：商業交付卡關、跨團隊對齊摩擦，以及規模化後的效率瓶頸。',
+      en: 'From mission-critical banking ops to enterprise AI data centers, I solve three high-leverage problems: commercial delivery blockers, cross-team friction, and scale bottlenecks.',
     } as T,
     trust: {
       zh: '7+ 年 · 國泰 CUBE SRE 帶 5–8 人 · MetaMEC 架構師帶 3–5 人',
@@ -63,7 +87,7 @@ export const journeyUi = {
       { zh: '讓團隊產出放大', en: 'Multiplies team output' },
       { zh: '把交付變成可重複', en: 'Makes delivery repeatable' },
     ] as T[],
-    ctaStart: { zh: '看機房如何亮起來 →', en: 'Watch the room light up →' } as T,
+    ctaStart: { zh: '下一站：5 站職涯軌跡 ↓', en: 'Next: 5-stop track record ↓' } as T,
     essentialsTitle: { zh: '30 秒履歷重點', en: '30-second essentials' } as T,
   },
   act2: {
@@ -115,18 +139,18 @@ export const journeyUi = {
     actual: { zh: '實際', en: 'Actual' } as T,
   },
   act4: {
-    kicker: { zh: '04 · 100% · 全亮', en: '04 · 100% · Fully live' } as T,
-    headline: { zh: '燈亮之後，你拿到什麼', en: 'When the lights are on, what you get' } as T,
+    kicker: { zh: '04 · 角色價值與成果', en: '04 · VALUE FOR YOU' } as T,
+    headline: { zh: '不同角色，在這套經歷中拿到什麼價值', en: 'What you gain, by role' } as T,
     subline: {
-      zh: '拖動中線對比「人工維運」與「架構後」；再選你的角色，看商業、團隊與效率價值。',
-      en: 'Drag the divider from manual ops to architected ops, then pick your role to see business, team and efficiency value.',
+      zh: '選擇你的角色視角，看我如何為團隊、商業與營運效率創造實質價值。',
+      en: 'Pick your lens to see the concrete business, team, and efficiency outcomes.',
     } as T,
     beforeLabel: { zh: '人工維運：排隊與漂移', en: 'Manual: queues & drift' } as T,
     afterLabel: { zh: '架構後：GitOps 自動收斂', en: 'Architected: GitOps reconcile' } as T,
     roleLabel: { zh: '選擇你的角色', en: 'Pick your lens' } as T,
     stackShow: { zh: '顯示底層技術', en: 'Show underlying stack' } as T,
     stackHide: { zh: '隱藏底層技術', en: 'Hide underlying stack' } as T,
-    closing: { zh: '下一個關著的機房，也許是你的。', en: 'The next locked room might be yours.' } as T,
+    closing: { zh: '下一個需要被點亮的專案與團隊，也許就是你的。', en: 'Ready to bring clarity and velocity to your next platform or team.' } as T,
     cta: { zh: '寄信聊聊', en: 'Email Shin' } as T,
   },
   dossier: {

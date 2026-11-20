@@ -1,0 +1,137 @@
+---
+import { profile, ui, type Lang } from '../../data/profile';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = (o: Record<Lang, string>) => o[lang];
+const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
+
+const copy = {
+  eyebrow: {
+    zh: 'SHIN LIN · 個人架構履歷與實證',
+    en: 'SHIN LIN · PORTFOLIO & ARCHITECTURE DOSSIER',
+  },
+  headline: {
+    zh: '將複雜基礎設施，轉化為企業競爭力與團隊效率。',
+    en: 'Turning complex infrastructure into business velocity and team leverage.',
+  },
+  subline: {
+    zh: '雲原生平台架構師與技術領導者（7+ 年經驗 · 台灣／遠端）。這裡收錄我的職涯軌跡、跨域解題方式，以及能為團隊創造的實質價值。',
+    en: 'Cloud-Native Platform Architect & Tech Lead (7+ yrs · Taiwan / Remote). Explore my track record, how I solve cross-domain problems, and the outcomes I deliver.',
+  },
+  explore: {
+    zh: '開始探索 ↓',
+    en: 'Explore Profile ↓',
+  },
+  dossier: {
+    zh: '開啟完整履歷實證',
+    en: 'Open Dossier',
+  },
+};
+---
+
+<section id="hero" class="hero-welcome" aria-labelledby="hero-name">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">{t(copy.eyebrow)}</span>
+    <h1 id="hero-name">{t(profile.name)}</h1>
+    <p class="hero-role">{t(profile.title)}</p>
+    <p class="hero-headline">{t(copy.headline)}</p>
+    <p class="hero-sub">{t(copy.subline)}</p>
+
+    <div class="hero-actions">
+      <a class="btn-signal" href="#act-1">{t(copy.explore)}</a>
+      <button type="button" class="btn-ghost" data-open-dossier>{t(copy.dossier)}</button>
+      <a class="btn-ghost" href={resumeHref} download>{t(ui.resumePdf)}</a>
+    </div>
+  </div>
+
+  <a class="scroll-cue" href="#act-1" aria-label={t(copy.explore)}>
+    <span class="cue-line" aria-hidden="true"></span>
+    <span>SCROLL</span>
+  </a>
+</section>
+
+<style>
+  .hero-welcome {
+    min-height: calc(100svh - 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    padding: clamp(32px, 6vh, 64px) 0 72px;
+  }
+  .hero-inner {
+    max-width: 720px;
+  }
+  .hero-eyebrow {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    color: var(--signal);
+    margin-bottom: 14px;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(2.8rem, 6.5vw, 4.6rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .hero-role {
+    margin: 0 0 22px;
+    font-family: var(--mono);
+    font-size: clamp(0.92rem, 1.5vw, 1.08rem);
+    color: var(--human);
+  }
+  .hero-headline {
+    margin: 0 0 14px;
+    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    font-weight: 650;
+    line-height: 1.38;
+    color: var(--ink);
+  }
+  .hero-sub {
+    margin: 0 0 28px;
+    font-size: 15.5px;
+    line-height: 1.68;
+    color: var(--mute);
+    max-width: 58ch;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .hero-actions .btn-ghost {
+    appearance: none;
+    background: rgba(12, 16, 23, 0.72);
+    backdrop-filter: blur(8px);
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .scroll-cue {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .scroll-cue:hover {
+    color: var(--signal);
+  }
+  .cue-line {
+    width: 28px;
+    height: 1px;
+    background: var(--signal);
+    display: inline-block;
+  }
+</style>
