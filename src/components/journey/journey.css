@@ -19,9 +19,10 @@
   color: var(--mute);
 }
 .journey-shell .panel {
-  border: 1px solid var(--grid);
+  border: 1px solid color-mix(in srgb, var(--grid) 85%, rgba(62, 230, 255, 0.14));
   border-radius: 18px;
-  background: rgba(12, 16, 23, 0.92);
+  background: rgba(10, 14, 22, 0.34);
+  backdrop-filter: blur(10px);
   padding: 16px;
 }
 .journey-shell .btn-signal,
