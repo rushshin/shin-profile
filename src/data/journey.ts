@@ -111,11 +111,11 @@ export const journeyUi = {
     groupLabel: { zh: '職涯五站', en: 'Five career stops' } as T,
   },
   act3: {
-    kicker: { zh: '03 · 60% · 現場能力即時演示', en: '03 · 60% · Skills, live' } as T,
-    headline: { zh: '三個當下發生的瞬間', en: 'Three moments, happening live' } as T,
+    kicker: { zh: '03 · 核心能力與工作方法', en: '03 · CORE CAPABILITIES' } as T,
+    headline: { zh: '四個維度，讓技術真正轉化為交付力', en: 'Four capabilities that turn engineering into reliable delivery' } as T,
     subline: {
-      zh: '琥珀色是人的功夫、青色是機器的功夫。以下為示意情境，非實際事故紀錄。',
-      en: 'Amber is human craft, cyan is machine craft. Scenarios are illustrative, not incident records.',
+      zh: '技術深度是底座，但真正決定專案能否落地的，是溝通對齊、根因拆解與團隊節奏。',
+      en: 'Technical depth is the foundation, but alignment, root-cause thinking, and team cadence determine whether it ships.',
     } as T,
     tabs: [
       { id: 'comm', kind: 'human', label: { zh: '溝通：行話 ↔ 白話', en: 'Communication' } as T },

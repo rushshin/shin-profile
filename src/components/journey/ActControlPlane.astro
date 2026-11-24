@@ -1,108 +1,113 @@
 ---
 import type { Lang } from '../../data/profile';
-import { journeyUi, swapPairs, squad, principles, rcaSteps } from '../../data/journey';
+import { journeyUi, principles } from '../../data/journey';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
 const a3 = journeyUi.act3;
+
+const pillars = [
+  {
+    id: 'tech',
+    code: '01 · TECH',
+    kind: 'system',
+    title: { zh: '系統架構與技術深度', en: 'Architecture & Technical Depth' },
+    summary: {
+      zh: '從裸機佈建、Kubernetes HA、GitOps 到企業資安與 AI 基礎設施，以程式碼確保環境可重複重建。',
+      en: 'From bare-metal provisioning, Kubernetes HA, and GitOps to enterprise PKI and AI infra—built as code for repeatability.',
+    },
+    exampleLabel: { zh: '代表實作', en: 'In Practice' },
+    example: {
+      zh: 'Kubespray HA + Terraform / ArgoCD GitOps + OpenBao PKI + Go 離線安裝器',
+      en: 'Kubespray HA + Terraform / ArgoCD GitOps + OpenBao PKI + Go air-gapped installer',
+    },
+  },
+  {
+    id: 'comm',
+    code: '02 · COMMUNICATION',
+    kind: 'human',
+    title: { zh: '跨域溝通與決策對齊', en: 'Cross-Functional Alignment' },
+    summary: {
+      zh: '把底層架構限制轉譯為客戶、主管與資安都能理解的風險與取捨，縮短來回對齊成本。',
+      en: 'Translates low-level technical constraints into clear trade-offs so clients, execs, and security can decide quickly.',
+    },
+    exampleLabel: { zh: '語言轉譯示例', en: 'Translation Example' },
+    example: {
+      zh: '「External Secrets 串 OpenBao」→「機密不進 Git 歷史，符合企業稽核並降低外洩風險」',
+      en: '"External Secrets + OpenBao" → "Zero secrets in Git history, audit-ready by design"',
+    },
+  },
+  {
+    id: 'rca',
+    code: '03 · PROBLEM SOLVING',
+    kind: 'system',
+    title: { zh: '問題拆解與根因收斂', en: 'Problem Solving & Root-Cause Analysis' },
+    summary: {
+      zh: '面對模糊或跨域卡關時，先釐清雙方期待與系統邊界，再收斂成標準化流程而非臨時補丁。',
+      en: 'Resolves ambiguous technical and cross-team blockers by isolating root causes and turning fixes into repeatable specs.',
+    },
+    exampleLabel: { zh: '拆解路徑', en: 'Resolution Path' },
+    example: {
+      zh: '現況卡關（斷網交付／簽核不明）→ 釐清邊界與期望 → 沉澱為 SiteSpec 與 OpenTelemetry 追蹤標準',
+      en: 'Blocker (air-gapped / unclear handoff) → Align boundaries → Standardized SiteSpec & OTel tracing',
+    },
+  },
+  {
+    id: 'mgmt',
+    code: '04 · LEADERSHIP',
+    kind: 'human',
+    title: { zh: '團隊賦能與 AI 工作流治理', en: 'Team Leadership & AI Governance' },
+    summary: {
+      zh: '透過任務拆解、排除阻礙與開發內部工具放大團隊戰力，並建立安全可控的 AI 協作準則。',
+      en: 'Multiplies team velocity by clearing blockers, building internal tools, and governing AI-assisted workflows.',
+    },
+    exampleLabel: { zh: '治理框架', en: 'Governance' },
+    example: {
+      zh: '帶領 5–8 人網銀 SRE 團隊；建立 8 個 AI 工作流準則與自動化工具（工時、憑證、MR 審查）',
+      en: 'Led 5–8 banking SREs; established 8 AI-workflow principles & internal velocity tools',
+    },
+  },
+];
 ---
 
-<section id="act-3" class="act act-skills" aria-labelledby="act3-title" data-ready="60">
+<section id="act-3" class="act act-skills" aria-labelledby="act3-title" data-ready="75">
   <span class="kicker">{t(a3.kicker)}</span>
   <h2 id="act3-title">{t(a3.headline)}</h2>
   <p class="subline">{t(a3.subline)}</p>
 
-  <div class="tabs" role="tablist" aria-label={t(a3.headline)} id="skill-tabs">
-    {a3.tabs.map((tab, i) => (
-      <button
-        type="button"
-        role="tab"
-        id={`tab-${tab.id}`}
-        data-tab={tab.id}
-        aria-selected={i === 0}
-        aria-controls={`panel-${tab.id}`}
-        tabindex={i === 0 ? 0 : -1}
-        class:list={['pill-tab', tab.kind, { active: i === 0 }]}
-      >
-        {t(tab.label)}
-      </button>
+  <div class="cap-grid">
+    {pillars.map((p) => (
+      <article class:list={['panel cap-card', p.kind]}>
+        <div class="cap-head">
+          <span class="cap-code">{p.code}</span>
+          <span class:list={['cap-dot', p.kind]} aria-hidden="true"></span>
+        </div>
+        <h3>{t(p.title)}</h3>
+        <p class="cap-sum">{t(p.summary)}</p>
+        <div class="cap-proof">
+          <span class="proof-lbl">{t(p.exampleLabel)}</span>
+          <p class="proof-txt">{t(p.example)}</p>
+        </div>
+      </article>
     ))}
   </div>
 
-  <div class="panel moment">
-    <div id="panel-comm" role="tabpanel" aria-labelledby="tab-comm" data-panel="comm" data-plain="false">
-      <div class="moment-head">
-        <p class="hint">{t(a3.commHint)}</p>
-        <button type="button" class="switch" role="switch" aria-checked="false" id="plain-switch">
-          <span class="knob" aria-hidden="true"></span>
-          <span>{t(a3.commToggle)}</span>
-        </button>
-      </div>
-      <ul class="swap-list" aria-live="polite">
-        {swapPairs.map((p) => (
-          <li>
-            <span class="j">{t(p.jargon)}</span>
-            <span class="p">{t(p.plain)}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    <div id="panel-mgmt" role="tabpanel" aria-labelledby="tab-mgmt" data-panel="mgmt" hidden>
-      <div class="moment-head">
-        <p class="hint">{t(a3.squadHint)}</p>
-        <button type="button" class="toggle-btn" id="squad-reset">{t(a3.reset)}</button>
-      </div>
-      <ul class="squad" aria-live="polite">
-        {squad.map((e, i) => (
-          <li class="lane" data-lane={e.id} data-state={i === 1 ? 'blocked' : 'running'}>
-            <span class="eng">{e.name}</span>
-            <span class="task">{t(e.task)}</span>
-            <span class="state">
-              <b class="s-run">{t(a3.running)}</b>
-              <b class="s-blk">{t(a3.blocked)} · {t(e.blocker)}</b>
-            </span>
-            <button type="button" class="toggle-btn unblock" data-unblock={e.id}>
-              {t(a3.unblock)}: {t(e.unblock)}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <h3 class="sub-h">{t(a3.principlesTitle)}</h3>
-      <div class="chips" role="group" aria-label={t(a3.principlesTitle)}>
-        {principles.map((p, i) => (
-          <button type="button" class:list={['chip', i < 4 ? 'cap' : 'gov']} data-principle={i} aria-pressed="false" aria-controls="principle-detail">
-            {String(i + 1).padStart(2, '0')} {t(p.name)}
-          </button>
-        ))}
-      </div>
-      <p id="principle-detail" class="principle-detail" aria-live="polite">
-        {principles.map((p, i) => <span data-principle-text={i} hidden>{t(p.text)}</span>)}
-      </p>
-    </div>
-
-    <div id="panel-rca" role="tabpanel" aria-labelledby="tab-rca" data-panel="rca" data-step="0" hidden>
-      <div class="rca-steps" role="group" aria-label={t(a3.tabs[2].label)}>
-        {rcaSteps.map((s, i) => (
-          <button type="button" class:list={['rca-step', { on: i === 0 }]} data-rca={i} aria-pressed={i === 0}>{t(s.label)}</button>
-        ))}
-      </div>
-      <div class="rca-grid" role="img" aria-label={`${t(a3.desired)} / ${t(a3.actual)}`}>
-        <span class="rca-lbl">{t(a3.desired)}</span>
-        <span class="cell ok"></span><span class="cell ok"></span><span class="cell ok"></span><span class="cell ok"></span>
-        <span class="rca-lbl">{t(a3.actual)}</span>
-        <span class="cell a" data-bad="0"></span><span class="cell a" data-bad="1"></span><span class="cell a" data-bad="0"></span><span class="cell a" data-bad="1"></span>
-      </div>
-      {rcaSteps.map((s, i) => (
-        <div class="rca-body" data-rca-body={i} hidden={i !== 0}>
-          <h3>{t(s.title)}</h3>
-          <p>{t(s.body)}</p>
+  <!-- Optional expandable 8 AI principles summary -->
+  <details class="panel principles-box">
+    <summary class="pr-summary">
+      <span>{t(a3.principlesTitle)}</span>
+      <span class="pr-hint">{lang === 'zh' ? '點擊展開 8 項準則' : 'Expand 8 principles'} ▾</span>
+    </summary>
+    <div class="pr-grid">
+      {principles.map((p, i) => (
+        <div class="pr-item">
+          <span class:list={['pr-num', i < 4 ? 'cap' : 'gov']}>{String(i + 1).padStart(2, '0')} · {t(p.name)}</span>
+          <p>{t(p.text)}</p>
         </div>
       ))}
-      <button type="button" class="toggle-btn" id="rca-next">{t(a3.rcaNext)} →</button>
     </div>
-  </div>
+  </details>
 
   <div class="drawer-cta">
     <button type="button" class="toggle-btn" data-dossier-open="dossier-skills" aria-haspopup="dialog" aria-controls="dossier">
@@ -111,164 +116,132 @@ const a3 = journeyUi.act3;
   </div>
 </section>
 
-<script>
-  import { bindTabs } from '../../scripts/tabs';
-
-  const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')];
-  const tabList = document.getElementById('skill-tabs');
-  if (tabList) bindTabs(tabList, (id) => panels.forEach((p) => (p.hidden = p.dataset.panel !== id)));
-
-  const comm = document.getElementById('panel-comm');
-  const sw = document.getElementById('plain-switch');
-  sw?.addEventListener('click', () => {
-    const on = sw.getAttribute('aria-checked') !== 'true';
-    sw.setAttribute('aria-checked', String(on));
-    if (comm) comm.dataset.plain = String(on);
-  });
-
-  const lanes = [...document.querySelectorAll<HTMLElement>('[data-lane]')];
-  const initial = lanes.map((l) => l.dataset.state);
-  document.querySelectorAll<HTMLElement>('[data-unblock]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const lane = lanes.find((l) => l.dataset.lane === b.dataset.unblock);
-      if (lane) lane.dataset.state = 'running';
-    })
-  );
-  document.getElementById('squad-reset')?.addEventListener('click', () =>
-    lanes.forEach((l, i) => (l.dataset.state = initial[i] || 'running'))
-  );
-
-  const chips = [...document.querySelectorAll<HTMLElement>('[data-principle]')];
-  const texts = [...document.querySelectorAll<HTMLElement>('[data-principle-text]')];
-  chips.forEach((c) =>
-    c.addEventListener('click', () => {
-      chips.forEach((o) => o.setAttribute('aria-pressed', String(o === c)));
-      texts.forEach((x) => (x.hidden = x.dataset.principleText !== c.dataset.principle));
-    })
-  );
-
-  const rca = document.getElementById('panel-rca');
-  const steps = [...document.querySelectorAll<HTMLElement>('[data-rca]')];
-  const bodies = [...document.querySelectorAll<HTMLElement>('[data-rca-body]')];
-  const setStep = (n: number) => {
-    if (rca) rca.dataset.step = String(n);
-    steps.forEach((s, i) => {
-      s.classList.toggle('on', i === n);
-      s.setAttribute('aria-pressed', String(i === n));
-    });
-    bodies.forEach((b, i) => (b.hidden = i !== n));
-  };
-  steps.forEach((s, i) => s.addEventListener('click', () => setStep(i)));
-  document.getElementById('rca-next')?.addEventListener('click', () => setStep(((Number(rca?.dataset.step) || 0) + 1) % 3));
-</script>
-
 <style>
   .act-skills { padding: clamp(36px, 6vh, 68px) 0; }
-  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-  .moment-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-  .hint { margin: 0; max-width: 60ch; font-size: 13.5px; color: var(--mute); line-height: 1.6; }
+  .cap-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .cap-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    transition: border-color 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .cap-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--signal) 50%, var(--grid));
+  }
+  .cap-card.human:hover {
+    border-color: color-mix(in srgb, var(--human) 55%, var(--grid));
+  }
+  .cap-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .cap-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--mute);
+  }
+  .cap-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .cap-dot.system { background: var(--signal); }
+  .cap-dot.human { background: var(--human); }
 
-  .switch {
-    appearance: none;
-    font: inherit;
+  .cap-card h3 {
+    margin: 0 0 8px;
+    font-size: 17.5px;
+    color: var(--ink);
+  }
+  .cap-sum {
+    margin: 0 0 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--mute);
+  }
+  .cap-proof {
+    padding-top: 12px;
+    border-top: 1px dashed var(--grid);
+  }
+  .proof-lbl {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    color: var(--signal);
+    margin-bottom: 4px;
+  }
+  .cap-card.human .proof-lbl {
+    color: var(--human);
+  }
+  .proof-txt {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .principles-box {
+    padding: 14px 18px;
+  }
+  .pr-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-family: var(--mono);
     font-size: 12.5px;
     color: var(--ink);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: transparent;
-    border: 1px solid var(--grid);
-    border-radius: 999px;
-    padding: 5px 14px 5px 6px;
-    cursor: pointer;
+    list-style: none;
   }
-  .knob {
-    width: 34px;
-    height: 20px;
-    border-radius: 999px;
-    background: #1b2430;
-    position: relative;
-    transition: background 0.2s ease;
+  .pr-summary::-webkit-details-marker { display: none; }
+  .pr-hint {
+    color: var(--signal);
+    font-size: 11.5px;
   }
-  .knob::after {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--signal);
-    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
-  }
-  .switch[aria-checked='true'] { border-color: var(--human); }
-  .switch[aria-checked='true'] .knob { background: rgba(255, 181, 71, 0.3); }
-  .switch[aria-checked='true'] .knob::after { transform: translateX(14px); background: var(--human); }
-
-  .swap-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  .swap-list li { padding: 12px 14px; border: 1px solid var(--grid); border-radius: 10px; background: rgba(10, 14, 22, 0.42); font-size: 14px; line-height: 1.55; }
-  .swap-list .j { font-family: var(--mono); font-size: 13px; color: var(--signal); }
-  .swap-list .p { display: none; color: var(--human); }
-  [data-plain='true'] .swap-list .j { display: none; }
-  [data-plain='true'] .swap-list .p { display: inline; animation: fadeSlide 0.16s ease; }
-
-  .squad { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
-  .lane {
+  .pr-grid {
     display: grid;
-    grid-template-columns: 56px minmax(0, 1.1fr) minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: center;
-    padding: 10px 12px;
-    border: 1px solid var(--grid);
-    border-radius: 10px;
-    background: rgba(10, 14, 22, 0.42);
-    font-size: 13px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 18px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--grid);
   }
-  .eng { font-family: var(--mono); color: var(--human); font-size: 12px; }
-  .state b { font-family: var(--mono); font-size: 11.5px; font-weight: 600; }
-  .s-run { color: var(--ok); }
-  .s-blk { color: var(--warn, #ff7b72); }
-  .lane[data-state='running'] .s-blk,
-  .lane[data-state='running'] .unblock { display: none; }
-  .lane[data-state='blocked'] .s-run { display: none; }
-  .lane[data-state='blocked'] { border-color: color-mix(in srgb, var(--warn, #ff7b72) 55%, var(--grid)); }
-  .lane[data-state='running'] { border-color: color-mix(in srgb, var(--ok) 35%, var(--grid)); }
-  .unblock { font-size: 11.5px; color: var(--human); border-color: color-mix(in srgb, var(--human) 45%, transparent); background: rgba(255, 181, 71, 0.07); text-align: left; }
-  .sub-h { margin: 0 0 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--mute); font-weight: 500; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    appearance: none;
-    font: inherit;
+  .pr-num {
+    display: block;
     font-family: var(--mono);
     font-size: 11.5px;
-    color: var(--ink);
-    background: rgba(10, 14, 22, 0.42);
-    border: 1px solid var(--grid);
-    border-radius: 6px;
-    padding: 5px 9px;
-    cursor: pointer;
+    font-weight: 700;
+    margin-bottom: 2px;
   }
-  .chip.cap { border-color: color-mix(in srgb, var(--signal) 40%, var(--grid)); }
-  .chip.gov { border-color: color-mix(in srgb, var(--human) 40%, var(--grid)); }
-  .chip[aria-pressed='true'].cap { background: rgba(62, 230, 255, 0.12); }
-  .chip[aria-pressed='true'].gov { background: rgba(255, 181, 71, 0.12); }
-  .principle-detail { min-height: 22px; margin: 10px 0 0; font-size: 13.5px; color: var(--ink); }
+  .pr-num.cap { color: var(--signal); }
+  .pr-num.gov { color: var(--human); }
+  .pr-item p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--mute);
+    line-height: 1.5;
+  }
 
-  .rca-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-  .rca-step { appearance: none; font: inherit; font-family: var(--mono); font-size: 12px; color: var(--mute); background: rgba(10, 14, 22, 0.42); border: 1px solid var(--grid); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
-  .rca-step.on { color: var(--ink); border-color: var(--signal); background: rgba(62, 230, 255, 0.1); }
-  .rca-grid { display: grid; grid-template-columns: 64px repeat(4, minmax(0, 1fr)); gap: 6px; align-items: center; max-width: 480px; margin-bottom: 14px; }
-  .rca-lbl { font-family: var(--mono); font-size: 11px; color: var(--mute); }
-  .cell { height: 22px; border-radius: 5px; border: 1px solid var(--grid); transition: background 0.35s ease, border-color 0.35s ease; }
-  .cell.ok { background: rgba(92, 242, 154, 0.2); border-color: var(--ok); }
-  .cell.a { background: rgba(92, 242, 154, 0.2); border-color: var(--ok); }
-  #panel-rca[data-step='0'] .cell.a[data-bad='1'] { background: rgba(255, 123, 114, 0.22); border-color: var(--warn, #ff7b72); }
-  #panel-rca[data-step='1'] .cell.a[data-bad='1'] { background: rgba(255, 181, 71, 0.25); border-color: var(--human); box-shadow: 0 0 0 2px rgba(255, 181, 71, 0.2); }
-  .rca-body h3 { margin: 0 0 6px; font-size: 17px; }
-  .rca-body p { margin: 0 0 14px; font-size: 14px; color: var(--mute); max-width: 60ch; line-height: 1.6; }
-  .drawer-cta { margin-top: 16px; }
+  .drawer-cta {
+    margin-top: 16px;
+  }
 
-  @media (max-width: 720px) {
-    .lane { grid-template-columns: 1fr; gap: 6px; }
+  @media (max-width: 780px) {
+    .cap-grid,
+    .pr-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
