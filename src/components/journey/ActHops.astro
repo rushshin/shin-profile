@@ -6,9 +6,7 @@ interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
 const xs = [110, 305, 500, 695, 890];
-const ys = [262, 208, 208, 148, 88];
-const pts = stops.map((s, i) => ({ s, x: xs[i], y: ys[i] }));
-const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+const baseY = 278;
 const last = stops.length - 1;
 ---
 
@@ -26,28 +24,91 @@ const last = stops.length - 1;
   <div class="stage panel">
     <div class="stage-scroll">
       <svg id="stops-svg" class="stops-svg" viewBox="0 0 1000 340" role="group" aria-label={t(journeyUi.act2.groupLabel)}>
-        <path d={path} class="stair-track" />
-        <path d={path} class="stair-pulse" />
-        {pts.map(({ s, x, y }, i) => (
-          <g
-            class="stop-node"
-            data-stop={s.slug}
-            data-scope={s.scope}
-            data-index={i}
-            tabindex={i === last ? 0 : -1}
-            role="button"
-            aria-pressed={i === last}
-            aria-controls="stop-story"
-            aria-label={`${s.code} · ${t(s.scene)} · ${t(s.scopeLabel)}`}
-          >
-            <rect x={x - 70} y={y - 72} width="140" height={324 - y + 72} fill="transparent" />
-            <line x1={x} y1={y + 34} x2={x} y2="320" class="stop-leg" />
-            <circle cx={x} cy={y} r="46" class="stop-glow" />
-            <circle cx={x} cy={y} r="30" class="stop-core" />
-            <text x={x} y={y + 5} text-anchor="middle" class="stop-num">{String(i + 1).padStart(2, '0')}</text>
-            <text x={x} y={y - 52} text-anchor="middle" class="stop-scene">{t(s.scene)}</text>
-          </g>
-        ))}
+        <!-- Shared urban ground plane & subsurface utility pipeline -->
+        <line x1="36" y1={baseY} x2="964" y2={baseY} class="ground-line" />
+        <path d={`M ${xs[0]} ${baseY + 18} L ${xs[4]} ${baseY + 18}`} class="pipe-track" />
+        <path d={`M ${xs[0]} ${baseY + 18} L ${xs[4]} ${baseY + 18}`} class="pipe-pulse" />
+
+        {stops.map((s, i) => {
+          const x = xs[i];
+          return (
+            <g
+              class="stop-node"
+              data-stop={s.slug}
+              data-scope={s.scope}
+              data-index={i}
+              tabindex={i === last ? 0 : -1}
+              role="button"
+              aria-pressed={i === last}
+              aria-controls="stop-story"
+              aria-label={`${s.code} · ${t(s.company)} · ${t(s.scene)}`}
+            >
+              <rect x={x - 78} y="24" width="156" height="304" fill="transparent" />
+              <circle cx={x} cy={baseY + 18} r="5" class="pipe-joint" />
+
+              {/* 01 Foundation slab & container blocks */}
+              {i === 0 && (
+                <g class="city-glyph">
+                  <rect x={x - 42} y={baseY - 22} width="84" height="22" rx="3" />
+                  <rect x={x - 30} y={baseY - 46} width="26" height="24" rx="2" />
+                  <rect x={x + 4} y={baseY - 40} width="26" height="18" rx="2" />
+                </g>
+              )}
+
+              {/* 02 Edge relay tower & branching signal waves */}
+              {i === 1 && (
+                <g class="city-glyph">
+                  <rect x={x - 36} y={baseY - 30} width="72" height="30" rx="3" />
+                  <polygon points={`${x - 14},${baseY - 30} ${x},${baseY - 96} ${x + 14},${baseY - 30}`} />
+                  <circle cx={x} cy={baseY - 102} r="5" class="beacon" />
+                  <path d={`M ${x - 22} ${baseY - 92} Q ${x - 32} ${baseY - 102} ${x - 22} ${baseY - 112}`} class="wave" />
+                  <path d={`M ${x + 22} ${baseY - 92} Q ${x + 32} ${baseY - 102} ${x + 22} ${baseY - 112}`} class="wave" />
+                </g>
+              )}
+
+              {/* 03 High-throughput twin towers & stream bridge */}
+              {i === 2 && (
+                <g class="city-glyph">
+                  <rect x={x - 40} y={baseY - 114} width="32" height="114" rx="3" />
+                  <rect x={x + 8} y={baseY - 92} width="32" height="92" rx="3" />
+                  <path d={`M ${x - 8} ${baseY - 72} Q ${x} ${baseY - 84} ${x + 8} ${baseY - 72}`} class="wave" />
+                  <line x1={x - 28} y1={baseY - 90} x2={x - 20} y2={baseY - 90} />
+                  <line x1={x - 28} y1={baseY - 70} x2={x - 20} y2={baseY - 70} />
+                  <line x1={x + 20} y1={baseY - 68} x2={x + 28} y2={baseY - 68} />
+                </g>
+              )}
+
+              {/* 04 Shielded financial gateway & twin vault pillars */}
+              {i === 3 && (
+                <g class="city-glyph human">
+                  <rect x={x - 42} y={baseY - 134} width="26" height="134" rx="3" />
+                  <rect x={x + 16} y={baseY - 134} width="26" height="134" rx="3" />
+                  <path d={`M ${x - 16} ${baseY - 104} H ${x + 16}`} />
+                  <path d={`M ${x} ${baseY - 122} L ${x + 14} ${baseY - 114} V ${baseY - 98} C ${x + 14} ${baseY - 88} ${x} ${baseY - 82} ${x} ${baseY - 82} C ${x} ${baseY - 82} ${x - 14} ${baseY - 88} ${x - 14} ${baseY - 98} V ${baseY - 114} Z`} class="shield" />
+                </g>
+              )}
+
+              {/* 05 Sovereign AI data center spire */}
+              {i === 4 && (
+                <g class="city-glyph ai">
+                  <rect x={x - 44} y={baseY - 168} width="88" height="168" rx="4" />
+                  <rect x={x - 28} y={baseY - 146} width="22" height="22" rx="2" />
+                  <rect x={x + 6} y={baseY - 146} width="22" height="22" rx="2" />
+                  <rect x={x - 28} y={baseY - 112} width="22" height="22" rx="2" />
+                  <rect x={x + 6} y={baseY - 112} width="22" height="22" rx="2" />
+                  <line x1={x} y1={baseY - 168} x2={x} y2={baseY - 196} />
+                  <circle cx={x} cy={baseY - 202} r="6" class="beacon" />
+                </g>
+              )}
+
+              <text x={x} y={baseY + 40} text-anchor="middle" class="stop-company">{t(s.company)}</text>
+              <text x={x} y={baseY + 56} text-anchor="middle" class="stop-years">{s.start}–{s.end}</text>
+              <text x={x} y={i === 4 ? baseY - 216 : i === 3 ? baseY - 150 : i === 2 ? baseY - 128 : i === 1 ? baseY - 124 : baseY - 62} text-anchor="middle" class="stop-scene">
+                {t(s.scene)}
+              </text>
+            </g>
+          );
+        })}
       </svg>
     </div>
 
@@ -55,7 +116,7 @@ const last = stops.length - 1;
       {stops.map((s, i) => (
         <article class="story-card" data-story={s.slug} hidden={i !== last}>
           <span class:list={['scope-chip', s.scope]}>{t(s.scopeLabel)}</span>
-          <h3>{t(s.scene)}</h3>
+          <h3>{t(s.company)} · {t(s.scene)}</h3>
           <p>{t(s.story)}</p>
           <button type="button" class="toggle-btn" data-dossier-open={`dossier-stop-${s.slug}`} aria-haspopup="dialog" aria-controls="dossier">
             {t(journeyUi.dossier.openStop)}
@@ -73,15 +134,17 @@ const last = stops.length - 1;
   const rungs = [...document.querySelectorAll<HTMLElement>('[data-rung]')];
 
   const select = (node: SVGGElement, focus: boolean) => {
-    nodes.forEach((n) => {
+    const selectedIdx = Number(node.dataset.index);
+    nodes.forEach((n, idx) => {
       const on = n === node;
       n.classList.toggle('active', on);
+      n.classList.toggle('lit', idx <= selectedIdx);
       n.setAttribute('aria-pressed', String(on));
       n.tabIndex = on ? 0 : -1;
     });
     cards.forEach((c) => (c.hidden = c.dataset.story !== node.dataset.stop));
     rungs.forEach((r) => r.classList.toggle('on', r.dataset.rung === node.dataset.scope));
-    window.dispatchEvent(new CustomEvent('shin:stop-select', { detail: { index: Number(node.dataset.index) } }));
+    window.dispatchEvent(new CustomEvent('shin:stop-select', { detail: { index: selectedIdx } }));
     if (focus) node.focus();
   };
 
@@ -120,44 +183,89 @@ const last = stops.length - 1;
     color: var(--mute);
     transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
-  .ladder li:not(:last-child)::after { content: ' →'; color: var(--grid); }
+  .ladder li + li::before { content: '→ '; color: var(--grid); margin-right: 4px; }
   .ladder li.on { color: var(--human); border-color: var(--human); background: rgba(255, 181, 71, 0.1); }
   .stage-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .stops-svg { width: 100%; height: auto; display: block; }
   @media (max-width: 720px) { .stops-svg { min-width: 680px; } }
-  .stair-track { fill: none; stroke: var(--grid); stroke-width: 2; }
-  .stair-pulse {
+
+  .ground-line { stroke: var(--grid); stroke-width: 1.5; }
+  .pipe-track { fill: none; stroke: var(--grid); stroke-width: 2; stroke-dasharray: 4 4; }
+  .pipe-pulse {
     fill: none;
     stroke: var(--signal);
     stroke-width: 2.5;
     stroke-linecap: round;
-    stroke-dasharray: 44 900;
-    animation: flow 4.2s linear infinite;
+    stroke-dasharray: 48 800;
+    animation: flow 3.8s linear infinite;
   }
-  @keyframes flow { from { stroke-dashoffset: 944; } to { stroke-dashoffset: 0; } }
-  .stop-node { cursor: pointer; outline: none; }
-  .journey-shell .stop-node:focus-visible { outline: none; }
-  .stop-node:focus-visible .stop-core { stroke: var(--human); stroke-width: 3; }
-  .stop-node:focus-visible .stop-glow { stroke: var(--human); stroke-dasharray: none; }
-  .stop-leg { stroke: var(--grid); stroke-width: 1; stroke-dasharray: 3 4; }
-  .stop-glow { fill: rgba(255, 181, 71, 0.03); stroke: var(--grid); stroke-dasharray: 3 4; transition: fill 0.3s ease, stroke 0.3s ease; }
-  .stop-core { fill: #0d131c; stroke: color-mix(in srgb, var(--signal) 55%, var(--grid)); stroke-width: 1.5; transition: fill 0.3s ease, stroke 0.3s ease; }
-  .stop-node:hover .stop-core,
-  .stop-node.active .stop-core { stroke: var(--human); fill: rgba(255, 181, 71, 0.16); }
-  .stop-node.active .stop-glow { fill: rgba(255, 181, 71, 0.1); stroke: color-mix(in srgb, var(--human) 55%, transparent); }
-  .stop-num { font-family: var(--mono); font-size: 13px; font-weight: 700; fill: var(--ink); }
-  .stop-scene { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
-  .stop-story { margin-top: 12px; border-top: 1px dashed var(--grid); padding-top: 14px; }
+  @keyframes flow { from { stroke-dashoffset: 848; } to { stroke-dashoffset: 0; } }
+
+  .stop-node { cursor: pointer; opacity: 0.48; transition: opacity 0.25s ease; }
+  .stop-node.lit { opacity: 0.78; }
+  .stop-node:hover,
+  .stop-node.active { opacity: 1; }
+
+  .pipe-joint { fill: var(--grid); transition: fill 0.2s ease; }
+  .stop-node.lit .pipe-joint { fill: var(--signal); }
+  .stop-node.active .pipe-joint { fill: var(--ok); }
+
+  .city-glyph {
+    fill: rgba(62, 230, 255, 0.04);
+    stroke: color-mix(in srgb, var(--signal) 55%, var(--grid));
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+    transition: stroke 0.25s ease, fill 0.25s ease;
+  }
+  .city-glyph.human {
+    fill: rgba(255, 181, 71, 0.05);
+    stroke: color-mix(in srgb, var(--human) 60%, var(--grid));
+  }
+  .city-glyph.ai {
+    fill: rgba(92, 242, 154, 0.05);
+    stroke: color-mix(in srgb, var(--ok) 60%, var(--grid));
+  }
+  .stop-node.active .city-glyph {
+    fill: rgba(62, 230, 255, 0.12);
+    stroke: var(--signal);
+  }
+  .stop-node.active .city-glyph.human {
+    fill: rgba(255, 181, 71, 0.14);
+    stroke: var(--human);
+  }
+  .stop-node.active .city-glyph.ai {
+    fill: rgba(92, 242, 154, 0.14);
+    stroke: var(--ok);
+  }
+  .wave { fill: none; }
+  .beacon { fill: var(--signal); stroke: none; }
+  .city-glyph.ai .beacon { fill: var(--ok); }
+  .shield { fill: rgba(255, 181, 71, 0.14); }
+
+  .stop-company { font-size: 12.5px; font-weight: 700; fill: var(--ink); }
+  .stop-years { font-family: var(--mono); font-size: 9.5px; fill: var(--mute); }
+  .stop-scene { font-family: var(--mono); font-size: 11px; fill: var(--mute); transition: fill 0.2s ease; }
+  .stop-node.active .stop-scene { fill: var(--ink); font-weight: 700; }
+
+  .stop-story { margin-top: 14px; border-top: 1px dashed var(--grid); padding-top: 16px; }
   .story-card { animation: fadeSlide 0.16s cubic-bezier(0.22, 1, 0.36, 1); }
-  .story-card h3 { margin: 8px 0 6px; font-size: 19px; }
-  .story-card p { margin: 0 0 14px; max-width: 62ch; font-size: 14.5px; line-height: 1.65; color: var(--ink); }
   .scope-chip {
+    display: inline-block;
     font-family: var(--mono);
     font-size: 11px;
     padding: 3px 9px;
-    border-radius: 6px;
-    background: rgba(255, 181, 71, 0.12);
-    color: var(--human);
+    border-radius: 999px;
+    border: 1px solid var(--grid);
+    color: var(--signal);
+    margin-bottom: 8px;
   }
-  @media (prefers-reduced-motion: reduce) { .stair-pulse { animation: none; } }
+  .scope-chip.lead,
+  .scope-chip.architect {
+    color: var(--human);
+    border-color: color-mix(in srgb, var(--human) 45%, transparent);
+    background: rgba(255, 181, 71, 0.12);
+  }
+  .story-card h3 { margin: 0 0 6px; font-size: 19px; }
+  .story-card p { margin: 0 0 14px; font-size: 15px; line-height: 1.6; color: var(--mute); max-width: 62ch; }
+  @media (prefers-reduced-motion: reduce) { .pipe-pulse { animation: none; } }
 </style>
