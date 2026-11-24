@@ -1,11 +1,10 @@
 ---
-import { profile, ui, type Lang } from '../../data/profile';
+import type { Lang } from '../../data/profile';
 import { journeyUi, valuePillars } from '../../data/journey';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
-const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
 ---
 
 <section id="act-1" class="act act-identity" aria-labelledby="act1-title">
@@ -23,26 +22,11 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
     ))}
   </div>
 
-  <aside class="dossier-strip" aria-label={t(journeyUi.act1.essentialsTitle)}>
-    <div class="strip-head">
-      <span class="strip-tag">DOSSIER // VERIFIED PROFILE</span>
-      <span class="strip-trust">{t(journeyUi.act1.trust)}</span>
-    </div>
-    <div class="strip-meta">
-      <span>{t(profile.education[0].school)} {t(profile.education[0].degree)}</span>
-      <span>{t(profile.location)} · {t(profile.workMode)} · {lang === 'zh' ? '中英雙語' : 'Bilingual (zh/en)'}</span>
-    </div>
-    <div class="strip-links">
-      <button type="button" class="link-btn" data-open-dossier>{lang === 'zh' ? '展開完整履歷實證 →' : 'Open full dossier →'}</button>
-      <a href={resumeHref} download>{t(ui.resumePdf)} ↓</a>
-      {profile.links.slice(0, 2).map((l) => (
-        <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a>
-      ))}
-    </div>
-  </aside>
-
   <div class="section-next">
     <a class="next-btn" href="#act-2">{t(journeyUi.act1.ctaStart)}</a>
+    <button type="button" class="link-btn" data-dossier-open="dossier-essentials">
+      {lang === 'zh' ? '展開完整履歷實證 →' : 'Open full dossier →'}
+    </button>
   </div>
 </section>
 
@@ -54,7 +38,7 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
   .pillar-card {
     border: 1px solid var(--grid);
@@ -87,61 +71,11 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
     color: var(--mute);
   }
 
-  .dossier-strip {
-    border: 1px solid color-mix(in srgb, var(--ok) 32%, var(--grid));
-    border-radius: 14px;
-    background: rgba(10, 15, 22, 0.85);
-    backdrop-filter: blur(8px);
-    padding: 16px 20px;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
-  .strip-head {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .strip-tag {
-    font-size: 10.5px;
-    letter-spacing: 0.1em;
-    color: var(--ok);
-  }
-  .strip-trust {
-    color: var(--ink);
-  }
-  .strip-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 18px;
-    color: var(--mute);
-    margin-bottom: 12px;
-  }
-  .strip-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    align-items: center;
-  }
-  .strip-links a,
-  .link-btn {
-    appearance: none;
-    background: none;
-    border: 0;
-    padding: 0;
-    font: inherit;
-    color: var(--signal);
-    text-decoration: none;
-    cursor: pointer;
-  }
-  .strip-links a:hover,
-  .link-btn:hover {
-    text-decoration: underline;
-  }
-
   .section-next {
-    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
   }
   .next-btn {
     display: inline-flex;
@@ -158,6 +92,19 @@ const resumeHref = `/Shin-Lin-Resume-${lang}.pdf`;
   .next-btn:hover {
     border-color: var(--signal);
     color: var(--signal);
+  }
+  .link-btn {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ok);
+    cursor: pointer;
+  }
+  .link-btn:hover {
+    text-decoration: underline;
   }
 
   @media (max-width: 860px) {

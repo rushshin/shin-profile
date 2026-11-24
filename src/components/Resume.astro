@@ -157,49 +157,46 @@ const ext = (href: string) => (href.startsWith('mailto:') ? {} : { target: '_bla
   );
   document.querySelectorAll('section[id]').forEach((s) => spy.observe(s));
 
-  // Dossier drawer controller with focus return
-  const dossier = document.getElementById('dossier-drawer');
+  // Dossier drawer controller matching Dossier.astro (#dossier, #dossier-backdrop)
+  const dossier = document.getElementById('dossier');
+  const backdrop = document.getElementById('dossier-backdrop');
   const dossierClose = document.getElementById('dossier-close');
   let lastTrigger: HTMLElement | null = null;
 
-  const openDossier = (stopSlug?: string, openSkills = false) => {
-    if (!dossier) return;
+  const openDossier = (targetId?: string) => {
+    if (!dossier || !backdrop) return;
     lastTrigger = document.activeElement as HTMLElement | null;
     dossier.hidden = false;
+    backdrop.hidden = false;
     document.body.style.overflow = 'hidden';
 
-    if (openSkills) {
-      const sk = document.getElementById('dossier-skills') as HTMLDetailsElement | null;
-      if (sk) {
-        sk.open = true;
-        sk.scrollIntoView({ block: 'start' });
-      }
-    } else if (stopSlug) {
-      const target = dossier.querySelector<HTMLElement>(`[data-dossier-stop="${stopSlug}"]`);
+    if (targetId) {
+      const target = document.getElementById(targetId);
       if (target) {
-        dossier.querySelectorAll('[data-dossier-stop]').forEach((el) => el.classList.remove('highlight'));
-        target.classList.add('highlight');
-        target.scrollIntoView({ block: 'center' });
+        dossier.querySelectorAll('.ds-stop').forEach((el) => el.classList.remove('highlight'));
+        if (target.classList.contains('ds-stop')) target.classList.add('highlight');
+        requestAnimationFrame(() => target.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' }));
       }
     }
     dossierClose?.focus();
   };
 
   const closeDossier = () => {
-    if (!dossier || dossier.hidden) return;
+    if (!dossier || !backdrop || dossier.hidden) return;
     dossier.hidden = true;
+    backdrop.hidden = true;
     document.body.style.overflow = '';
     lastTrigger?.focus();
   };
 
-  document.querySelectorAll<HTMLElement>('[data-open-dossier]').forEach((btn) => {
+  document.querySelectorAll<HTMLElement>('[data-open-dossier], [data-dossier-open]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      openDossier(btn.dataset.dossierStop, btn.dataset.dossierSkills === 'true');
+      openDossier(btn.dataset.dossierOpen || undefined);
     });
   });
   dossierClose?.addEventListener('click', closeDossier);
-  dossier?.querySelector('[data-dossier-backdrop]')?.addEventListener('click', closeDossier);
+  backdrop?.addEventListener('click', closeDossier);
   addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && dossier && !dossier.hidden) closeDossier();
   });
