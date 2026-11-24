@@ -1,113 +1,196 @@
 ---
 import type { Lang } from '../../data/profile';
-import { journeyUi, principles } from '../../data/journey';
+import { journeyUi } from '../../data/journey';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = (o: Record<Lang, string>) => o[lang];
-const a3 = journeyUi.act3;
 
-const pillars = [
+const header = {
+  kicker: { zh: '03 · 城市運作中樞', en: '03 · HOW THE CITY RUNS' },
+  headline: { zh: '當真實難題發生，三層協同如何運作', en: 'When real friction hits, how three layers converge' },
+  subline: {
+    zh: '承接前五站的建設經驗——選一個真實情境，點選圖中任一層級查看關鍵取捨。',
+    en: 'Built across the five districts—pick a real scenario and click any layer to inspect the trade-off.',
+  },
+};
+
+const cases = [
   {
-    id: 'tech',
-    code: '01 · TECH',
-    kind: 'system',
-    title: { zh: '系統架構與技術深度', en: 'Architecture & Technical Depth' },
-    summary: {
-      zh: '從裸機佈建、Kubernetes HA、GitOps 到企業資安與 AI 基礎設施，以程式碼確保環境可重複重建。',
-      en: 'From bare-metal provisioning, Kubernetes HA, and GitOps to enterprise PKI and AI infra—built as code for repeatability.',
+    id: 'airgap',
+    tab: { zh: '01 · 斷網機房交付', en: '01 · Air-Gapped Site' },
+    friction: {
+      zh: '企業客戶機房完全斷網，且沒有實體 GPU 機群可供預先驗證。',
+      en: 'Enterprise data center is air-gapped with no physical GPU fleet to pre-validate.',
     },
-    exampleLabel: { zh: '代表實作', en: 'In Practice' },
-    example: {
-      zh: 'Kubespray HA + Terraform / ArgoCD GitOps + OpenBao PKI + Go 離線安裝器',
-      en: 'Kubespray HA + Terraform / ArgoCD GitOps + OpenBao PKI + Go air-gapped installer',
+    layers: {
+      business: {
+        label: { zh: '商業與客戶', en: 'Client & Business' },
+        line: {
+          zh: '擔任企業技術窗口，將合規限制轉譯為可驗收的 POC 規格，打通現場交付。',
+          en: 'Acted as enterprise tech lead, translating compliance limits into a verifiable POC spec.',
+        },
+      },
+      team: {
+        label: { zh: '團隊與流程', en: 'Team & Process' },
+        line: {
+          zh: '建立實驗室到客戶機房一致的交付標準，讓團隊不再依賴人工現場救火。',
+          en: 'Standardized one lab-to-site delivery path so the team never relies on manual heroics.',
+        },
+      },
+      arch: {
+        label: { zh: '底層架構', en: 'Architecture' },
+        line: {
+          zh: '自建 Go 離線安裝器＋NICo 模擬機群；密鑰選 OpenBao 避開 Vault BSL 授權風險。',
+          en: 'Built a Go air-gapped installer + NICo sim; chose OpenBao over Vault to avoid BSL risk.',
+        },
+      },
     },
   },
   {
-    id: 'comm',
-    code: '02 · COMMUNICATION',
-    kind: 'human',
-    title: { zh: '跨域溝通與決策對齊', en: 'Cross-Functional Alignment' },
-    summary: {
-      zh: '把底層架構限制轉譯為客戶、主管與資安都能理解的風險與取捨，縮短來回對齊成本。',
-      en: 'Translates low-level technical constraints into clear trade-offs so clients, execs, and security can decide quickly.',
+    id: 'banking',
+    tab: { zh: '02 · 網銀跨隊觀測', en: '02 · Banking SRE' },
+    friction: {
+      zh: 'CUBE 網銀核心 Gateway 不能中斷，同時多團隊服務正分批上雲。',
+      en: 'CUBE banking gateway cannot go down while multiple teams migrate services to cloud.',
     },
-    exampleLabel: { zh: '語言轉譯示例', en: 'Translation Example' },
-    example: {
-      zh: '「External Secrets 串 OpenBao」→「機密不進 Git 歷史，符合企業稽核並降低外洩風險」',
-      en: '"External Secrets + OpenBao" → "Zero secrets in Git history, audit-ready by design"',
+    layers: {
+      business: {
+        label: { zh: '商業與風險', en: 'Risk & Continuity' },
+        line: {
+          zh: '守住金融級高可用底線，確保雲端遷移期間客戶金流體驗零感切換。',
+          en: 'Protected banking-grade availability so cloud migration stayed invisible to customers.',
+        },
+      },
+      team: {
+        label: { zh: '團隊與協作', en: 'Team Alignment' },
+        line: {
+          zh: '帶領 5–8 人 SRE 團隊並協調各開發組導入統一規格，消除事故時各說各話。',
+          en: 'Led a 5–8 SRE squad and aligned dev teams on one telemetry standard for incident triage.',
+        },
+      },
+      arch: {
+        label: { zh: '底層架構', en: 'Architecture' },
+        line: {
+          zh: '以 OpenTelemetry 建立共用監控模組，串聯 OpenShift 私有雲與 AWS/GCP 追蹤。',
+          en: 'Built a shared OpenTelemetry module spanning OpenShift private cloud and AWS/GCP.',
+        },
+      },
     },
   },
   {
-    id: 'rca',
-    code: '03 · PROBLEM SOLVING',
-    kind: 'system',
-    title: { zh: '問題拆解與根因收斂', en: 'Problem Solving & Root-Cause Analysis' },
-    summary: {
-      zh: '面對模糊或跨域卡關時，先釐清雙方期待與系統邊界，再收斂成標準化流程而非臨時補丁。',
-      en: 'Resolves ambiguous technical and cross-team blockers by isolating root causes and turning fixes into repeatable specs.',
+    id: 'ai',
+    tab: { zh: '03 · 團隊 AI 導入', en: '03 · AI Rollout' },
+    friction: {
+      zh: '工程師各自試用 AI 工具，缺乏審查護欄與可重複的團隊交付節奏。',
+      en: 'Engineers experimented with AI individually without guardrails or a shared review cadence.',
     },
-    exampleLabel: { zh: '拆解路徑', en: 'Resolution Path' },
-    example: {
-      zh: '現況卡關（斷網交付／簽核不明）→ 釐清邊界與期望 → 沉澱為 SiteSpec 與 OpenTelemetry 追蹤標準',
-      en: 'Blocker (air-gapped / unclear handoff) → Align boundaries → Standardized SiteSpec & OTel tracing',
+    layers: {
+      business: {
+        label: { zh: '產出與品質', en: 'Output & Quality' },
+        line: {
+          zh: '將 AI 從個人玩具轉化為可控管、可稽核的組織生產力，降低重工成本。',
+          en: 'Turned AI from ad-hoc experiments into governed, auditable team velocity.',
+        },
+      },
+      team: {
+        label: { zh: '團隊與節奏', en: 'Team Cadence' },
+        line: {
+          zh: '確立 spec → 實作 → 跨模型審查 → MR 流程，並把 RCA 沉澱為共用 Agent Skills。',
+          en: 'Established spec → build → cross-model review → MR flow and reusable ops Agent Skills.',
+        },
+      },
+      arch: {
+        label: { zh: '底層治理', en: 'Governance' },
+        line: {
+          zh: '歸納 8 項 AI 工作流準則（模型、RAG、權限、護欄、路由快取與可觀測性）。',
+          en: 'Codified 8 AI-workflow principles covering models, RAG, access, guardrails, and OTel.',
+        },
+      },
     },
   },
-  {
-    id: 'mgmt',
-    code: '04 · LEADERSHIP',
-    kind: 'human',
-    title: { zh: '團隊賦能與 AI 工作流治理', en: 'Team Leadership & AI Governance' },
-    summary: {
-      zh: '透過任務拆解、排除阻礙與開發內部工具放大團隊戰力，並建立安全可控的 AI 協作準則。',
-      en: 'Multiplies team velocity by clearing blockers, building internal tools, and governing AI-assisted workflows.',
-    },
-    exampleLabel: { zh: '治理框架', en: 'Governance' },
-    example: {
-      zh: '帶領 5–8 人網銀 SRE 團隊；建立 8 個 AI 工作流準則與自動化工具（工時、憑證、MR 審查）',
-      en: 'Led 5–8 banking SREs; established 8 AI-workflow principles & internal velocity tools',
-    },
-  },
+] as const;
+
+type LayerKey = 'business' | 'team' | 'arch';
+const layerOrder: { key: LayerKey; y: number; kind: 'human' | 'system' }[] = [
+  { key: 'business', y: 54, kind: 'human' },
+  { key: 'team', y: 146, kind: 'human' },
+  { key: 'arch', y: 238, kind: 'system' },
 ];
 ---
 
-<section id="act-3" class="act act-skills" aria-labelledby="act3-title" data-ready="75">
-  <span class="kicker">{t(a3.kicker)}</span>
-  <h2 id="act3-title">{t(a3.headline)}</h2>
-  <p class="subline">{t(a3.subline)}</p>
+<section id="act-3" class="act act-ops" aria-labelledby="act3-title" data-ready="75">
+  <span class="kicker">{t(header.kicker)}</span>
+  <h2 id="act3-title">{t(header.headline)}</h2>
+  <p class="subline">{t(header.subline)}</p>
 
-  <div class="cap-grid">
-    {pillars.map((p) => (
-      <article class:list={['panel cap-card', p.kind]}>
-        <div class="cap-head">
-          <span class="cap-code">{p.code}</span>
-          <span class:list={['cap-dot', p.kind]} aria-hidden="true"></span>
-        </div>
-        <h3>{t(p.title)}</h3>
-        <p class="cap-sum">{t(p.summary)}</p>
-        <div class="cap-proof">
-          <span class="proof-lbl">{t(p.exampleLabel)}</span>
-          <p class="proof-txt">{t(p.example)}</p>
-        </div>
-      </article>
+  <div class="case-tabs" role="tablist" aria-label={t(header.headline)}>
+    {cases.map((c, i) => (
+      <button
+        type="button"
+        role="tab"
+        id={`case-tab-${c.id}`}
+        data-case-btn={c.id}
+        aria-selected={i === 0}
+        tabindex={i === 0 ? 0 : -1}
+        class:list={['pill-tab', { active: i === 0 }]}
+      >
+        {t(c.tab)}
+      </button>
     ))}
   </div>
 
-  <!-- Optional expandable 8 AI principles summary -->
-  <details class="panel principles-box">
-    <summary class="pr-summary">
-      <span>{t(a3.principlesTitle)}</span>
-      <span class="pr-hint">{lang === 'zh' ? '點擊展開 8 項準則' : 'Expand 8 principles'} ▾</span>
-    </summary>
-    <div class="pr-grid">
-      {principles.map((p, i) => (
-        <div class="pr-item">
-          <span class:list={['pr-num', i < 4 ? 'cap' : 'gov']}>{String(i + 1).padStart(2, '0')} · {t(p.name)}</span>
-          <p>{t(p.text)}</p>
+  <div class="panel ops-stage">
+    <!-- Left: Interactive 3-Layer City Cross-Section SVG -->
+    <div class="ops-visual">
+      <svg class="layers-svg" viewBox="0 0 420 310" role="group" aria-label={lang === 'zh' ? '三層協同架構圖' : 'Three-layer convergence diagram'}>
+        <line x1="210" y1="36" x2="210" y2="274" class="v-spine" />
+        <line x1="210" y1="36" x2="210" y2="274" class="v-pulse" />
+
+        {layerOrder.map((l, idx) => (
+          <g
+            class:list={['layer-node', l.kind, { active: idx === 0 }]}
+            data-layer-btn={l.key}
+            tabindex={idx === 0 ? 0 : -1}
+            role="button"
+            aria-pressed={idx === 0}
+          >
+            <rect x="34" y={l.y - 30} width="352" height="60" rx="12" class="layer-box" />
+            <circle cx="62" cy={l.y} r="6" class="layer-dot" />
+            <text x="82" y={l.y + 5} class="layer-title">
+              {t(cases[0].layers[l.key].label)}
+            </text>
+            <text x="364" y={l.y + 4} text-anchor="end" class="layer-idx">L{3 - idx}</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+
+    <!-- Right: Crisp 1-line Friction + Active Layer Resolution -->
+    <div class="ops-detail" aria-live="polite">
+      {cases.map((c, ci) => (
+        <div class="case-pane" data-case-pane={c.id} hidden={ci !== 0}>
+          <div class="friction-box">
+            <span class="f-tag">{lang === 'zh' ? '現場難題' : 'THE FRICTION'}</span>
+            <p>{t(c.friction)}</p>
+          </div>
+
+          <div class="layer-cards">
+            {layerOrder.map((l, li) => (
+              <button
+                type="button"
+                class:list={['l-card', l.kind, { active: li === 0 }]}
+                data-layer-card={l.key}
+              >
+                <span class="l-head">{t(c.layers[l.key].label)}</span>
+                <span class="l-body">{t(c.layers[l.key].line)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       ))}
     </div>
-  </details>
+  </div>
 
   <div class="drawer-cta">
     <button type="button" class="toggle-btn" data-dossier-open="dossier-skills" aria-haspopup="dialog" aria-controls="dossier">
@@ -116,132 +199,161 @@ const pillars = [
   </div>
 </section>
 
+<script>
+  const caseBtns = [...document.querySelectorAll<HTMLElement>('[data-case-btn]')];
+  const casePanes = [...document.querySelectorAll<HTMLElement>('[data-case-pane]')];
+  const svgLayers = [...document.querySelectorAll<SVGGElement>('[data-layer-btn]')];
+  const cardLayers = [...document.querySelectorAll<HTMLElement>('[data-layer-card]')];
+
+  let activeLayer = 'business';
+
+  const syncLayer = (key: string) => {
+    activeLayer = key;
+    svgLayers.forEach((n) => {
+      const on = n.dataset.layerBtn === key;
+      n.classList.toggle('active', on);
+      n.setAttribute('aria-pressed', String(on));
+      n.tabIndex = on ? 0 : -1;
+    });
+    cardLayers.forEach((c) => c.classList.toggle('active', c.dataset.layerCard === key));
+  };
+
+  caseBtns.forEach((btn, i) => {
+    const activate = (focus: boolean) => {
+      const id = btn.dataset.caseBtn!;
+      caseBtns.forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      casePanes.forEach((p) => (p.hidden = p.dataset.casePane !== id));
+      syncLayer(activeLayer);
+      if (focus) btn.focus();
+    };
+    btn.addEventListener('click', () => activate(false));
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const next = caseBtns[(i + (e.key === 'ArrowRight' ? 1 : -1) + caseBtns.length) % caseBtns.length];
+        next.click();
+        next.focus();
+      }
+    });
+  });
+
+  svgLayers.forEach((n) => {
+    const key = n.dataset.layerBtn!;
+    n.addEventListener('click', () => syncLayer(key));
+    n.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        syncLayer(key);
+      }
+    });
+  });
+  cardLayers.forEach((c) => c.addEventListener('click', () => syncLayer(c.dataset.layerCard!)));
+</script>
+
 <style>
-  .act-skills { padding: clamp(36px, 6vh, 68px) 0; }
-  .cap-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+  .act-ops { padding: clamp(36px, 6vh, 68px) 0; }
+  .case-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 14px;
   }
-  .cap-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    transition: border-color 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .cap-card:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--signal) 50%, var(--grid));
-  }
-  .cap-card.human:hover {
-    border-color: color-mix(in srgb, var(--human) 55%, var(--grid));
-  }
-  .cap-head {
-    display: flex;
-    justify-content: space-between;
+  .ops-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 18px;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 20px;
   }
-  .cap-code {
+
+  .layers-svg { width: 100%; height: auto; display: block; }
+  .v-spine { stroke: var(--grid); stroke-width: 2; stroke-dasharray: 4 4; }
+  .v-pulse {
+    stroke: var(--signal);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 28 210;
+    animation: vFlow 2.6s linear infinite;
+  }
+  @keyframes vFlow { from { stroke-dashoffset: 238; } to { stroke-dashoffset: 0; } }
+
+  .layer-node { cursor: pointer; opacity: 0.58; transition: opacity 0.2s ease; }
+  .layer-node:hover,
+  .layer-node.active { opacity: 1; }
+  .layer-box {
+    fill: rgba(10, 14, 22, 0.55);
+    stroke: var(--grid);
+    stroke-width: 1.5;
+    transition: stroke 0.2s ease, fill 0.2s ease;
+  }
+  .layer-node.human.active .layer-box {
+    stroke: var(--human);
+    fill: rgba(255, 181, 71, 0.1);
+  }
+  .layer-node.system.active .layer-box {
+    stroke: var(--signal);
+    fill: rgba(62, 230, 255, 0.1);
+  }
+  .layer-dot { fill: var(--mute); }
+  .layer-node.human.active .layer-dot { fill: var(--human); }
+  .layer-node.system.active .layer-dot { fill: var(--signal); }
+  .layer-title { font-size: 14px; font-weight: 700; fill: var(--ink); }
+  .layer-idx { font-family: var(--mono); font-size: 11px; fill: var(--mute); }
+
+  .friction-box {
+    padding: 12px 14px;
+    border-left: 2px solid var(--ok);
+    background: rgba(92, 242, 154, 0.06);
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 12px;
+  }
+  .f-tag {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ok);
+    margin-bottom: 3px;
+  }
+  .friction-box p { margin: 0; font-size: 14px; color: var(--ink); line-height: 1.5; }
+
+  .layer-cards { display: grid; gap: 8px; }
+  .l-card {
+    appearance: none;
+    text-align: left;
+    font: inherit;
+    background: rgba(10, 14, 22, 0.42);
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .l-card:hover { opacity: 0.9; }
+  .l-card.active { opacity: 1; }
+  .l-card.human.active { border-color: var(--human); background: rgba(255, 181, 71, 0.08); }
+  .l-card.system.active { border-color: var(--signal); background: rgba(62, 230, 255, 0.08); }
+  .l-head {
+    display: block;
     font-family: var(--mono);
     font-size: 11px;
-    letter-spacing: 0.08em;
     color: var(--mute);
+    margin-bottom: 3px;
   }
-  .cap-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-  .cap-dot.system { background: var(--signal); }
-  .cap-dot.human { background: var(--human); }
+  .l-card.human.active .l-head { color: var(--human); }
+  .l-card.system.active .l-head { color: var(--signal); }
+  .l-body { display: block; font-size: 13.5px; color: var(--ink); line-height: 1.5; }
 
-  .cap-card h3 {
-    margin: 0 0 8px;
-    font-size: 17.5px;
-    color: var(--ink);
-  }
-  .cap-sum {
-    margin: 0 0 14px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--mute);
-  }
-  .cap-proof {
-    padding-top: 12px;
-    border-top: 1px dashed var(--grid);
-  }
-  .proof-lbl {
-    display: block;
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    color: var(--signal);
-    margin-bottom: 4px;
-  }
-  .cap-card.human .proof-lbl {
-    color: var(--human);
-  }
-  .proof-txt {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--ink);
-  }
+  .drawer-cta { margin-top: 16px; }
 
-  .principles-box {
-    padding: 14px 18px;
+  @media (max-width: 860px) {
+    .ops-stage { grid-template-columns: 1fr; }
   }
-  .pr-summary {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    font-family: var(--mono);
-    font-size: 12.5px;
-    color: var(--ink);
-    list-style: none;
-  }
-  .pr-summary::-webkit-details-marker { display: none; }
-  .pr-hint {
-    color: var(--signal);
-    font-size: 11.5px;
-  }
-  .pr-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px 18px;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px dashed var(--grid);
-  }
-  .pr-num {
-    display: block;
-    font-family: var(--mono);
-    font-size: 11.5px;
-    font-weight: 700;
-    margin-bottom: 2px;
-  }
-  .pr-num.cap { color: var(--signal); }
-  .pr-num.gov { color: var(--human); }
-  .pr-item p {
-    margin: 0;
-    font-size: 13px;
-    color: var(--mute);
-    line-height: 1.5;
-  }
-
-  .drawer-cta {
-    margin-top: 16px;
-  }
-
-  @media (max-width: 780px) {
-    .cap-grid,
-    .pr-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+  @media (prefers-reduced-motion: reduce) { .v-pulse { animation: none; } }
 </style>
