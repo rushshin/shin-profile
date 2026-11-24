@@ -81,6 +81,7 @@ const last = stops.length - 1;
     });
     cards.forEach((c) => (c.hidden = c.dataset.story !== node.dataset.stop));
     rungs.forEach((r) => r.classList.toggle('on', r.dataset.rung === node.dataset.scope));
+    window.dispatchEvent(new CustomEvent('shin:stop-select', { detail: { index: Number(node.dataset.index) } }));
     if (focus) node.focus();
   };
 

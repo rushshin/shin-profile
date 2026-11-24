@@ -1,6 +1,14 @@
 import * as THREE from 'three';
 
-// Renders an ascending 3D architectural platform horizon with 5 bridged nodes.
+interface DistrictMeta {
+  cx: number;
+  cz: number;
+  color: number;
+  wireMats: THREE.LineBasicMaterial[];
+  beacon: THREE.Mesh;
+}
+
+// Renders a 5-district 3D wireframe city with transit pipelines synced to scroll and Ch 2 selection.
 export function mountScene3D(container: HTMLElement, reduced: boolean): void {
   let renderer: THREE.WebGLRenderer;
   try {
@@ -14,95 +22,172 @@ export function mountScene3D(container: HTMLElement, reduced: boolean): void {
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0a0d12, 0.042);
+  scene.fog = new THREE.FogExp2(0x0a0d12, 0.036);
 
-  const camera = new THREE.PerspectiveCamera(46, container.clientWidth / Math.max(container.clientHeight, 1), 0.1, 100);
-  camera.position.set(0, 4.2, 14.5);
-  camera.lookAt(0, 0.8, 0);
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / Math.max(container.clientHeight, 1), 0.1, 100);
+  camera.position.set(-1.5, 5.2, 15.5);
+  camera.lookAt(0, 0.6, 0);
 
-  const world = new THREE.Group();
-  scene.add(world);
+  const city = new THREE.Group();
+  scene.add(city);
 
-  // Blueprint ground plane
-  const grid = new THREE.GridHelper(36, 36, 0x1b3448, 0x11202e);
-  grid.position.y = -1.8;
-  world.add(grid);
+  // Urban street grid
+  const grid = new THREE.GridHelper(44, 44, 0x1a3044, 0x101d2b);
+  grid.position.y = -2.0;
+  city.add(grid);
 
-  // 5 ascending platform monoliths echoing the 5 career stages
-  const specs = [
-    { x: -6.4, z: 1.6, h: 1.4, color: 0x3ee6ff },
-    { x: -3.2, z: 0.4, h: 2.1, color: 0x3ee6ff },
-    { x: 0.0, z: -0.6, h: 2.7, color: 0x3ee6ff },
-    { x: 3.2, z: -0.2, h: 3.4, color: 0xffb547 },
-    { x: 6.4, z: -1.4, h: 4.3, color: 0x5cf29a },
+  // 5 city districts corresponding to the 5 career stations
+  const districtSpecs = [
+    {
+      cx: -8.0,
+      cz: 1.8,
+      color: 0x3ee6ff,
+      buildings: [
+        { dx: -0.6, dz: -0.4, w: 0.9, d: 0.9, h: 1.1 },
+        { dx: 0.5, dz: 0.3, w: 0.8, d: 0.8, h: 1.4 },
+      ],
+    },
+    {
+      cx: -4.0,
+      cz: 0.6,
+      color: 0x3ee6ff,
+      buildings: [
+        { dx: -0.5, dz: 0.3, w: 0.8, d: 0.8, h: 1.8 },
+        { dx: 0.5, dz: -0.3, w: 0.7, d: 0.7, h: 2.2 },
+        { dx: 0.0, dz: 0.7, w: 0.6, d: 0.6, h: 1.3 },
+      ],
+    },
+    {
+      cx: 0.0,
+      cz: -0.4,
+      color: 0x3ee6ff,
+      buildings: [
+        { dx: -0.6, dz: -0.2, w: 0.85, d: 0.85, h: 2.5 },
+        { dx: 0.5, dz: 0.4, w: 0.85, d: 0.85, h: 2.9 },
+        { dx: 0.2, dz: -0.8, w: 0.7, d: 0.7, h: 2.0 },
+      ],
+    },
+    {
+      cx: 4.0,
+      cz: 0.2,
+      color: 0xffb547,
+      buildings: [
+        { dx: -0.5, dz: 0.2, w: 1.0, d: 1.0, h: 3.4 },
+        { dx: 0.6, dz: -0.3, w: 0.9, d: 0.9, h: 3.0 },
+        { dx: 0.0, dz: 0.9, w: 0.7, d: 0.7, h: 2.3 },
+      ],
+    },
+    {
+      cx: 8.0,
+      cz: -1.0,
+      color: 0x5cf29a,
+      buildings: [
+        { dx: -0.6, dz: 0.0, w: 0.95, d: 0.95, h: 4.4 },
+        { dx: 0.55, dz: -0.4, w: 0.9, d: 0.9, h: 3.8 },
+        { dx: 0.3, dz: 0.75, w: 0.75, d: 0.75, h: 3.1 },
+      ],
+    },
   ];
 
-  const tops: THREE.Vector3[] = [];
-  const beacons: THREE.Mesh[] = [];
+  const districts: DistrictMeta[] = [];
+  const spinePts: THREE.Vector3[] = [];
 
-  specs.forEach((s) => {
-    const boxGeo = new THREE.BoxGeometry(1.15, s.h, 1.15);
-    const wire = new THREE.WireframeGeometry(boxGeo);
-    const mat = new THREE.LineBasicMaterial({ color: s.color, transparent: true, opacity: 0.28 });
-    const mesh = new THREE.LineSegments(wire, mat);
-    mesh.position.set(s.x, -1.8 + s.h / 2, s.z);
-    world.add(mesh);
+  districtSpecs.forEach((d) => {
+    const wireMats: THREE.LineBasicMaterial[] = [];
+    let maxH = 0;
 
-    const top = new THREE.Vector3(s.x, -1.8 + s.h, s.z);
-    tops.push(top);
+    d.buildings.forEach((b) => {
+      maxH = Math.max(maxH, b.h);
+      const geo = new THREE.BoxGeometry(b.w, b.h, b.d);
+      const wire = new THREE.WireframeGeometry(geo);
+      const mat = new THREE.LineBasicMaterial({ color: d.color, transparent: true, opacity: 0.22 });
+      const mesh = new THREE.LineSegments(wire, mat);
+      mesh.position.set(d.cx + b.dx, -2.0 + b.h / 2, d.cz + b.dz);
+      city.add(mesh);
+      wireMats.push(mat);
+    });
 
-    const dotGeo = new THREE.SphereGeometry(0.11, 12, 12);
-    const dotMat = new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.85 });
-    const dot = new THREE.Mesh(dotGeo, dotMat);
-    dot.position.copy(top);
-    world.add(dot);
-    beacons.push(dot);
+    const beaconGeo = new THREE.SphereGeometry(0.11, 12, 12);
+    const beaconMat = new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.85 });
+    const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+    beacon.position.set(d.cx, -2.0 + maxH + 0.35, d.cz);
+    city.add(beacon);
+
+    spinePts.push(new THREE.Vector3(d.cx, -1.92, d.cz));
+    districts.push({ cx: d.cx, cz: d.cz, color: d.color, wireMats, beacon });
   });
 
-  // Glowing parabolic bridges connecting consecutive platform monoliths
-  for (let i = 0; i < tops.length - 1; i++) {
-    const a = tops[i];
-    const b = tops[i + 1];
-    const mid = new THREE.Vector3((a.x + b.x) / 2, Math.max(a.y, b.y) + 1.1, (a.z + b.z) / 2);
+  // Elevated urban transit / data pipeline connecting the 5 districts
+  for (let i = 0; i < spinePts.length - 1; i++) {
+    const a = spinePts[i];
+    const b = spinePts[i + 1];
+    const mid = new THREE.Vector3((a.x + b.x) / 2, -1.0, (a.z + b.z) / 2);
     const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
-    const pts = curve.getPoints(28);
-    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(28));
     const lineMat = new THREE.LineBasicMaterial({
       color: i >= 2 ? 0xffb547 : 0x3ee6ff,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.38,
     });
-    world.add(new THREE.Line(lineGeo, lineMat));
+    city.add(new THREE.Line(lineGeo, lineMat));
   }
 
+  let activeDistrict = 4;
   let targetMx = 0;
   let targetMy = 0;
   let curMx = 0;
   let curMy = 0;
   let scrollNorm = 0;
+  let camFocusX = 0;
 
-  const onPointerMove = (e: PointerEvent) => {
-    targetMx = (e.clientX / window.innerWidth - 0.5) * 1.1;
-    targetMy = (e.clientY / window.innerHeight - 0.5) * 0.6;
-  };
+  window.addEventListener('shin:stop-select', (e: Event) => {
+    const idx = (e as CustomEvent<{ index: number }>).detail?.index;
+    if (typeof idx === 'number' && idx >= 0 && idx < districts.length) {
+      activeDistrict = idx;
+    }
+  });
+
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      targetMx = (e.clientX / window.innerWidth - 0.5) * 1.1;
+      targetMy = (e.clientY / window.innerHeight - 0.5) * 0.5;
+    },
+    { passive: true }
+  );
+
   const onScroll = () => {
     const max = document.documentElement.scrollHeight - window.innerHeight;
     scrollNorm = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
   };
-  const onResize = () => {
-    const w = container.clientWidth;
-    const h = Math.max(container.clientHeight, 1);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  };
-
-  window.addEventListener('pointermove', onPointerMove, { passive: true });
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onResize, { passive: true });
   onScroll();
 
+  window.addEventListener(
+    'resize',
+    () => {
+      const w = container.clientWidth;
+      const h = Math.max(container.clientHeight, 1);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    },
+    { passive: true }
+  );
+
+  const applyDistrictHighlight = (t: number) => {
+    districts.forEach((d, idx) => {
+      const lit = idx <= activeDistrict;
+      const focused = idx === activeDistrict;
+      const targetOpacity = focused ? 0.52 : lit ? 0.28 : 0.14;
+      d.wireMats.forEach((m) => (m.opacity += (targetOpacity - m.opacity) * 0.08));
+      const scale = focused ? 1.25 + 0.2 * Math.sin(t * 2.6) : 1.0;
+      d.beacon.scale.setScalar(scale);
+    });
+  };
+
   if (reduced) {
+    applyDistrictHighlight(0);
     renderer.render(scene, camera);
     return;
   }
@@ -118,17 +203,15 @@ export function mountScene3D(container: HTMLElement, reduced: boolean): void {
     curMx += (targetMx - curMx) * 0.05;
     curMy += (targetMy - curMy) * 0.05;
 
-    // Glide camera smoothly across the ascending horizon as the user scrolls
-    camera.position.x = -2.2 + scrollNorm * 4.4 + curMx;
-    camera.position.y = 4.2 - scrollNorm * 0.9 - curMy;
-    camera.position.z = 14.5 - scrollNorm * 2.2;
-    camera.lookAt(scrollNorm * 1.6, 0.7, -0.2);
+    const targetX = districts[activeDistrict].cx * 0.35 + scrollNorm * 2.4;
+    camFocusX += (targetX - camFocusX) * 0.05;
 
-    beacons.forEach((b, idx) => {
-      const s = 1 + 0.18 * Math.sin(t * 2.1 + idx * 0.9);
-      b.scale.setScalar(s);
-    });
+    camera.position.x = camFocusX + curMx;
+    camera.position.y = 5.0 - scrollNorm * 0.8 - curMy;
+    camera.position.z = 15.5 - scrollNorm * 2.0;
+    camera.lookAt(camFocusX * 0.7, 0.5, -0.2);
 
+    applyDistrictHighlight(t);
     renderer.render(scene, camera);
     rafId = requestAnimationFrame(tick);
   };

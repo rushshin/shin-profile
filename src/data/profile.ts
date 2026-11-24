@@ -124,7 +124,7 @@ export const profile = {
     },
     {
       school: { zh: '銘傳大學', en: 'Ming Chuan University' } as T,
-      degree: { zh: '資訊與通訊工程 學士', en: 'B.S., Information & Telecommunications Engineering' } as T,
+      degree: { zh: '電腦與通訊工程學系 學士', en: 'B.S., Information & Telecommunications Engineering' } as T,
       period: '2013 — 2017',
     },
   ],

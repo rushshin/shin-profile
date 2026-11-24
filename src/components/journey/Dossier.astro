@@ -56,9 +56,7 @@ const ordered = [...stops].reverse();
   <section class="ds-sec" id="dossier-education">
     <h3>{t(d.education)}</h3>
     <ul class="ds-edu">
-      {profile.education.map((e) => (
-        <li><span class="ds-date">{e.period}</span> {t(e.school)} · {t(e.degree)}</li>
-      ))}
+      <li><span class="ds-date">{profile.education[0].period}</span> {t(profile.education[0].school)} · {t(profile.education[0].degree)}</li>
     </ul>
   </section>
 

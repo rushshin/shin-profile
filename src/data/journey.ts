@@ -79,8 +79,8 @@ export const journeyUi = {
       en: 'From mission-critical banking ops to enterprise AI data centers, I solve three high-leverage problems: commercial delivery blockers, cross-team friction, and scale bottlenecks.',
     } as T,
     trust: {
-      zh: '7+ 年 · 國泰 CUBE SRE 帶 5–8 人 · MetaMEC 架構師帶 3–5 人',
-      en: '7+ yrs · Cathay CUBE SRE Lead (5–8) · MetaMEC Architect (3–5)',
+      zh: '7+ 年 · 國泰 CUBE SRE Lead · MetaMEC 技術架構師',
+      en: '7+ yrs · Cathay CUBE SRE Lead · MetaMEC Technical Architect',
     } as T,
     values: [
       { zh: '打開企業商機', en: 'Unlocks enterprise deals' },
@@ -91,17 +91,17 @@ export const journeyUi = {
     essentialsTitle: { zh: '30 秒履歷重點', en: '30-second essentials' } as T,
   },
   act2: {
-    kicker: { zh: '02 · 25% · 一站一站點亮', en: '02 · 25% · Lit one stop at a time' } as T,
-    headline: { zh: '5 站經歷，責任範圍一路放大', en: '5 stops, scope growing every time' } as T,
+    kicker: { zh: '02 · 城市基礎設施的演化', en: '02 · URBAN INFRASTRUCTURE EVOLUTION' } as T,
+    headline: { zh: '五座階段，從打地基到點亮 AI 中樞', en: 'Five stages, from laying foundations to lighting the AI hub' } as T,
     subline: {
-      zh: '選任一站，展開「挑戰 → 決策 → 結果」。',
-      en: 'Pick a stop to unfold Challenge → Decision → Result.',
+      zh: '如同建設一座持續成長的城市：點選任一站，背景 3D 街區同步亮起並展開該階段的交付紀錄。',
+      en: 'Like building a growing city: select any district to illuminate its 3D block and inspect its delivery record.',
     } as T,
     ladder: [
       { id: 'ic', label: { zh: 'IC', en: 'IC' } as T },
       { id: 'owner', label: { zh: '產品／後端 Owner', en: 'Product / Backend Owner' } as T },
       { id: 'lead', label: { zh: 'SRE Lead 5–8 人', en: 'SRE Lead 5–8' } as T },
-      { id: 'architect', label: { zh: '架構師＆客戶窗口 3–5 人', en: 'Architect & Client Lead 3–5' } as T },
+      { id: 'architect', label: { zh: '技術架構＆企業窗口', en: 'Tech Architect & Client Lead' } as T },
     ],
     challenge: { zh: '挑戰', en: 'Challenge' } as T,
     decision: { zh: '決策', en: 'Decision' } as T,
@@ -139,19 +139,19 @@ export const journeyUi = {
     actual: { zh: '實際', en: 'Actual' } as T,
   },
   act4: {
-    kicker: { zh: '04 · 角色價值與成果', en: '04 · VALUE FOR YOU' } as T,
-    headline: { zh: '不同角色，在這套經歷中拿到什麼價值', en: 'What you gain, by role' } as T,
+    kicker: { zh: '04 · 合作模式與影響力', en: '04 · OPERATING MODEL' } as T,
+    headline: { zh: '加入團隊後，我如何讓事情落地', en: 'How I create leverage inside an organization' } as T,
     subline: {
-      zh: '選擇你的角色視角，看我如何為團隊、商業與營運效率創造實質價值。',
-      en: 'Pick your lens to see the concrete business, team, and efficiency outcomes.',
+      zh: '比起個人英雄主義，我更在意能否建立讓團隊長期穩健運作的節奏與標準。',
+      en: 'Less heroics, more durable engineering judgment, cross-team clarity, and repeatable execution.',
     } as T,
     beforeLabel: { zh: '人工維運：排隊與漂移', en: 'Manual: queues & drift' } as T,
     afterLabel: { zh: '架構後：GitOps 自動收斂', en: 'Architected: GitOps reconcile' } as T,
-    roleLabel: { zh: '選擇你的角色', en: 'Pick your lens' } as T,
-    stackShow: { zh: '顯示底層技術', en: 'Show underlying stack' } as T,
-    stackHide: { zh: '隱藏底層技術', en: 'Hide underlying stack' } as T,
-    closing: { zh: '下一個需要被點亮的專案與團隊，也許就是你的。', en: 'Ready to bring clarity and velocity to your next platform or team.' } as T,
-    cta: { zh: '寄信聊聊', en: 'Email Shin' } as T,
+    roleLabel: { zh: '關注視角', en: 'Perspective' } as T,
+    stackShow: { zh: '檢視相關技術堆疊', en: 'Inspect underlying stack' } as T,
+    stackHide: { zh: '收合技術堆疊', en: 'Hide stack' } as T,
+    closing: { zh: '歡迎就平台架構、AI 基礎設施或技術領導角色進一步交流。', en: 'Open to Platform Architecture, AI Infrastructure, and Technical Leadership conversations.' } as T,
+    cta: { zh: '寄信聯繫', en: 'Email Shin' } as T,
   },
   dossier: {
     header: 'DOSSIER // VERIFIED PROFILE',
@@ -168,9 +168,7 @@ export const journeyUi = {
 
 export const essentials: { key: T; value: T }[] = [
   { key: { zh: '年資', en: 'Tenure' }, value: { zh: '2019.07 → Now', en: '2019.07 → Now' } },
-  { key: { zh: '碩士', en: 'M.S.' }, value: { zh: '國立臺北大學 資工碩士 (NTPU CSIE M.S.)', en: 'NTPU CSIE M.S.' } },
-  { key: { zh: '學士', en: 'B.S.' }, value: { zh: '銘傳大學 資通工程 (MCU B.S.)', en: 'MCU B.S.' } },
-  { key: { zh: '交換', en: 'Exchange' }, value: { zh: '鄭州大學交換生 (Zhengzhou Exchange)', en: 'Zhengzhou Exchange' } },
+  { key: { zh: '最高學歷', en: 'Education' }, value: { zh: '國立臺北大學 資訊工程碩士 (NTPU CSIE M.S.)', en: 'M.S., CSIE — National Taipei University' } },
   { key: { zh: '地點', en: 'Base' }, value: { zh: '台北 · 遠端／混合 · 中英雙語', en: 'Taipei · Remote/Hybrid · Bilingual zh/en' } },
 ];
 
@@ -186,10 +184,10 @@ export const stops: StopSpec[] = [
     scopeLabel: { zh: 'IC', en: 'IC' },
     team: { zh: '個人貢獻者', en: 'Individual contributor' },
     tag: { zh: '視覺與容器起步', en: 'Vision & Containers' },
-    scene: { zh: '學會握住工具', en: 'Learn the tools' },
+    scene: { zh: '01 · 打地基', en: '01 · Laying Foundations' },
     story: {
-      zh: '還不認得機房的我，先學會把東西裝進容器、讓它在任何地方跑起來。',
-      en: 'Before I knew the room, I learned to pack software into containers that run anywhere.',
+      zh: '在系統整合專案中建立容器化與 Kubernetes 實戰能力，為後續所有平台架構打下可重複部署的底座。',
+      en: 'Built practical container and Kubernetes foundations across SI projects, establishing repeatable deployment habits.',
     },
     challenge: {
       zh: 'AI 影像分析、Hadoop 資安分析與人事雲服務，都需要可重複部署的執行環境。',
@@ -219,10 +217,10 @@ export const stops: StopSpec[] = [
     scopeLabel: { zh: '產品／後端 Owner', en: 'Product / Backend Owner' },
     team: { zh: '負責 MEC 平台後端', en: 'Owned the MEC platform backend' },
     tag: { zh: 'MEC 邊緣產品化', en: 'MEC Productized' },
-    scene: { zh: '把邊緣做成產品', en: 'Turn edge into product' },
+    scene: { zh: '02 · 鋪設管線', en: '02 · Edge Pipelines' },
     story: {
-      zh: '第一次整個後端都是我的：從授權、權限到節點管理，做成能賣的產品。',
-      en: 'The first backend that was entirely mine: licensing, access and nodes, shaped into something sellable.',
+      zh: '首次完整負責平台後端：將 ETSI/3GPP MEC 邊緣運算、軟體授權管理與節點自動化做成可商業交付的產品。',
+      en: 'Owned a full platform backend end-to-end—turning ETSI/3GPP MEC edge, licensing, and node ops into a shippable product.',
     },
     challenge: {
       zh: 'MEC 邊緣運算平台要符合 ETSI / 3GPP，同時要能授權、控權限、管理節點並可重複部署。',
@@ -252,10 +250,10 @@ export const stops: StopSpec[] = [
     scopeLabel: { zh: '產品／後端 Owner', en: 'Product / Backend Owner' },
     team: { zh: '負責推薦服務後端', en: 'Owned the recommendation backend' },
     tag: { zh: '高併發影音推薦', en: 'Video Recs' },
-    scene: { zh: '在高併發下做取捨', en: 'Trade-offs under load' },
+    scene: { zh: '03 · 疏通人流', en: '03 · High-Scale Traffic' },
     story: {
-      zh: '流量湧進來時，我學會用最終一致換吞吐，讓推薦不中斷。',
-      en: 'When traffic surged I learned to trade strict consistency for throughput so recommendations never stalled.',
+      zh: '進入高併發社群影音推薦服務，以 Go (gin) 與 DDD 設計 API，並在效能與資料最終一致性間做出務實取捨。',
+      en: 'Designed high-concurrency video recommendation APIs in Go (gin) with DDD, balancing latency and eventual consistency.',
     },
     challenge: {
       zh: '首頁 Instream 影片需要個人化推薦，且 API 要撐住高併發。',
@@ -285,10 +283,10 @@ export const stops: StopSpec[] = [
     scopeLabel: { zh: 'SRE Lead 5–8 人', en: 'SRE Lead 5–8' },
     team: { zh: '帶領 5–8 人團隊', en: 'Led a team of 5–8' },
     tag: { zh: '網銀 Gateway · 帶 5–8 人', en: 'Banking SRE · Led 5–8' },
-    scene: { zh: '守住那扇不能關的門', en: 'Hold the door that cannot close' },
+    scene: { zh: '04 · 守住金流閘門', en: '04 · Financial Gateway' },
     story: {
-      zh: '銀行的入口不能停。我帶著團隊，讓每一次異常都能被追到源頭。',
-      en: "A bank's front door cannot close. I led the team so every anomaly could be traced to its source.",
+      zh: '帶領 5–8 人 SRE 團隊維運國泰 CUBE 網銀關鍵 Gateway，並透過 OpenTelemetry 建立跨團隊可觀測性標準。',
+      en: 'Led a 5–8 engineer SRE squad protecting Cathay CUBE banking gateways while standardizing OpenTelemetry observability.',
     },
     challenge: {
       zh: 'CUBE 網銀與內部系統的關鍵 gateway 不能停，同時要協助服務上雲。',
@@ -315,13 +313,13 @@ export const stops: StopSpec[] = [
     start: '2025.08',
     end: 'Now',
     scope: 'architect',
-    scopeLabel: { zh: '架構師＆客戶窗口 3–5 人', en: 'Architect & Client Lead 3–5' },
-    team: { zh: '帶領 3–5 人小組，擔任企業客戶技術窗口', en: 'Leads 3–5 engineers, enterprise technical contact' },
-    tag: { zh: 'AI 資料中心 · 帶 3–5 人', en: 'AI DC · Leads 3–5' },
-    scene: { zh: '打開那間鎖死的機房', en: 'Open the locked room' },
+    scopeLabel: { zh: '技術架構＆企業窗口', en: 'Tech Architect & Client Lead' },
+    team: { zh: '主導專案架構設計，並擔任企業客戶技術窗口', en: 'Leads platform architecture and serves as enterprise technical contact' },
+    tag: { zh: 'AI 資料中心 · 技術架構', en: 'AI DC · Technical Architect' },
+    scene: { zh: '05 · 導入 AI 中樞', en: '05 · Sovereign AI Hub' },
     story: {
-      zh: '沒有外網、沒有實體機群。我把整座機房寫成程式碼，帶進去、點亮它。',
-      en: 'No internet, no physical fleet. I wrote the whole room as code, carried it in, and switched it on.',
+      zh: '主導私有雲與 AI 資料中心架構設計：整合裸機 PXE、GitOps、離線交付與企業級資安，並建立團隊 AI 協作準則。',
+      en: 'Architects private cloud and AI data centers—unifying bare-metal PXE, GitOps, air-gapped delivery, and team AI governance.',
     },
     challenge: {
       zh: '企業與 AI 資料中心的機房常常沒有外網、也沒有實體 GPU 機群可供開發驗證。',
@@ -416,73 +414,55 @@ export const rcaSteps: RcaStep[] = [
 
 export const roleLenses: RoleLens[] = [
   {
-    id: 'ceo',
-    label: { zh: 'CEO / 創辦人', en: 'CEO / Founder' },
-    headline: { zh: '讓企業客戶敢簽、讓團隊少靠英雄、讓交付越做越快。', en: 'Unlocks enterprise deals, removes hero dependency, speeds up every delivery.' },
-    bullets: {
-      zh: [
-        '打通企業與機敏客戶：離線安裝器、OpenBao PKI、Keycloak SSO，支援 POC 與技術提案',
-        '守住關鍵業務：曾帶 5–8 人維運國泰 CUBE 網銀關鍵 gateway',
-        '放大團隊產出：以 8 個 AI 工作流準則與自製工具，讓 3–5 人小組更快',
-      ],
-      en: [
-        'Opens enterprise and sensitive-site deals: air-gapped installer, OpenBao PKI and Keycloak SSO behind POCs and proposals',
-        'Protects mission-critical operations: led 5–8 engineers running the Cathay CUBE banking gateway',
-        'Multiplies output: 8 AI-workflow principles and in-house tools for a 3–5 engineer squad',
-      ],
-    },
-    stack: ['Air-gapped installer', 'OpenBao', 'Keycloak SSO', 'OpenTelemetry'],
-  },
-  {
     id: 'cto',
-    label: { zh: 'CTO / VP Eng', en: 'CTO / VP Eng' },
-    headline: { zh: '把基礎設施從人力瓶頸變成可複製的平台能力。', en: 'Turns infrastructure from a manual bottleneck into a repeatable platform.' },
+    label: { zh: '架構與交付紀律', en: 'Architecture & Delivery' },
+    headline: { zh: '把複雜的基礎設施收斂成可重複、可稽核的工程標準。', en: 'Converging complex infrastructure into repeatable, auditable engineering standards.' },
     bullets: {
       zh: [
-        '裸機 → VM → Kubernetes → AI 機群全部以程式碼建置，變更皆可審查、可回滾',
-        '依信任域設計受名稱限制的 Intermediate CA，身分、機密、憑證一致處理',
-        '以 kube-burner 做 1000+ Pod 壓測並自動出報告',
+        '從裸機、K8s 到 AI 機群全面 IaC 與 GitOps 化，消除人工配置漂移與單點英雄依賴',
+        '以受名稱限制的 Intermediate CA、OpenBao PKI 與 Keycloak SSO 建立一致的安全邊界',
+        '透過 kube-burner 1000+ Pod 壓測與離線安裝器，讓實驗室與客戶現場走同一套交付路徑',
       ],
       en: [
-        'Bare metal → VMs → Kubernetes → AI fleets built as code; every change reviewable and reversible',
-        'Name-constrained intermediate CAs per trust domain; one approach to identity, secrets and certificates',
-        'kube-burner load tests at 1000+ pods with automatic reports',
+        'Full IaC and GitOps from bare metal to Kubernetes and AI fleets, eliminating config drift and hero dependency',
+        'Consistent security boundaries with name-constrained Intermediate CAs, OpenBao PKI, and Keycloak SSO',
+        'Identical delivery path from lab to customer site via kube-burner 1000+ pod validation and air-gapped tooling',
       ],
     },
-    stack: ['Kubespray HA', 'Terraform', 'ArgoCD', 'KubeVirt', 'Rook-Ceph', 'kube-burner'],
+    stack: ['Kubespray HA', 'Terraform', 'ArgoCD', 'OpenBao', 'kube-burner'],
   },
   {
-    id: 'hr',
-    label: { zh: 'HR / 用人主管', en: 'HR / Hiring Mgr' },
-    headline: { zh: '7 年、5 家公司，責任範圍每一站都在放大。', en: '7 years, 5 companies, with scope growing at every stop.' },
+    id: 'hm',
+    label: { zh: '跨界對齊與商業落地', en: 'Alignment & Execution' },
+    headline: { zh: '在技術深度與商業現場之間，擔任能把事推過終點線的橋樑。', en: 'Bridging technical depth and commercial reality to move critical initiatives across the line.' },
     bullets: {
       zh: [
-        'IC → 產品／後端 Owner → SRE Lead 5–8 人 → 架構師＆客戶窗口 3–5 人',
-        '能寫 Go / Java / Python，也能帶團隊與面對客戶',
-        '日期、學歷與每一站的挑戰／決策／結果，都在履歷實證裡可逐項查證',
+        '擔任企業客戶技術窗口，主導 POC 驗證、架構提案與斷網機敏現場交付',
+        '把底層限制轉譯成主管、客戶與資安都能做決策的語言，縮短來回對齊成本',
+        '七年橫跨系統整合、MEC 產品後端、高併發影音推薦、網銀 SRE 到 AI 平台架構，能寫程式也能對外溝通',
       ],
       en: [
-        'IC → Product/Backend Owner → SRE Lead 5–8 → Architect & Client Lead 3–5',
-        'Hands-on in Go / Java / Python, and able to lead a team and face customers',
-        'Dates, degrees and every stop\'s challenge / decision / result are checkable in the dossier',
+        'Enterprise technical contact leading POCs, proposals, and air-gapped on-site rollouts',
+        'Translates low-level constraints into clear trade-offs so execs, clients, and security can decide quickly',
+        '7+ years across SI, MEC product backend, high-scale video recs, banking SRE, and AI infra',
       ],
     },
-    stack: ['Go', 'Java', 'Python', 'Kubernetes', 'Terraform'],
+    stack: ['Go', 'Java', 'Python', 'Keycloak SSO', 'Air-gapped installer'],
   },
   {
     id: 'lead',
-    label: { zh: 'Tech Lead', en: 'Tech Lead' },
-    headline: { zh: '自己能解難題，也做工具讓整組更快。', en: 'Solves deep problems and builds tools that speed up the whole squad.' },
+    label: { zh: '團隊節奏與系統韌性', en: 'Team Cadence & Reliability' },
+    headline: { zh: '不只自己解決深水區難題，更把經驗沉澱成整個團隊的戰力。', en: 'Solving deep incidents while turning hard-won lessons into shared team leverage.' },
     bullets: {
       zh: [
-        'spec → ticket → 實作 → 跨模型審查 → MR 流程；ArgoCD 排錯、憑證輪替、RCA 寫成可重用 Agent skills',
-        '以 OpenTelemetry 統一觀測，事故沿 trace 定位根因',
-        '工時自動彙整、憑證自動更新、webhook 推播等團隊小工具',
+        '曾帶領網銀 SRE 團隊守住 CUBE 關鍵 gateway，並以 OpenTelemetry 建立共用監控與根因追蹤',
+        '歸納並落地 8 個 AI 工作流準則（模型、RAG、護欄、可觀測性），建立 spec → cross-model review → MR 節奏',
+        '開發工時彙整、憑證自動更新、webhook 推播等內部工具，並把 RCA 與維運經驗寫成可重用 Agent skills',
       ],
       en: [
-        'spec → ticket → implementation → cross-model review → MR flow; ArgoCD triage, cert rotation and RCA captured as reusable agent skills',
-        'OpenTelemetry as the shared lens; incidents traced back to root cause',
-        'Team tools: automatic timesheets, certificate renewal and webhook push',
+        'Led banking SREs protecting the CUBE gateway, establishing shared OpenTelemetry tracing for root-cause isolation',
+        'Distilled 8 AI-workflow principles into a governed spec → cross-model review → MR cadence',
+        'Built internal velocity tools (timesheets, auto-cert renewal, webhook alerts) and reusable ops skills',
       ],
     },
     stack: ['OpenTelemetry', 'ArgoCD', 'Claude Code / Codex', 'GitLab CI', 'Go'],
